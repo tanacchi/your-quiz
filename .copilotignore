@@ -1,0 +1,25 @@
+# Ignore test directories
+tests/
+docs/instructions/shared/tests/
+
+# Ignore sensitive files
+.env
+.env.*
+*.key
+*.pem
+secrets/
+
+# Ignore build and dependency directories
+node_modules/
+dist/
+build/
+coverage/
+
+# Ignore log files
+*.log
+logs/
+
+# Ignore temporary files
+*.tmp
+*.temp
+.cache/
