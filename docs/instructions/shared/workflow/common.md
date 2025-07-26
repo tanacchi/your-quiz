@@ -14,12 +14,39 @@
 
 作業開始前に以下を必ず確認：
 
-1. **tools/配下確認**: CLIツール実行前に `../tools/[ツール名].md` 存在確認
-2. **languages/配下確認**: 言語ファイル操作前に `../languages/[言語名].md` 存在確認
+1. **tools/配下確認**: CLIツール実行前に `docs/instructions/shared/tools/[ツール名].md` 存在確認
+2. **languages/配下確認**: 言語ファイル操作前に `docs/instructions/shared/languages/[言語名].md` 存在確認
 3. **指示存在時**: 該当ファイルの指示に完全準拠
 4. **指示不存在時**: ユーザーにルール問い合わせ、ルール取得後に該当ディレクトリに追加
 
 ### 確認例
 
-- `npm install` → `../tools/npm.md` 確認
-- `.ts`ファイル編集 → `../languages/typescript.md` 確認
+- `npm install` → `docs/instructions/shared/tools/npm.md` 確認
+- `.ts`ファイル編集 → `docs/instructions/shared/languages/typescript.md` 確認
+
+## ユーザー問い合わせルール
+
+### 問い合わせ必須条件
+
+判断迷い・要件不明確・品質基準未定義時は作業停止してユーザー問い合わせ必須
+
+### 1問1答フォーマット
+
+`docs/tmp/user-inquiry-template.md` 使用：
+
+```markdown
+# [工程名] - 問い合わせ
+
+## Q1: [カテゴリ]
+[状況説明]
+- A) [選択肢1]
+- B) [選択肢2] 
+- C) [選択肢3]
+```
+
+### 利用手順
+
+1. テンプレートファイル内容クリア
+2. 上記フォーマットで問い合わせ記載
+3. ユーザー回答取得
+4. 該当ドキュメントに反映・テンプレートクリア
