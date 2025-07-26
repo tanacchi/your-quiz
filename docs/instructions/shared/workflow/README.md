@@ -11,18 +11,17 @@
 ## 工程別指示
 
 - [specification.md](./specification.md) - 仕様整理
+- [architecture.md](./architecture.md) - 全体技術設計
+- [ddd-design.md](./ddd-design.md) - ドメイン設計（DDD）
 - [api-design.md](./api-design.md) - API設計
+- [db-design.md](./db-design.md) - DB設計
+- [tech-selection.md](./tech-selection.md) - 技術選定
 - [bdd-implementation.md](./bdd-implementation.md) - BDDテスト実装
+- [skeleton.md](./skeleton.md) - スケルトン実装
 - [unit-testing.md](./unit-testing.md) - 単体テスト実装
+- [implementation.md](./implementation.md) - 本実装
+- [e2e-testing.md](./e2e-testing.md) - E2Eテスト
 
-## 未作成の工程指示
+## 横断的指示
 
-以下の工程指示は今後作成予定：
-
-- architecture.md - 全体技術設計
-- ddd-design.md - ドメイン設計（DDD）
-- db-design.md - DB設計
-- tech-selection.md - 技術選定
-- skeleton.md - スケルトン実装
-- implementation.md - 本実装
-- e2e-testing.md - E2Eテスト
+- [adr-management.md](./adr-management.md) - アーキテクチャ決定記録管理

@@ -5,7 +5,7 @@
 - [git.md](./git.md) - Git操作指示
 - [npm.md](./npm.md) - パッケージ管理指示
 - [mise.md](./mise.md) - ツールバージョン管理指示
-- [testing.md](./testing.md) - テストツール指示
+- [typespec.md](./typespec.md) - TypeSpec仕様書作成指示
 
 ## 使用方針
 
