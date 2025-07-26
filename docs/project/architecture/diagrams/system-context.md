@@ -77,4 +77,6 @@ graph TB
     class Browser,Frontend,API appClass
     class DB,Cache dataClass
     class CDN,AuthService,NotificationService externalClass
+    
+## E2Eテストフレームワーク
 ```
