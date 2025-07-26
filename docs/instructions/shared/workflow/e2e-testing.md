@@ -16,12 +16,21 @@
 
 ## アウトプット出力先
 
+### 基本方針
+E2Eテスト関連のドキュメントは、`docs/project/e2e-testing/` ディレクトリに集約し、テストの実装ファイルは通常のテストディレクトリに配置する。
+
 ### 出力先ディレクトリ構造
 
 ```text
+docs/project/e2e-testing/
+├── test-strategy.md                    # テスト戦略・計画
+├── test-scenarios.md                   # テストシナリオ設計
+├── user-journeys.md                    # ユーザージャーニー定義
+├── api-integration.md                  # API統合テスト仕様
+└── performance-requirements.md        # パフォーマンス要件
+
 e2e-tests/
-├── test-strategy/                      # テスト戦略・計画
-├── scenarios/                          # テストシナリオ
+├── scenarios/                          # テストシナリオ実装
 │   ├── user-journey/                   # ユーザージャーニーテスト
 │   ├── api-integration/                # API統合テスト
 │   ├── performance/                    # パフォーマンステスト

@@ -20,13 +20,13 @@
 
 ## アウトプット出力先
 
-**基本方針**: APIドキュメントはAPIソースコードと同じワークスペース・ディレクトリ・リポジトリに配置せよ
+**基本方針**: APIドキュメントは `docs/project/api/` ディレクトリに配置し、プロジェクトドキュメント体系として整理する
 
 **ファイル命名規則**:
 - **メインTypeSpec**: `specs/main.tsp`
 - **モデル定義**: `specs/models/{リソース名}.tsp`
 - **操作定義**: `specs/operations/{機能名}.tsp`
-- **生成されたOpenAPI**: `docs/api/openapi.yaml`
+- **生成されたOpenAPI**: `docs/project/api/openapi.yaml`
 
 ## API設計の手順
 

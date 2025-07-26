@@ -49,12 +49,12 @@
 ## アウトプット出力先
 
 ### 基本方針
-アーキテクチャ設計文書は、プロジェクト全体の技術的基盤となるため、プロジェクトルート直下の `architecture/` ディレクトリに集約し、後続工程からの参照を容易にする。
+アーキテクチャ設計文書は、プロジェクト全体の技術的基盤となるため、`docs/project/architecture/` ディレクトリに集約し、後続工程からの参照を容易にする。
 
 ### 出力先ディレクトリ構造
 
 ```
-architecture/
+docs/project/architecture/
 ├── system-overview.md              # システム全体俯瞰・境界定義
 ├── user-management/                # ユーザー管理責務
 │   ├── architecture.md            # ユーザー管理のアーキテクチャ

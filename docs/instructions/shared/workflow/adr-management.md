@@ -18,7 +18,6 @@ ADRはプロジェクト固有のドキュメントとして、プロジェク�
 
 ### 出力先ディレクトリ構造
 
-#### パターン1: docs/project配下（推奨）
 ```
 docs/
 ├── project/
@@ -29,17 +28,6 @@ docs/
 │       ├── 0003-communication-pattern.md # 通信パターン選定
 │       └── templates/
 │           └── adr-template.md          # ADR作成テンプレート
-```
-
-#### パターン2: プロジェクトルート配下（標準的）
-```
-adr/
-├── README.md                    # ADR一覧とインデックス
-├── 0001-architecture-style.md   # システムアーキテクチャスタイル選定
-├── 0002-database-selection.md   # データベース選定
-├── 0003-communication-pattern.md # 通信パターン選定
-└── templates/
-    └── adr-template.md          # ADR作成テンプレート
 ```
 
 ### ファイル命名規則
@@ -62,7 +50,7 @@ adr/
 以下のタイミングでADRの作成が必要となる：
 
 - **重要なアーキテクチャ決定**: システム全体に影響する技術選択
-- **トレードオフが存在する決定**: 複数の選択肢から一つを選ぶ場合  
+- **トレードオフが存在する決定**: 複数の選択肢から一つを選ぶ場合
 - **制約に基づく決定**: 外部要因により選択肢が限られる場合
 - **実験的な決定**: 新技術や新手法の採用を決定する場合
 - **既存決定の変更**: 過去のADRを覆す新たな決定
@@ -124,7 +112,7 @@ adr/
 - [解決される問題]
 - [向上する品質特性]
 
-### Negative  
+### Negative
 - [決定により失われるもの]
 - [新たに発生するリスク]
 - [悪化する可能性のある品質特性]
@@ -158,9 +146,9 @@ adr/
 - [技術ドキュメント]
 
 ---
-**Created**: YYYY-MM-DD  
-**Last Updated**: YYYY-MM-DD  
-**Authors**: [作成者名]  
+**Created**: YYYY-MM-DD
+**Last Updated**: YYYY-MM-DD
+**Authors**: [作成者名]
 **Reviewers**: [レビュー者名]
 ```
 
@@ -207,7 +195,7 @@ ADRディレクトリのREADME.mdには、全ADRの一覧とステータスを�
 
 新しいADRを作成する場合は、[templates/adr-template.md](templates/adr-template.md) を使用してください。
 
-詳細な作成手順については、[../shared/workflow/adr-management.md](../shared/workflow/adr-management.md) を参照してください。
+詳細な作成手順については、[docs/instructions/shared/workflow/adr-management.md](docs/instructions/shared/workflow/adr-management.md) を参照してください。
 ```
 
 #### 3.2 インデックス更新ルール

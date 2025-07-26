@@ -14,6 +14,21 @@
 
 ## アウトプット出力先
 
+### 基本方針
+DDD設計成果物は、プロジェクトドキュメント体系として整理し、`docs/project/ddd-design/` ディレクトリに集約して後続工程からの参照を容易にする。
+
+### 出力先ディレクトリ構造
+```
+docs/project/ddd-design/
+├── ubiquitous-language.md          # ユビキタス言語辞書
+├── bounded-contexts/               # 境界づけられたコンテキスト
+├── entities/                      # エンティティ定義
+├── value-objects/                 # 値オブジェクト定義
+├── domain-services/               # ドメインサービス定義
+├── aggregates/                    # 集約定義
+└── repositories/                  # リポジトリインターフェース
+```
+
 **ファイル命名規則**:
 - **エンティティ**: `{名前}.entity.md`
 - **値オブジェクト**: `{名前}.value-object.md`
