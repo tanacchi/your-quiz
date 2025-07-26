@@ -6,6 +6,6 @@
 
 ## カテゴリ別指示
 
-- 開発ワークフロー: [./workflow/](./workflow/)
-- 言語固有の開発: [./languages/](./languages/)
-- ツール操作: [./tools/](./tools/)
+- 開発ワークフロー: [./workflow/README.md](./workflow/README.md)
+- 言語固有の開発: [./languages/README.md](./languages/README.md)
+- ツール操作: [./tools/README.md](./tools/README.md)
