@@ -8,7 +8,6 @@
 
 - ユーザーストーリーを4W1H形式で明確に記述する
 - 成功・失敗パターンをHTTPステータスコードと併せて定義する
-- API仕様をRESTful設計原則に従って記述する
 
 ## 仕様整理の手順
 
@@ -18,7 +17,6 @@
 ```
 specifications/
 ├── user-stories/           # ユーザーストーリー
-├── api-specs/             # API仕様書
 ├── success-scenarios/     # 成功パターン
 ├── error-scenarios/       # 失敗パターン
 └── requirements/          # 非機能要件
@@ -26,7 +24,6 @@ specifications/
 
 #### 0.2 ファイル命名規則
 - **ユーザーストーリー**: `user-story-[機能名].md`
-- **API仕様**: `api-spec-[機能名].md`
 - **成功シナリオ**: `success-[機能名].md`
 - **エラーシナリオ**: `error-[機能名].md`
 - **要件定義**: `requirements-[機能名].md`
@@ -148,105 +145,54 @@ specifications/
 #### 3.3 失敗パターン出力
 作成した失敗パターンを `specifications/error-scenarios/error-[機能名].md` に保存する。
 
-### 4. APIエンドポイント設計
+### 4. データ整合性要件
 
-#### 4.1 RESTful API設計
-```
-## APIエンドポイント
-
-### [機能名] API
-
-**エンドポイント**: `[HTTP_METHOD] /api/v1/[resource]`
-
-**リクエスト**:
-- **Headers**:
-  - `Content-Type: application/json`
-  - `Authorization: Bearer [token]`
-- **Parameters**:
-  - `param1` (string, required): [説明]
-  - `param2` (number, optional): [説明]
-- **Body**:
-  ```json
-  {
-    "field1": "value1",
-    "field2": 123
-  }
-  ```
-
-**レスポンス**:
-- **成功時 (200 OK)**:
-  ```json
-  {
-    "data": {
-      "id": "uuid",
-      "field1": "value1",
-      "created_at": "2024-01-01T00:00:00Z"
-    }
-  }
-  ```
-- **エラー時 (400 Bad Request)**:
-  ```json
-  {
-    "error": {
-      "code": "VALIDATION_ERROR",
-      "message": "入力値が正しくありません"
-    }
-  }
-  ```
-```
-
-#### 4.2 API仕様出力
-作成したAPI仕様を `specifications/api-specs/api-spec-[機能名].md` に保存する。
-
-### 5. データ整合性要件
-
-#### 5.1 データ制約
+#### 4.1 データ制約
 - **一意性制約**: 重複を許可しないフィールド
 - **外部キー制約**: 関連データの整合性
 - **CHECK制約**: 値の範囲や形式制約
 - **NOT NULL制約**: 必須フィールド
 
-#### 5.2 トランザクション要件
+#### 4.2 トランザクション要件
 - **ACID特性**: 原子性、一貫性、独立性、持続性の保証
 - **分離レベル**: 同時実行時の動作制御
 - **デッドロック対策**: 競合状態の回避方法
 
-### 6. パフォーマンス要件
+### 5. パフォーマンス要件
 
-#### 6.1 応答時間
+#### 5.1 応答時間
 - **API応答時間**: 95%ile で [X]ms 以内
 - **画面表示時間**: 初回読み込み [X]秒以内
 - **バッチ処理時間**: [X]件の処理を [X]分以内
 
-#### 6.2 スループット
+#### 5.2 スループット
 - **同時接続数**: 最大 [X] 接続
 - **リクエスト処理数**: 毎秒 [X] リクエスト
 - **データ処理量**: 毎時 [X] GB
 
-### 7. セキュリティ要件
+### 6. セキュリティ要件
 
-#### 7.1 認証・認可
+#### 6.1 認証・認可
 - **認証方式**: JWT トークン / OAuth 2.0
 - **権限管理**: RBAC (Role-Based Access Control)
 - **セッション管理**: タイムアウト時間と更新方式
 
-#### 7.2 データ保護
+#### 6.2 データ保護
 - **暗号化**: 機密データの暗号化方式
 - **アクセスログ**: 監査証跡の記録要件
 - **個人情報保護**: GDPR、個人情報保護法への対応
 
-### 8. 要件ドキュメント出力
+### 7. 要件ドキュメント出力
 
-#### 8.1 非機能要件出力
+#### 7.1 非機能要件出力
 データ整合性、パフォーマンス、セキュリティ要件を `specifications/requirements/requirements-[機能名].md` に保存する。
 
-#### 8.2 完成した仕様書の構成
+#### 7.2 完成した仕様書の構成
 ```
 specifications/
 ├── user-stories/user-story-[機能名].md      # ユーザーストーリー
 ├── success-scenarios/success-[機能名].md    # 成功パターン
 ├── error-scenarios/error-[機能名].md        # 失敗パターン
-├── api-specs/api-spec-[機能名].md           # API仕様
 └── requirements/requirements-[機能名].md    # 非機能要件
 ```
 
@@ -255,7 +201,6 @@ specifications/
 - `specifications/` ディレクトリ配下に適切な構造でファイルが作成されていること
 - ユーザーストーリーが4W1H（Who, What, When, Where, Why）で記述されていること
 - 成功／失敗パターンがRESTステータスと振る舞いで明示されていること
-- APIエンドポイントの設計が RESTful な原則に従っていること
 - データ整合性要件が具体的に定義されていること
 - パフォーマンス要件が数値で明示されていること
 - セキュリティ要件が具体的な実装方式で記述されていること
