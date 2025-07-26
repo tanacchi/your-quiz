@@ -88,14 +88,14 @@ flowchart TD
 - 設計方針決定（API設計、データモデル等）
 - 非機能要件対応方針
 
-詳細手順: `./adr-management.md` 参照
+詳細手順: `docs/instructions/shared/workflow/adr-management.md` 参照
 
 ## フロー詳細
 
 ### 1. 仕様整理
 
 - **必須要件**：新機能を開始したら直ちにユーザーストーリーと成功／失敗パターンを整理せよ
-- **参照必須の文書**：./specification.md
+- **参照必須の文書**：docs/instructions/shared/workflow/specification.md
 - **完了判定基準**：
   - ユーザーストーリーが4W1Hで記述されている
   - 成功／失敗パターンがRESTステータスと振る舞いで明示されている
@@ -111,7 +111,7 @@ flowchart TD
 
 - **前提条件**：仕様整理のユーザー承認完了
 - **必須要件**：同期API vs Pub/Sub、モノリス vs マイクロサービス、DB種別選定などを明確に定義せよ
-- **参照必須の文書**：./architecture.md
+- **参照必須の文書**：docs/instructions/shared/workflow/architecture.md
 - **完了判定基準**：
   - 選定したアーキテクチャパターンが図示されている
   - **技術的トレードオフと理由が箇条書きで示されている**
@@ -129,7 +129,7 @@ flowchart TD
 
 - **前提条件**：全体技術設計のユーザー承認完了
 - **必須要件**：BC、エンティティ／VO／ドメインサービス、ユースケースI/Fを設計せよ
-- **参照必須の文書**：./ddd-design.md
+- **参照必須の文書**：docs/instructions/shared/workflow/ddd-design.md
 - **完了判定基準**：
   - エンティティ・VOが型定義付きで示されている
   - ドメインサービスおよびリポジトリI/Fがインターフェースで定義されている
@@ -145,7 +145,7 @@ flowchart TD
 
 - **前提条件**：DDD設計のユーザー承認完了
 - **必須要件**：ドメインモデルに基づく詳細なAPI仕様を作成し、OpenAPI形式で文書化せよ
-- **参照必須の文書**：./api-design.md
+- **参照必須の文書**：docs/instructions/shared/workflow/api-design.md
 - **完了判定基準**：
   - OpenAPI 3.0仕様書が作成されている
   - 全エンドポイントのリクエスト/レスポンス構造が定義されている
@@ -163,7 +163,7 @@ flowchart TD
 
 - **前提条件**：API設計のユーザー承認完了
 - **必須要件**：エンティティ／VOに基づくテーブルスキーマを設計せよ
-- **参照必須の文書**：./db-design.md
+- **参照必須の文書**：docs/instructions/shared/workflow/db-design.md
 - **完了判定基準**：
   - ER図が作成されている
   - マイグレーションファイルの雛形が生成されている
@@ -179,7 +179,7 @@ flowchart TD
 
 - **前提条件**：DB設計のユーザー承認完了
 - **必須要件**：neverthrowやORM、バリデーションライブラリなどを選定せよ
-- **参照必須の文書**：./tech-selection.md
+- **参照必須の文書**：docs/instructions/shared/workflow/tech-selection.md
 - **完了判定基準**：
   - **選定ライブラリとバージョン、理由が表形式で示されている**
   - **比較検討表でトレードオフが明示されている**
@@ -196,7 +196,7 @@ flowchart TD
 
 - **前提条件**：技術選定のユーザー承認完了
 - **必須要件**：E2Eおよびドメイン結合シナリオをGherkin形式で記述し、選定したBDDフレームワークで実装せよ
-- **参照必須の文書**：./bdd-implementation.md
+- **参照必須の文書**：docs/instructions/shared/workflow/bdd-implementation.md
 - **完了判定基準**：
   - 全シナリオがGherkin形式（Given-When-Then）で記述されている
   - Step Definitionsが実装され、テストがコンパイル・実行可能になっている
@@ -213,7 +213,7 @@ flowchart TD
 
 - **前提条件**：BDDテスト実装のユーザー承認完了
 - **必須要件**：APIルートやメッセージハンドラの骨組みを実装し、BDDテストが依然としてRedであることを確認せよ
-- **参照必須の文書**：./skeleton.md
+- **参照必須の文書**：docs/instructions/shared/workflow/skeleton.md
 - **完了判定基準**：
   - スケルトンコードがコンパイルし、BDDテストがすべてRedであること
 - **完了後の必須アクション**：
@@ -228,7 +228,7 @@ flowchart TD
 
 - **前提条件**：スケルトン実装のユーザー承認完了
 - **必須要件**：TDDのRed-Green-Refactorサイクルに従い、まず失敗するテストを実装せよ
-- **参照必須の文書**：./unit-testing.md
+- **参照必須の文書**：docs/instructions/shared/workflow/unit-testing.md
 - **完了判定基準**：
   - 全ての単体テストケースがRedで失敗している（実装前のため）
   - テストカバレッジ目標95%に向けたテスト設計が完了している
@@ -245,7 +245,7 @@ flowchart TD
 
 - **前提条件**：TDDテスト実装のユーザー承認完了
 - **必須要件**：TDDサイクルに従ってテストをGreen化し、リファクタリングまで完了せよ
-- **参照必須の文書**：./unit-testing.md
+- **参照必須の文書**：docs/instructions/shared/workflow/unit-testing.md
 - **完了判定基準**：
   - 全ての単体テストがGreenで通過している
   - カバレッジが95%以上達成している
@@ -262,7 +262,7 @@ flowchart TD
 
 - **前提条件**：TDD実装（Red→Green）のユーザー承認完了
 - **必須要件**：BDDテストを実行してGreen化し、ビジネス要件を満たす完全な実装を完成せよ
-- **参照必須の文書**：./implementation.md
+- **参照必須の文書**：docs/instructions/shared/workflow/implementation.md
 - **完了判定基準**：
   - 全てのBDDテストがGreenで通過している
   - ビジネス仕様との完全な整合性が確保されている
@@ -279,7 +279,7 @@ flowchart TD
 
 - **前提条件**：BDD統合テスト・本実装完成のユーザー承認完了
 - **必須要件**：フロントからバックエンドまでのユーザーフローをカバーするE2Eシナリオを記述・実行せよ
-- **参照必須の文書**：./e2e-testing.md
+- **参照必須の文書**：docs/instructions/shared/workflow/e2e-testing.md
 - **完了判定基準**：
   - 全てのE2EテストがGreenで成功している
 - **完了後の必須アクション**：
@@ -296,5 +296,5 @@ flowchart TD
 
 ## 新規タスク追加、工程のドキュメント時の対応
 
-各工程のドキュメントが存在しなかったあるいは新規にワークフローの工程を増やす場合は ./docs.md の内容に従ってドキュメントを追加すること。
+各工程のドキュメントが存在しなかったあるいは新規にワークフローの工程を増やす場合は docs/instructions/shared/workflow/docs.md の内容に従ってドキュメントを追加すること。
 追加後はユーザのレビューを経て、本ドキュメントに工程を追加すること。

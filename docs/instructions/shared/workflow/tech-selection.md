@@ -4,6 +4,33 @@
 
 - アーキテクチャ設計で決定された技術方針に基づき、実装で使用する具体的なライブラリ・フレームワーク・ツールを選定し、開発チームが一貫性のある技術スタックで実装を進めるため、neverthrowやORM、バリデーションライブラリなどを表形式で比較検討し、判断根拠を明示した技術選定書を作成する
 
+## アウトプット出力先
+
+### 基本方針
+技術選定文書は、プロジェクトドキュメント体系として整理し、`docs/project/tech-selection/` ディレクトリに集約して後続工程からの参照を容易にする。
+
+### 出力先ディレクトリ構造
+```
+docs/project/tech-selection/
+├── overview.md                     # 技術選定概要・方針
+├── libraries/                      # ライブラリ選定
+│   ├── error-handling.md           # エラーハンドリング（neverthrow等）
+│   ├── orm.md                      # ORM選定
+│   ├── validation.md               # バリデーション
+│   ├── testing.md                  # テストフレームワーク
+│   └── ui-framework.md             # UIフレームワーク
+├── infrastructure/                 # インフラ技術選定
+│   ├── database.md                 # データベース選定
+│   ├── deployment.md               # デプロイメント
+│   └── monitoring.md               # 監視・ログ
+└── comparison-tables/              # 比較検討表
+    └── tech-comparison-matrix.md   # 技術比較マトリクス
+```
+
+**ファイル命名規則**:
+- **比較検討表**: `{カテゴリ}-comparison.md`
+- **選定結果**: `{技術分野}-selection.md`
+
 ## 遵守事項
 
 - **全ての技術選定は必ず表形式で比較検討を行う**
