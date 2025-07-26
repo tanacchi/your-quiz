@@ -7,15 +7,77 @@
 ## 遵守事項
 
 - RESTful設計原則に従ったAPI設計を行う
-- TypeSpecを使用したタイプセーフな仕様書作成を行う
+- **TypeSpecを使用したタイプセーフな仕様書作成を必須とする**
+- **手書きのOpenAPI YAMLは絶対禁止する**
 - エラーハンドリングとセキュリティ要件を明確に定義する
+- 全エンドポイントのリクエスト/レスポンス構造を詳細に定義する
+- バリデーションルールを詳細に記述する
+
+## 必須ツール確認
+
+### TypeSpec使用の義務化
+
+**OpenAPI仕様書作成には必ずTypeSpecを使用すること。手書きのOpenAPI YAMLは禁止。**
+
+#### 禁止事項
+
+```yaml
+# ❌ 絶対禁止：手書きのOpenAPI YAML
+openapi: 3.0.0
+info:
+  title: Manual API
+  version: 1.0.0
+paths:
+  /users:
+    get:
+      # 手動でのスキーマ定義は型安全性が保証されない
+      responses:
+        '200':
+          description: Success
+```
+
+#### 必須方法
+
+```typescript
+// ✅ 必須：TypeSpecによる定義
+import "@typespec/rest";
+import "@typespec/openapi3";
+
+@service({
+  title: "User API",
+  version: "1.0.0",
+})
+namespace UserAPI;
+
+model User {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: utcDateTime;
+}
+
+@route("/users")
+interface Users {
+  @get list(): User[];
+  @post create(@body user: CreateUserRequest): User;
+}
+```
+
+#### TypeSpec使用の理由
+
+- **タイプセーフ**: フロントエンド・バックエンド間の型整合性を保つ
+- **自動生成**: TypeScriptやその他言語の型定義を自動生成
+- **保守性**: 手書きYAMLに比べて保守・更新が容易
+- **検証**: コンパイル時に構文・型エラーを検出
 
 ## アウトプット出力先
 
 ### 基本方針
+
 APIドキュメントは、APIソースコードと同じワークスペース・ディレクトリ・リポジトリに配置する。これにより、コードとドキュメントの同期が保たれ、開発効率が向上する。
 
 ### 出力先ディレクトリ構造（APIプロジェクト内）
+
 ```
 [api-project-root]/
 ├── src/                       # APIソースコード
@@ -39,6 +101,7 @@ APIドキュメントは、APIソースコードと同じワークスペース�
 ```
 
 ### ファイル命名規則
+
 - **メインTypeSpec**: `specs/main.tsp`
 - **モデル定義**: `specs/models/[リソース名].tsp`
 - **操作定義**: `specs/operations/[機能名].tsp`
@@ -49,6 +112,7 @@ APIドキュメントは、APIソースコードと同じワークスペース�
 ### プロジェクト構成パターン
 
 #### パターン1: モノリスAPI
+
 ```
 api-server/
 ├── src/
@@ -58,6 +122,7 @@ api-server/
 ```
 
 #### パターン2: マイクロサービス（リポジトリ分離）
+
 ```
 user-service/
 ├── src/
@@ -73,6 +138,7 @@ order-service/
 ```
 
 #### パターン3: モノレポ（サービス別ディレクトリ）
+
 ```
 api-services/
 ├── services/
@@ -94,6 +160,7 @@ api-services/
 ### 1. RESTful設計原則の適用
 
 #### 1.1 リソース識別
+
 以下の原則に従ってリソースを識別する：
 
 - **名詞でリソースを表現**: 動詞ではなく名詞を使用
@@ -102,6 +169,7 @@ api-services/
 - **一意性の確保**: リソースIDによる一意識別
 
 #### 1.2 HTTPメソッドの適切な使用
+
 ```
 # リソース操作の標準パターン
 GET    /api/v1/users           # ユーザー一覧取得
@@ -113,6 +181,7 @@ DELETE /api/v1/users/{id}      # ユーザー削除
 ```
 
 #### 1.3 ステータスコードの標準化
+
 - **2xx成功**: 200 OK, 201 Created, 204 No Content
 - **4xxクライアントエラー**: 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 422 Unprocessable Entity
 - **5xxサーバーエラー**: 500 Internal Server Error, 502 Bad Gateway, 503 Service Unavailable
@@ -120,9 +189,11 @@ DELETE /api/v1/users/{id}      # ユーザー削除
 ### 2. TypeSpec仕様書作成
 
 #### 2.1 基本構成作成
+
 `specs/main.tsp` にサービス定義、`specs/models/` にモデル、`specs/operations/` に操作を作成。
 
 #### 2.2 OpenAPI生成
+
 ```bash
 tsp compile specs/main.tsp --emit @typespec/openapi3
 ```
@@ -130,12 +201,14 @@ tsp compile specs/main.tsp --emit @typespec/openapi3
 ### 3. データスキーマ設計
 
 #### 3.1 型システムの定義
+
 - **プリミティブ型**: string, number, integer, boolean
 - **複合型**: object, array
 - **フォーマット**: date, date-time, email, uri, uuid
 - **制約**: required, minimum, maximum, minLength, maxLength, pattern
 
 #### 3.2 バリデーション仕様
+
 ```yaml
 UserCreateRequest:
   type: object
@@ -165,6 +238,7 @@ UserCreateRequest:
 ### 4. エラーハンドリング設計
 
 #### 4.1 統一エラーレスポンス形式
+
 ```yaml
 ErrorResponse:
   type: object
@@ -208,6 +282,7 @@ ErrorResponse:
 ```
 
 #### 4.2 エラーコード体系
+
 ```yaml
 # バリデーションエラー（4xx）
 VALIDATION_ERROR:        # 400 - 一般的なバリデーションエラー
@@ -235,6 +310,7 @@ EXTERNAL_SERVICE_ERROR:  # 502 - 外部サービスエラー
 ### 5. セキュリティ仕様
 
 #### 5.1 認証・認可
+
 ```yaml
 components:
   securitySchemes:
@@ -259,6 +335,7 @@ security:
 ```
 
 #### 5.2 入力検証
+
 - **SQLインジェクション対策**: パラメータ化クエリ必須
 - **XSS対策**: 出力時エスケープ必須
 - **CSRF対策**: SameSite Cookie + CSRFトークン
@@ -267,6 +344,7 @@ security:
 ### 6. パフォーマンス設計
 
 #### 6.1 ページネーション
+
 ```yaml
 parameters:
   - name: page
@@ -297,6 +375,7 @@ responses:
 ```
 
 #### 6.2 フィルタリング・ソート
+
 ```yaml
 parameters:
   - name: filter
@@ -317,11 +396,13 @@ parameters:
 ### 7. バージョニング戦略
 
 #### 7.1 APIバージョニング方式
+
 - **URLパス方式**: `/api/v1/users` (推奨)
 - **ヘッダー方式**: `Accept: application/vnd.api+json;version=1`
 - **パラメータ方式**: `/api/users?version=1`
 
 #### 7.2 後方互換性ガイドライン
+
 - **破壊的変更**: メジャーバージョンアップ
 - **非破壊的変更**: マイナーバージョンアップ
 - **バグ修正**: パッチバージョンアップ
@@ -329,11 +410,13 @@ parameters:
 ### 8. ドキュメント生成と配置
 
 #### 8.1 自動生成ツール連携
+
 - **Swagger UI**: インタラクティブAPI仕様書（`docs/api/openapi.yaml`から生成）
 - **Redoc**: 静的API仕様書（CI/CDで自動生成・デプロイ）
 - **Postman Collection**: テスト用コレクション生成
 
 #### 8.2 CI/CDパイプライン統合
+
 ```yaml
 # .github/workflows/api-docs.yml 例
 name: API Documentation
@@ -354,6 +437,7 @@ jobs:
 ```
 
 #### 8.3 サンプルコード生成
+
 ```yaml
 # リクエスト例
 examples:
