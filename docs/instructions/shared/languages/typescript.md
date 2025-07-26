@@ -10,12 +10,14 @@
 - string型は可能な限りUnion型でパターン化する
 - ユーティリティ型を最大限駆使して型の再利用を図る
 - 型推論を活用し、冗長な型注釈を避ける
+- **型エラー解決時**: 5回の解決試行後、解決できない場合はユーザーに状況報告する
 
 ## 厳密な型定義
 
 ### 1. 絶対禁止事項
 
 #### 1.1 any型の禁止
+
 ```typescript
 // ❌ 絶対禁止
 function processData(data: any): any {
@@ -37,6 +39,7 @@ function processUnknownData(data: unknown): string {
 ```
 
 #### 1.2 型アサーション(as)の禁止
+
 ```typescript
 // ❌ 絶対禁止
 const userData = response.data as User;
@@ -68,6 +71,7 @@ if (element instanceof HTMLElement) {
 ```
 
 #### 1.3 Non-null assertion(!.)の禁止
+
 ```typescript
 // ❌ 絶対禁止
 const user = getUser()!;
@@ -89,6 +93,7 @@ const name = getUser()?.name?.toUpperCase();
 ### 2. Union型によるstring制限
 
 #### 2.1 リテラル型の活用
+
 ```typescript
 // ❌ 汎用的すぎる型
 interface User {
@@ -110,6 +115,7 @@ interface User {
 ```
 
 #### 2.2 const assertionの活用
+
 ```typescript
 // ✅ const assertionによる型の厳密化
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE'] as const;
@@ -124,6 +130,7 @@ type ApiEndpoint = typeof API_ENDPOINTS[keyof typeof API_ENDPOINTS];
 ```
 
 #### 2.3 テンプレートリテラル型の活用
+
 ```typescript
 // ✅ テンプレートリテラル型による動的Union型
 type EventType = 'click' | 'scroll' | 'resize';
@@ -138,6 +145,7 @@ type ApiRoute = `/api/${string}`;
 ### 3. 型の再利用戦略
 
 #### 3.1 基本ユーティリティ型
+
 ```typescript
 interface User {
   id: string;
@@ -162,6 +170,7 @@ type RequiredUser = Required<Partial<User>>;
 ```
 
 #### 3.2 高度なユーティリティ型の組み合わせ
+
 ```typescript
 // ✅ 複数ユーティリティ型の組み合わせ
 type UserCreateInput = Omit<User, 'id' | 'createdAt' | 'updatedAt'>;
@@ -177,6 +186,7 @@ type ApiResponse<T> = {
 ```
 
 #### 3.3 カスタムユーティリティ型
+
 ```typescript
 // ✅ 再利用可能なカスタムユーティリティ型
 type DeepReadonly<T> = {
@@ -208,6 +218,7 @@ type NumberKeys = KeysOfType<User, number>; // 'age'
 ### 4. tsconfig.json設定
 
 #### 4.1 厳密設定
+
 ```json
 {
   "compilerOptions": {
@@ -228,6 +239,7 @@ type NumberKeys = KeysOfType<User, number>; // 'age'
 ```
 
 #### 4.2 推奨設定
+
 ```json
 {
   "compilerOptions": {
@@ -248,6 +260,7 @@ type NumberKeys = KeysOfType<User, number>; // 'age'
 ### 5. ESLint設定
 
 #### 5.1 TypeScript ESLint Rules
+
 ```json
 {
   "extends": [
@@ -274,9 +287,10 @@ type NumberKeys = KeysOfType<User, number>; // 'age'
 ### 6. エラーハンドリング
 
 #### 6.1 Result型パターン
+
 ```typescript
 // ✅ Result型による型安全なエラーハンドリング
-type Result<T, E = Error> = 
+type Result<T, E = Error> =
   | { success: true; data: T }
   | { success: false; error: E };
 
@@ -292,9 +306,9 @@ async function fetchUser(id: string): Promise<Result<User>> {
     }
     return { success: false, error: new Error('Invalid user data') };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error : new Error('Unknown error') 
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error('Unknown error')
     };
   }
 }
@@ -309,6 +323,7 @@ if (result.success) {
 ```
 
 #### 6.2 Either型パターン
+
 ```typescript
 // ✅ Either型による関数型アプローチ
 type Either<L, R> = Left<L> | Right<R>;
@@ -330,6 +345,7 @@ function parseJSON<T>(str: string): Either<Error, T> {
 ### 7. 状態管理の型安全性
 
 #### 7.1 Discriminated Union
+
 ```typescript
 // ✅ 判別可能なUnion型による状態管理
 type LoadingState = { status: 'loading' };
@@ -357,6 +373,7 @@ function handleState(state: DataState) {
 ### 8. 関数の型安全性
 
 #### 8.1 関数オーバーロード
+
 ```typescript
 // ✅ 関数オーバーロードによる型安全性
 function createElement(tag: 'div'): HTMLDivElement;
@@ -372,6 +389,7 @@ const span = createElement('span'); // HTMLSpanElement
 ```
 
 #### 8.2 高階関数の型安全性
+
 ```typescript
 // ✅ 高階関数の適切な型定義
 function createValidator<T>(
@@ -379,7 +397,7 @@ function createValidator<T>(
 ): (obj: unknown) => obj is T {
   return (obj): obj is T => {
     if (typeof obj !== 'object' || obj === null) return false;
-    
+
     return Object.entries(schema).every(([key, validator]) => {
       const value = (obj as Record<string, unknown>)[key];
       return validator(value);
@@ -400,6 +418,7 @@ const isUser = createValidator<User>({
 ### 9. 型レベルでの最適化
 
 #### 9.1 mapped typesの効率的使用
+
 ```typescript
 // ✅ 効率的なmapped types
 type OptionalExcept<T, K extends keyof T> = Partial<T> & Pick<T, K>;
@@ -409,16 +428,17 @@ type UserUpdate = OptionalExcept<User, 'id'>;
 ```
 
 #### 9.2 conditional typesによる最適化
+
 ```typescript
 // ✅ 条件付き型による最適化
-type ApiMethod<T extends string> = T extends `get${string}` 
-  ? 'GET' 
-  : T extends `post${string}` 
-  ? 'POST' 
-  : T extends `put${string}` 
-  ? 'PUT' 
-  : T extends `delete${string}` 
-  ? 'DELETE' 
+type ApiMethod<T extends string> = T extends `get${string}`
+  ? 'GET'
+  : T extends `post${string}`
+  ? 'POST'
+  : T extends `put${string}`
+  ? 'PUT'
+  : T extends `delete${string}`
+  ? 'DELETE'
   : never;
 
 type GetUserMethod = ApiMethod<'getUser'>; // 'GET'
@@ -430,6 +450,7 @@ type CreateUserMethod = ApiMethod<'postUser'>; // 'POST'
 ### 10. ファイル構成
 
 #### 10.1 型定義ファイルの配置
+
 ```
 src/
 ├── types/
@@ -446,6 +467,7 @@ src/
 ```
 
 #### 10.2 index.tsでの型エクスポート
+
 ```typescript
 // types/index.ts
 export type { User, UserCreate, UserUpdate } from './domain/user';
@@ -461,6 +483,7 @@ export { isUser, isApiResponse } from '../utils/type-guards';
 ### 11. 型安全なテスト
 
 #### 11.1 型レベルテスト
+
 ```typescript
 // ✅ 型レベルでのテスト
 type Expect<T extends true> = T;
@@ -476,16 +499,17 @@ type Test = [
 ```
 
 #### 11.2 ランタイムテスト
+
 ```typescript
 // ✅ 型ガードのテスト
 describe('Type Guards', () => {
   test('isUser should validate user object', () => {
     const validUser = { id: '1', name: 'John', email: 'john@example.com' };
     const invalidUser = { id: '1', name: 'John' }; // email missing
-    
+
     expect(isUser(validUser)).toBe(true);
     expect(isUser(invalidUser)).toBe(false);
-    
+
     if (isUser(validUser)) {
       // この中では validUser は User 型として扱える
       expect(validUser.email).toBeDefined();
