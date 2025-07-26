@@ -17,3 +17,4 @@
 - 開発ワークフロー: [./workflow/README.md](./workflow/README.md)
 - 言語固有の開発: [./languages/README.md](./languages/README.md)
 - ツール操作: [./tools/README.md](./tools/README.md)
+- リポジトリ設定: [./repository-setup.md](./repository-setup.md)
