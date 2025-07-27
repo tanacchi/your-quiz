@@ -15,8 +15,6 @@ graph TB
     %% Client Layer
     Browser[📱 スマートフォンブラウザ<br/>PWA対応]
 
-    %% CDN Layer
-    CDN[🌐 CDN<br/>Vercel Edge Network]
 
     %% Application Layer
     Frontend[⚙️ Next.js Frontend<br/>App Router + PWA]
@@ -35,21 +33,17 @@ graph TB
     Admin -->|管理画面アクセス| Browser
 
     %% Client to Services
-    Browser -->|HTTPS Request| CDN
     Browser <-->|オフライン同期| Cache
 
-    %% CDN to Application
-    CDN -->|Cache Miss<br/>Static Assets| Frontend
-
-    %% Browser to Frontend (Ajax)
-    Browser -->|Ajax Request<br/>JSON over HTTPS| Frontend
+    %% Browser to Frontend (Direct)
+    Browser -->|HTTPS Request<br/>JSON over HTTPS| Frontend
 
     %% Frontend to API (Proxy)
     Frontend -->|API Proxy<br/>Server-side Request| API
 
     %% API to Data
     API <-->|Drizzle ORM<br/>SQL Queries| DB
-    API -->|回答履歴同期| Cache
+    Frontend -->|回答履歴同期| Cache
 
     %% Future Integrations (Dotted Lines)
     API -.->|OAuth 2.0<br/>将来実装| AuthService
@@ -78,5 +72,5 @@ graph TB
     class User,Admin userClass
     class Browser,Frontend,API appClass
     class DB,Cache dataClass
-    class CDN,AuthService,NotificationService externalClass
+    class AuthService,NotificationService externalClass
 ```

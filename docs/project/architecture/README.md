@@ -43,7 +43,7 @@
 
 ### 6. non-functional-requirements（非機能要件）
 
-- **ファイル**: `non-functional-requirements.md`
+- **ファイル**: [non-functional-requirements.md](./non-functional-requirements.md)
 - **内容**: 性能（100ms応答）、スケーラビリティ、セキュリティ要件
 - **目的**: システムの品質要求と制約条件を把握
 
@@ -63,7 +63,7 @@
 
 - Framework: Next.js 15 (App Router)
 - Styling: Tailwind CSS
-- State: Zustand
+- State: Jotai
 - Language: TypeScript
 
 ### バックエンド

@@ -29,45 +29,13 @@
 
 ### RESTful API設計
 
-#### エンドポイント設計
+#### 設計原則
 
-| リソース | HTTP Method | エンドポイント | 説明 | レスポンス時間 |
-|----------|-------------|----------------|------|---------------|
-| **クイズ** | GET | `/api/quizzes` | クイズ一覧取得（タグフィルタ対応） | 100ms |
-| **クイズ** | GET | `/api/quizzes/{id}` | 個別クイズ取得 | 50ms |
-| **クイズ** | POST | `/api/quizzes` | クイズ作成（承認待ち） | 200ms |
-| **回答** | POST | `/api/quizzes/{id}/answers` | 回答提出 | 100ms |
-| **履歴** | GET | `/api/answers/history` | 回答履歴取得 | 150ms |
-| **管理** | PATCH | `/api/admin/quizzes/{id}` | クイズ承認・非承認 | 200ms |
+**注意**: 具体的なエンドポイント設計・データ形式の詳細定義はAPI設計工程で実施します。ここでは設計方針のみを記述します。
 
-#### データ形式標準化
-
-```typescript
-// 統一レスポンス形式
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
-  metadata?: {
-    timestamp: string;
-    requestId: string;
-  };
-}
-
-// ページネーション対応
-interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    hasNext: boolean;
-  };
-}
-```
+- **RESTful設計**: 名詞リソース、適切なHTTPメソッド使用
+- **統一レスポンス形式**: 成功・エラー共通形式での応答
+- **レスポンス時間要件**: 各操作種別ごとの性能目標設定
 
 ### エラーハンドリング戦略
 

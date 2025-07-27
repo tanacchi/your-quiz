@@ -10,9 +10,15 @@
 
 ## 作業前必須確認
 
-### ツール・言語固有指示の確認手順
+### 工程スコープ確認
 
 作業開始前に以下を必ず確認：
+
+1. **スコープ範囲確認**: `docs/instructions/shared/workflow/scope-confirmation.md` に従い、今回の工程で作成すべき内容と除外すべき内容を明確化
+2. **境界判断迷い時**: 自己判断せず、具体例を示して指示者に問い合わせ
+3. **詳細度の基準**: 「実装に直接使える内容」は後続工程で扱う原則を確認
+
+### ツール・言語固有指示の確認手順
 
 1. **tools/配下確認**: CLIツール実行前に `docs/instructions/shared/tools/[ツール名].md` 存在確認
 2. **languages/配下確認**: 言語ファイル操作前に `docs/instructions/shared/languages/[言語名].md` 存在確認
