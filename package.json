@@ -7,7 +7,7 @@
     "npm-run-all2": "^8.0.4"
   },
   "scripts": {
-    "lint:md": "markdownlint-cli2",
+    "lint:md": "sh ./scripts/lint-md.sh",
     "format:md": "markdownlint-cli2 --fix",
     "lint": "run-p lint:*",
     "format": "run-p format:*",
