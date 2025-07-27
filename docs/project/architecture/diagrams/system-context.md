@@ -40,10 +40,12 @@ graph TB
 
     %% CDN to Application
     CDN -->|Cache Miss<br/>Static Assets| Frontend
-    CDN -->|API Calls| API
 
-    %% Frontend to API
-    Frontend -->|REST API<br/>JSON over HTTPS| API
+    %% Browser to Frontend (Ajax)
+    Browser -->|Ajax Request<br/>JSON over HTTPS| Frontend
+
+    %% Frontend to API (Proxy)
+    Frontend -->|API Proxy<br/>Server-side Request| API
 
     %% API to Data
     API <-->|Drizzle ORM<br/>SQL Queries| DB
