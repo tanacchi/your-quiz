@@ -11,8 +11,7 @@
 - コミット・PR前に必ず以下コマンドでチェックを実施すること
 
 ```bash
-pnpm exec markdownlint-cli2 "**/*.md"
-pnpm run lint:md # (scriptsでmarkdownlint-cli2を使うこと)
+pnpm run lint:md
 ```
 
 - エラー・警告が出た場合は必ず修正し、再度チェックを通すこと
