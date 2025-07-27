@@ -68,6 +68,7 @@ Your Quizは、ユーザーが投稿したクイズを楽しめるモバイル�
 - [技術選定](docs/project/architecture/tech-selection.md) - 採用技術とその理由
 - [アーキテクチャパターン](docs/project/architecture/adr/0001-architecture-pattern.md) - システム設計の方針
 - [データアーキテクチャ](docs/project/architecture/data-architecture.md) - データ設計と一貫性方針
+- [非機能要件](docs/project/architecture/non-functional-requirements.md) - パフォーマンス・可用性要件
 
 ### 技術決定記録 (ADR)
 - [ADR-0003: フロントエンドフレームワーク](docs/project/architecture/adr/0003-frontend-framework.md)
@@ -76,6 +77,8 @@ Your Quizは、ユーザーが投稿したクイズを楽しめるモバイル�
 - [ADR-0010: バリデーションライブラリ](docs/project/architecture/adr/0010-validation-library.md)
 - [ADR-0011: HTTPクライアント](docs/project/architecture/adr/0011-http-client.md)
 - [ADR-0012: データベースホスティング](docs/project/architecture/adr/0012-database-hosting.md)
+- [ADR-0013: フロントエンドホスティング](docs/project/architecture/adr/0013-frontend-hosting.md)
+- [ADR-0014: APIホスティング](docs/project/architecture/adr/0014-api-hosting.md)
 
 ### 設計図
 - [システムコンテキスト図](docs/project/architecture/diagrams/system-context.md)
