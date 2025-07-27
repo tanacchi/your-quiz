@@ -22,35 +22,68 @@ Accepted
 ## Decision
 
 ### Chosen Option
-**PostgreSQL（Neon等）+ Cloudflare Hyperdrive**
+**SQLite + Cloudflare D1**
 
-データベースリプレースの困難さとPostgreSQL互換性の重要性を重視し、PostgreSQL + Hyperdrive構成を採用する。
+**方針転換**: 当初PostgreSQL互換性を重視したが、クイズアプリの要件分析の結果、運用の統一性・パフォーマンス・コスト効率を優先してSQLite + D1構成を採用する。
 
-**理由**: D1はSQLiteベースでPostgreSQL直接互換なし。Cloudflare HyperdriveでPostgreSQLの高速アクセスが可能。
+**理由**: 
+1. シンプルなCRUD処理が中心でPostgreSQL高機能は不要
+2. Cloudflare Workers統合による運用統一とパフォーマンス向上
+3. 無料枠（25GB）での十分な運用可能性
+4. エッジDB配置による100ms要件確実達成
 
 ### Alternatives Considered
 
 | データベース | メリット | デメリット | PostgreSQL互換性 | 運用コスト | 学習曲線 | リプレース容易性 | 判定 |
 |-------------|----------|------------|------------------|------------|----------|------------------|------|
-| **PostgreSQL + Hyperdrive** | **・PostgreSQL完全互換**<br>**・業界標準SQL**<br>**・豊富なエコシステム**<br>**・リプレース容易**<br>**・Cloudflareエッジ最適化**<br>**・型安全性** | **・設定複雑**<br>**・Hyperdrive学習コスト**<br>**・複数サービス管理** | **★★★（完全）** | **中** | **中** | **★★★** | **○** |
-| D1 (SQLite) | ・Cloudflare統合<br>・エッジ配置<br>・SQLite互換<br>・無料枠大<br>・設定シンプル<br>・超高速 | ・PostgreSQL互換なし<br>・機能制限<br>・新サービス<br>・分析クエリ弱<br>・リプレース困難 | ★（変換必要） | 低 | 低 | ★ | △ |
+| **D1 (SQLite)** | **・Cloudflare Workers完全統合**<br>**・エッジDB配置による超高速**<br>**・無料枠大（25GB）**<br>**・設定・運用シンプル**<br>**・単一プラットフォーム管理**<br>**・100ms要件確実達成** | **・PostgreSQL互換なし**<br>**・SQLite機能制限**<br>**・将来移行時の変換コスト**<br>**・分析クエリ弱** | **★（変換必要）** | **低** | **低** | **★** | **○** |
+| PostgreSQL + Hyperdrive | ・PostgreSQL完全互換<br>・業界標準SQL<br>・豊富なエコシステム<br>・リプレース容易<br>・型安全性 | ・設定複雑<br>・Hyperdrive学習コスト<br>・複数サービス管理<br>・運用負荷高<br>・コスト高 | ★★★（完全） | 中 | 中 | ★★★ | △ |
 | Neon PostgreSQL | ・Serverless PostgreSQL<br>・ブランチング<br>・自動スケール<br>・PostgreSQL互換<br>・モダン設計 | ・新しいサービス<br>・レイテンシ<br>・制限あり<br>・エッジ最適化なし | ★★★（完全） | 中 | 中 | ★★★ | △ |
 | PlanetScale MySQL | ・ブランチング<br>・自動スケール<br>・企業実績<br>・エッジ対応 | ・MySQL制約<br>・高コスト<br>・PostgreSQL互換なし<br>・移行複雑 | ★（変換必要） | 高 | 高 | ★★ | △ |
 | Railway PostgreSQL | ・統合管理<br>・シンプル設定<br>・PostgreSQL互換<br>・自動バックアップ | ・単一AZ<br>・制限あり<br>・エッジ最適化なし<br>・パフォーマンス制限 | ★★★（完全） | 中 | 中 | ★★★ | △ |
 
+### クイズアプリ要件への再評価
+
+| 要件 | PostgreSQL重要度 | SQLite適合性 | 判定 |
+|------|------------------|-------------|------|
+| **シンプルCRUD** | 低（オーバースペック） | 高（十分） | SQLite◎ |
+| **100ms要件** | 中（Hyperdrive必要） | 高（エッジDB） | SQLite◎ |
+| **小規模チーム運用** | 低（複雑性） | 高（シンプル） | SQLite◎ |
+| **無料運用** | 低（コスト発生） | 高（25GB無料） | SQLite◎ |
+| **Cloudflare統合** | 中（複数サービス） | 高（完全統合） | SQLite◎ |
+| **将来PostgreSQL移行** | 高（互換性） | 低（変換必要） | PostgreSQL○ |
+
+**結論**: クイズアプリの現在要件ではSQLiteが圧倒的に適合。将来移行リスクよりも現在の運用効率を優先。
+
 ## Consequences
 
 ### Positive
-- **PostgreSQL完全互換**: 業界標準のSQL機能・エコシステム活用
-- **リプレース容易性**: 将来の移行時の技術的負債最小化
-- **豊富なエコシステム**: ORM（Drizzle・Prisma）・ツール・ライブラリ対応
-- **Cloudflareエッジ最適化**: Hyperdriveによる高速アクセス
-- **型安全性**: PostgreSQLの厳密な型システム
-- **長期運用**: 安定性・実績・コミュニティサポート
+- **運用統一性**: Cloudflare Workers + D1の単一プラットフォーム管理
+- **圧倒的高速性**: エッジDB配置による100ms要件余裕達成
+- **コスト効率**: 25GB無料枠での十分な運用（数年分のデータ）
+- **設定シンプル**: 複雑な接続設定・認証管理が不要
+- **小規模チーム適合**: 学習コスト・運用負荷の最小化
+- **Cloudflare統合**: Workers・D1・CDNの完全な連携最適化
 
 ### Negative
-- **設定複雑性**: PostgreSQL + Hyperdrive の複数サービス管理
-- **学習コスト**: Hyperdrive設定・最適化の理解必要
+- **PostgreSQL互換性放棄**: 将来移行時のSQL変換・データ移行コスト
+- **SQLite機能制限**: 複雑クエリ・分析機能・並行書き込み制限
+- **新技術リスク**: D1の成熟度・長期サポート・ベンダーロック
+- **エコシステム制約**: PostgreSQL特化ツール・ライブラリの利用不可
+- **スケーラビリティ上限**: SQLiteの同時接続・データサイズ制限
+
+### 移行戦略（将来PostgreSQL必要時）
+
+**段階的移行計画**:
+1. **Phase 1**: SQLiteスキーマをPostgreSQL互換で設計
+2. **Phase 2**: データ変換ツール・ETLパイプライン構築  
+3. **Phase 3**: 段階的データ移行・検証・切り替え
+4. **Phase 4**: アプリケーション設定変更・テスト
+
+**技術的負債軽減策**:
+- Drizzle ORM: SQLite・PostgreSQL両対応
+- 標準SQL使用: DB固有機能への依存最小化
+- 移行時期判断: データ量・複雑性・チーム規模の閾値設定
 - **運用コスト**: D1と比較した費用増加（無料枠内でも制限）
 - **初期設定**: データベース・Hyperdrive・認証の統合設定
 
@@ -117,4 +150,4 @@ CREATE TABLE answers (
 **Created**: 2025-01-27
 **Last Updated**: 2025-01-27
 **Authors**: Claude
-**Reviewers**: TBD
+**Reviewers**: [@tanacchi](https://github.com/tanacchi)

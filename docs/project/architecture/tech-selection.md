@@ -39,9 +39,9 @@
 
 ### データベース選定
 
-**選定結果**: PostgreSQL (Neon等) + Cloudflare Hyperdrive
+**選定結果**: SQLite + Cloudflare D1
 
-**選定理由**: データベースリプレースの困難さとPostgreSQL互換性の重要性を重視。D1はSQLiteベースでPostgreSQL直接互換なし。Cloudflare HyperdriveでPostgreSQLの高速アクセスが可能。
+**選定理由**: クイズアプリの要件がシンプルなCRUD処理中心で、Cloudflare Workers統合による運用統一とパフォーマンス向上を重視。PostgreSQL互換性よりも現在の運用効率を優先。
 
 **詳細な比較検討**: [ADR-0007: データベース選定](adr/0007-database.md)
 
@@ -49,9 +49,9 @@
 
 **選定結果**: Drizzle ORM
 
-**選定理由**: TypeScript特化・軽量・SQL透明性・型安全性が現状の要件に最適。PostgreSQL対応も良好で、パフォーマンス要件を満たす。
+**選定理由**: TypeScript特化・軽量・SQL透明性・型安全性が現状の要件に最適。SQLite + D1での優れた動作実績とパフォーマンス要件を満たす。
 
-**詳細な比較検討**: 関連ADR参照
+**詳細な比較検討**: [ADR-0009: ORM選定](adr/0009-orm-selection.md)
 
 ## インフラ・運用技術選定
 
@@ -97,7 +97,7 @@
 3. 十分な無料枠: 100,000リクエスト/日 + 25GB DB - クイズアプリには十分
 4. クイズアプリの特性: 複雑なクエリ不要、CRUD中心の単純な処理
 5. 運用シンプル: 単一プラットフォームで完結、管理負荷最小
-6. D1はSQLite互換で、将来的なPostgres移行も視野に入る（Neon等）。DBはアプリケーションと違いリプレースが困難なため、初期選定時にPostgres互換性・移行性を重視すること。
+6. **方針転換**: 当初PostgreSQL互換性を重視したが、クイズアプリの要件分析の結果、運用統一とパフォーマンスを優先してSQLite + D1完全採用。
 
 #### 2.4 エラーハンドリングライブラリ
 
@@ -170,7 +170,7 @@
 
 **選定結果**: **D1 Database**（Cloudflare Workers統合）
 
-**選定理由**: SQLite互換でシンプル、25GB無料枠、エッジ配置による高速アクセス
+**選定理由**: SQLite互換でシンプル、25GB無料枠、エッジ配置による高速アクセス、Cloudflare Workers完全統合
 
 ### 開発ツール（Linting・フォーマット）
 
@@ -210,7 +210,7 @@
 **バックエンド**:
 
 - Framework: Hono
-- Database: SQLite → PostgreSQL
+- Database: SQLite (D1)
 - ORM: Drizzle ORM
 - Language: TypeScript
 

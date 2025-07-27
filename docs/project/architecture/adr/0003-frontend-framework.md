@@ -91,4 +91,4 @@ PWA対応によるオフライン機能実装が容易で、スマートフォ�
 **Created**: 2025-01-27
 **Last Updated**: 2025-01-27
 **Authors**: Claude
-**Reviewers**: TBD
+**Reviewers**: [@tanacchi](https://github.com/tanacchi)

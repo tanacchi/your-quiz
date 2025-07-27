@@ -91,4 +91,4 @@ Tinder風UI（スワイプ）実装時のアニメーション・レスポンシ
 **Created**: 2025-01-27
 **Last Updated**: 2025-01-27
 **Authors**: Claude
-**Reviewers**: TBD
+**Reviewers**: [@tanacchi](https://github.com/tanacchi)
