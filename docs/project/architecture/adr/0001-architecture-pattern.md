@@ -89,4 +89,4 @@ Accepted
 **Created**: 2025-07-27
 **Last Updated**: 2025-07-27
 **Authors**: Claude
-**Reviewers**: @tanacchi
+**Reviewers**: [@tanacchi](https://github.com/tanacchi)

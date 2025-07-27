@@ -103,7 +103,7 @@ app.get('/api/quiz', async (c) => {
   const { results } = await c.env.DB.prepare(
     'SELECT * FROM quizzes ORDER BY RANDOM() LIMIT 1'
   ).all()
-  
+
   return c.json(results[0])
 })
 ```

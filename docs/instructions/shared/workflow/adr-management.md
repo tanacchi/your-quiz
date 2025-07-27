@@ -159,6 +159,8 @@ docs/
 **Reviewers**: [レビュー者名]
 ```
 
+ADRのReviewerは原則として[@tanacchi](https://github.com/tanacchi)とする。
+
 #### 2.2 ADRステータスの管理
 
 ##### ステータス種別
