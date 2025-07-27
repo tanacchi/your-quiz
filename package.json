@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
     "markdownlint": "^0.38.0",
     "markdownlint-cli2": "^0.18.1",
     "npm-run-all2": "^8.0.4"
