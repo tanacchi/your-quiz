@@ -14,7 +14,7 @@ sequenceDiagram
     participant A as 🚀 API
     participant D as 📄 Database
 
-    Note over U,I: クイズ検索・回答フロー
+    Note over U: クイズ検索・回答フロー
 
     %% 1. クイズ一覧取得
     U->>B: クイズ一覧表示要求
