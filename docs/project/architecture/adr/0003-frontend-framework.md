@@ -1,16 +1,19 @@
 # ADR-0003: フロントエンドフレームワーク選定
 
 ## Status
+
 Accepted
 
 ## Context
 
 ### Background
+
 - クイズアプリケーションのフロントエンド開発において、フレームワーク選択が必要
 - PWA対応によるオフライン機能実装とスマートフォン最適化が重要
 - TypeScript開発体験の最適化を重視する
 
 ### Drivers
+
 - **PWA対応**: オフライン機能実装が必要
 - **スマートフォン最適化**: メインターゲットがモバイルユーザー
 - **TypeScript統一**: フルスタック開発での一貫性
@@ -20,7 +23,8 @@ Accepted
 ## Decision
 
 ### Chosen Option
-**Next.js 15 (App Router)**
+
+### Next.js 15 (App Router)
 
 PWA対応によるオフライン機能実装が容易で、スマートフォン最適化とTypeScript開発体験が最適であることから、Next.js 15を採用する。
 
@@ -35,6 +39,7 @@ PWA対応によるオフライン機能実装が容易で、スマートフォ�
 ## Consequences
 
 ### Positive
+
 - PWA対応によるオフライン機能実装が容易（Service Worker、Cache API統合）
 - スマートフォン最適化（SSR・画像最適化・レスポンシブ対応）
 - TypeScript開発体験の最適化（型安全性、IntelliSense）
@@ -43,12 +48,14 @@ PWA対応によるオフライン機能実装が容易で、スマートフォ�
 - 豊富なエコシステムとコミュニティサポート
 
 ### Negative
+
 - 設定複雑性による初期学習コスト
 - バンドルサイズが大きくなる可能性
 - シンプルなSPAには潜在的なオーバースペック
 - Next.js特有の設定・制約への依存
 
 ### Neutral
+
 - App Routerによる新しいルーティングパラダイム
 - SSR/SSGの選択肢による適切な最適化
 
@@ -63,6 +70,7 @@ PWA対応によるオフライン機能実装が容易で、スマートフォ�
 ## Implementation Notes
 
 ### Action Items
+
 - [ ] Next.js 15プロジェクト初期設定
 - [ ] PWA設定（Service Worker、Manifest）
 - [ ] TypeScript設定最適化
@@ -70,6 +78,7 @@ PWA対応によるオフライン機能実装が容易で、スマートフォ�
 - [ ] Vercelデプロイ設定
 
 ### 主要機能設定
+
 - **App Router**: 新しいルーティングシステム活用
 - **PWA**: Service Worker + Cache API
 - **TypeScript**: 厳密な型チェック設定
@@ -77,6 +86,7 @@ PWA対応によるオフライン機能実装が容易で、スマートフォ�
 - **Mobile Optimization**: レスポンシブ対応
 
 ### Timeline
+
 - **決定日**: 2025-01-27
 - **実装開始**: フロントエンド開発フェーズ
 - **完了予定**: 基本セットアップ完了時

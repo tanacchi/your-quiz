@@ -1,17 +1,20 @@
 # ADR-0009: ORM選定
 
 ## Status
+
 Accepted
 
 ## Context
 
 ### Background
+
 - **SQLite + Cloudflare D1**を採用したデータベース設計において、ORMの選択が必要
 - TypeScript統一による型安全性と開発体験向上を重視する
 - パフォーマンス要件（API応答時間100ms）への対応が重要
 - Cloudflare Workers環境での最適動作が重要
 
 ### Drivers
+
 - **型安全性**: TypeScriptとの親和性・コンパイル時型チェック
 - **パフォーマンス**: クエリ実行速度・オーバーヘッドの最小化
 - **開発効率**: 学習コスト・設定の容易さ・生産性
@@ -22,7 +25,8 @@ Accepted
 ## Decision
 
 ### Chosen Option
-**Drizzle ORM**
+
+### Drizzle ORM
 
 TypeScript特化・軽量・SQL透明性・型安全性が現状の要件に最適で、PostgreSQL対応も良好でパフォーマンス要件を満たすことから、Drizzle ORMを採用する。
 
@@ -99,11 +103,13 @@ const approvedQuizzes = await db
 #### 将来拡張性考慮
 
 **Drizzle ORM**:
+
 - リレーション機能による複雑クエリ対応
 - マイグレーション管理の継続性
 - エコシステム成長への期待
 
 **Kysely**:
+
 - 極限までの軽量性維持
 - SQL専門知識による高度な最適化
 - パフォーマンスクリティカルな用途対応
@@ -119,6 +125,7 @@ const approvedQuizzes = await db
 5. **PostgreSQL統合**: Cloudflare Hyperdriveとの親和性
 
 **Kyselyを選択しなかった理由**:
+
 - マイグレーション管理の別途対応コスト
 - ORM機能なしによる将来の拡張性制約
 - 極限の軽量性は現要件では過剰最適化
@@ -126,6 +133,7 @@ const approvedQuizzes = await db
 ## Consequences
 
 ### Positive
+
 - TypeScript特化による優れた型安全性とIntelliSense支援
 - 軽量性によるパフォーマンス向上（最小ランタイムオーバーヘッド）
 - SQL透明性による複雑クエリの最適化容易性
@@ -134,6 +142,7 @@ const approvedQuizzes = await db
 - Zodとの連携による型定義の一元管理
 
 ### Negative
+
 - 新しい技術による学習コスト（ドキュメント・事例の限定）
 - エコシステムの制約（プラグイン・ツールの選択肢少）
 - コミュニティサイズによるサポート制限
@@ -141,6 +150,7 @@ const approvedQuizzes = await db
 - 企業採用実績の少なさ
 
 ### Neutral
+
 - SQL知識要求によるチームの技術力依存
 - シンプルな設計による機能制限（複雑なORM機能なし）
 
@@ -155,6 +165,7 @@ const approvedQuizzes = await db
 ## Implementation Notes
 
 ### Action Items
+
 - [ ] Drizzle ORM セットアップとPostgreSQL統合
 - [ ] スキーマ定義設計（型安全なテーブル定義）
 - [ ] マイグレーション設定とワークフロー確立
@@ -162,6 +173,7 @@ const approvedQuizzes = await db
 - [ ] Zodスキーマとの連携設計
 
 ### 技術構成
+
 ```typescript
 // Drizzle設定例 (SQLite + D1)
 import { drizzle } from 'drizzle-orm/d1';
@@ -183,6 +195,7 @@ export const quizzes = sqliteTable('quizzes', {
 ```
 
 ### Timeline
+
 - **決定日**: 2025-07-27
 - **実装開始**: DB設計フェーズ
 - **完了予定**: 基本設定・スキーマ設計完了時

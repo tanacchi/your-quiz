@@ -3,6 +3,7 @@
 ## 📋 プロジェクト概要
 
 ### 技術スタック
+
 - **Frontend**: Next.js 15 (App Router) + TypeScript + Tailwind CSS + Zustand
 - **Backend**: Hono + TypeScript + Cloudflare Workers
 - **Database**: D1 Database (SQLite互換)
@@ -12,6 +13,7 @@
 - **ホスティング**: Vercel (Frontend) + Cloudflare Workers (Backend)
 
 ### アーキテクチャ
+
 - **システム**: モジュラーモノリス
 - **アプリケーション**: ヘキサゴナルアーキテクチャ
 - **通信**: 同期REST API + オフライン対応
@@ -23,6 +25,7 @@
 ### Milestone 1.1: 開発環境セットアップ
 
 #### ✅ 1.1.1 Node.js環境構築
+
 ```bash
 # Node.js 18以上をインストール
 node --version  # v18.0.0以上確認
@@ -33,6 +36,7 @@ pnpm --version
 ```
 
 #### ✅ 1.1.2 GitHubリポジトリ初期化
+
 ```bash
 # GitHubで新しいリポジトリ作成: your-quiz
 git clone https://github.com/[username]/your-quiz.git
@@ -46,6 +50,7 @@ git push origin main
 ```
 
 #### ✅ 1.1.3 モノレポ構造作成
+
 ```bash
 # プロジェクト構造作成
 mkdir -p {frontend,backend,shared,docs}
@@ -86,6 +91,7 @@ pnpm install
 ```
 
 #### ✅ 1.1.4 Biome設定 (Lint/Format統一)
+
 ```bash
 # Biome設定ファイル作成
 cat > biome.json << 'EOF'
@@ -131,6 +137,7 @@ EOF
 ### Milestone 1.2: Shared Types・Utilities作成
 
 #### ✅ 1.2.1 共通型定義パッケージ
+
 ```bash
 cd shared
 mkdir types
@@ -262,6 +269,7 @@ cd ../..
 ```
 
 #### ✅ 1.2.2 共通ユーティリティパッケージ
+
 ```bash
 cd shared
 mkdir utils
@@ -406,6 +414,7 @@ cd ../..
 ### Milestone 1.3: Backend (Cloudflare Workers + Hono) セットアップ
 
 #### ✅ 1.3.1 Cloudflare Workers環境構築
+
 ```bash
 cd backend
 
@@ -450,6 +459,7 @@ pnpm install
 ```
 
 #### ✅ 1.3.2 Wrangler設定
+
 ```bash
 # wrangler.toml設定
 cat > wrangler.toml << 'EOF'
@@ -498,6 +508,7 @@ EOF
 ```
 
 #### ✅ 1.3.3 D1データベースセットアップ
+
 ```bash
 # D1データベース作成
 wrangler d1 create your-quiz-db
@@ -573,6 +584,7 @@ pnpm db:migrate
 ```
 
 #### ✅ 1.3.4 Hono アプリケーション実装
+
 ```bash
 mkdir -p src/{routes,middleware,services,repositories}
 
@@ -1188,6 +1200,7 @@ cd ..
 ### Milestone 1.4: Frontend (Next.js 15) セットアップ
 
 #### ✅ 1.4.1 Next.js プロジェクト作成
+
 ```bash
 cd frontend
 
@@ -1286,6 +1299,7 @@ EOF
 ```
 
 #### ✅ 1.4.2 Tailwind CSS セットアップ
+
 ```bash
 # Tailwind設定
 npx tailwindcss init -p
@@ -1410,6 +1424,7 @@ EOF
 ```
 
 #### ✅ 1.4.3 状態管理 (Zustand) セットアップ
+
 ```bash
 mkdir -p src/{stores,lib,components,hooks}
 
@@ -1779,6 +1794,7 @@ EOF
 ```
 
 #### ✅ 1.4.4 共通コンポーネント作成
+
 ```bash
 mkdir -p src/components/{ui,quiz,layout}
 
@@ -1981,6 +1997,7 @@ cd ..
 ### Milestone 1.5: GitHub Actions CI/CD セットアップ
 
 #### ✅ 1.5.1 ワークフロー設定
+
 ```bash
 mkdir -p .github/workflows
 
@@ -2186,6 +2203,7 @@ EOF
 ### Milestone 2.1: クイズ一覧・詳細表示
 
 #### ✅ 2.1.1 クイズカードコンポーネント
+
 ```bash
 cd frontend/src/components/quiz
 
@@ -2352,6 +2370,7 @@ EOF
 ```
 
 #### ✅ 2.1.2 Tinder UI (スワイプ) コンポーネント
+
 ```bash
 cat > TinderQuiz.tsx << 'EOF'
 'use client';
@@ -2554,6 +2573,7 @@ EOF
 ### Milestone 2.2: クイズ作成機能
 
 #### ✅ 2.2.1 クイズ作成フォーム
+
 ```bash
 cat > CreateQuizForm.tsx << 'EOF'
 'use client';
@@ -2743,6 +2763,7 @@ EOF
 ### Milestone 2.3: 回答履歴機能
 
 #### ✅ 2.3.1 回答履歴コンポーネント
+
 ```bash
 cat > AnswerHistory.tsx << 'EOF'
 'use client';
@@ -2909,6 +2930,7 @@ EOF
 ### Milestone 2.4: Next.js App Router ページ実装
 
 #### ✅ 2.4.1 メインページ実装
+
 ```bash
 cd frontend/src/app
 
@@ -3128,6 +3150,7 @@ cd ../../..
 ### Milestone 2.5: PWA対応・オフライン機能
 
 #### ✅ 2.5.1 PWA設定
+
 ```bash
 cd frontend
 
@@ -3362,6 +3385,7 @@ cd ..
 ### Milestone 3.1: Cloudflare Workers デプロイ
 
 #### ✅ 3.1.1 本番環境設定
+
 ```bash
 cd backend
 
@@ -3393,6 +3417,7 @@ cd ..
 ### Milestone 3.2: Vercel フロントエンドデプロイ
 
 #### ✅ 3.2.1 Vercel設定
+
 ```bash
 cd frontend
 
@@ -3431,6 +3456,7 @@ cd ..
 ### Milestone 3.3: GitHub Secrets設定
 
 #### ✅ 3.3.1 必要なSecret設定
+
 ```bash
 # GitHub Repositoryで以下のSecretsを設定:
 
@@ -3454,6 +3480,7 @@ NEXT_PUBLIC_API_URL="https://your-quiz-api-prod.your-subdomain.workers.dev"
 ### Milestone 4.1: テスト環境構築
 
 #### ✅ 4.1.1 バックエンドテスト
+
 ```bash
 cd backend
 
@@ -3536,6 +3563,7 @@ cd ..
 ```
 
 #### ✅ 4.1.2 フロントエンドテスト
+
 ```bash
 cd frontend
 
@@ -3602,6 +3630,7 @@ cd ..
 ## 🚀 最終チェックリスト
 
 ### ✅ 開発環境確認
+
 - [ ] Node.js 18+ インストール済み
 - [ ] pnpm インストール済み
 - [ ] GitHub リポジトリ作成済み
@@ -3609,6 +3638,7 @@ cd ..
 - [ ] Vercel アカウント作成済み
 
 ### ✅ セットアップ完了確認
+
 - [ ] ルートレベルでの `pnpm install` 成功
 - [ ] `pnpm --filter shared build` 成功
 - [ ] `pnpm --filter backend dev` でローカルサーバー起動
@@ -3618,6 +3648,7 @@ cd ..
 - [ ] `pnpm test` でテスト通過
 
 ### ✅ デプロイ確認
+
 - [ ] Cloudflare Workers デプロイ成功
 - [ ] D1 Database マイグレーション成功
 - [ ] Vercel フロントエンドデプロイ成功
@@ -3625,6 +3656,7 @@ cd ..
 - [ ] 本番環境での動作確認
 
 ### ✅ 機能確認
+
 - [ ] クイズ一覧表示
 - [ ] Tinder UI でのクイズ回答
 - [ ] クイズ作成機能

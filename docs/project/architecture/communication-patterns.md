@@ -14,10 +14,12 @@
 | **将来: データ同期** | **非同期（Queue）** | **オフライン復旧時の大量処理** | **Queue Processing** | **非同期** | **結果整合性** |
 
 ### 選定結果
+
 **採用**: 同期通信（REST API）中心
 **将来拡張**: 非同期通信（Message Queue・Event）
 
 ### 判断基準
+
 - **ユーザー体験**: 即座のフィードバックが学習体験に重要
 - **非機能要件**: API応答時間100ms要件への適合
 - **システム複雑性**: 小規模チームでの運用負荷軽減
@@ -100,11 +102,9 @@ interface QuizRetrievalService {
 
 #### 依存関係ルール
 
-```
 - Quiz Management: 独立（他モジュールに依存しない）
 - Answer History: Quiz Management に依存
 - Shared Services: 全モジュールから利用可能
-```
 
 ### 外部システム連携方針（将来拡張）
 
@@ -130,10 +130,10 @@ interface QuizRetrievalService {
 interface OfflineSync {
   // アプリ起動時の事前ダウンロード
   preloadQuizzes(criteria: PreloadCriteria): Promise<void>;
-  
+
   // オンライン復旧時の同期
   syncPendingAnswers(): Promise<SyncResult>;
-  
+
   // 競合解決
   resolveConflicts(conflicts: DataConflict[]): Promise<void>;
 }
@@ -208,10 +208,10 @@ const CACHE_CONTROL = {
 interface InputValidation {
   // リクエスト時検証
   validateRequest(req: Request): ValidationResult;
-  
+
   // XSS対策
   sanitizeUserInput(input: string): string;
-  
+
   // SQL Injection対策
   validateQueryParams(params: QueryParams): ValidatedParams;
 }

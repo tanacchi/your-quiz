@@ -1,17 +1,20 @@
 # ADR-0007: データベース選定
 
 ## Status
+
 Accepted
 
 ## Context
 
 ### Background
+
 - クイズアプリケーションのデータベース選択が必要
 - **重要**: DBはリプレースが困難なため、将来の拡張性と互換性を重視
 - Cloudflare Workers（Hono）環境での最適動作と100ms応答要件を満たす必要
 - PostgreSQL互換性の確保が長期運用における重要な考慮事項
 
 ### Drivers
+
 - **リプレース困難性**: データベース移行の複雑さとリスク
 - **PostgreSQL互換性**: 業界標準・エコシステム・将来の移行容易性
 - **エッジ最適化**: Cloudflare Workers環境での高速アクセス
@@ -22,11 +25,13 @@ Accepted
 ## Decision
 
 ### Chosen Option
-**SQLite + Cloudflare D1**
+
+### SQLite + Cloudflare D1
 
 **方針転換**: 当初PostgreSQL互換性を重視したが、クイズアプリの要件分析の結果、運用の統一性・パフォーマンス・コスト効率を優先してSQLite + D1構成を採用する。
 
-**理由**: 
+**理由**:
+
 1. シンプルなCRUD処理が中心でPostgreSQL高機能は不要
 2. Cloudflare Workers統合による運用統一とパフォーマンス向上
 3. 無料枠（25GB）での十分な運用可能性
@@ -58,6 +63,7 @@ Accepted
 ## Consequences
 
 ### Positive
+
 - **運用統一性**: Cloudflare Workers + D1の単一プラットフォーム管理
 - **圧倒的高速性**: エッジDB配置による100ms要件余裕達成
 - **コスト効率**: 25GB無料枠での十分な運用（数年分のデータ）
@@ -66,6 +72,7 @@ Accepted
 - **Cloudflare統合**: Workers・D1・CDNの完全な連携最適化
 
 ### Negative
+
 - **PostgreSQL互換性放棄**: 将来移行時のSQL変換・データ移行コスト
 - **SQLite機能制限**: 複雑クエリ・分析機能・並行書き込み制限
 - **新技術リスク**: D1の成熟度・長期サポート・ベンダーロック
@@ -75,12 +82,14 @@ Accepted
 ### 移行戦略（将来PostgreSQL必要時）
 
 **段階的移行計画**:
+
 1. **Phase 1**: SQLiteスキーマをPostgreSQL互換で設計
 2. **Phase 2**: データ変換ツール・ETLパイプライン構築  
 3. **Phase 3**: 段階的データ移行・検証・切り替え
 4. **Phase 4**: アプリケーション設定変更・テスト
 
 **技術的負債軽減策**:
+
 - Drizzle ORM: SQLite・PostgreSQL両対応
 - 標準SQL使用: DB固有機能への依存最小化
 - 移行時期判断: データ量・複雑性・チーム規模の閾値設定
@@ -88,6 +97,7 @@ Accepted
 - **初期設定**: データベース・Hyperdrive・認証の統合設定
 
 ### Neutral
+
 - **パフォーマンス**: Hyperdrive最適化によりエッジレベルの高速化
 - **スケーラビリティ**: PostgreSQLの水平・垂直スケール対応
 
@@ -102,6 +112,7 @@ Accepted
 ## Implementation Notes
 
 ### Action Items
+
 - [ ] PostgreSQL データベース選定（Neon推奨）
 - [ ] Cloudflare Hyperdrive 設定・接続確認
 - [ ] Drizzle ORM PostgreSQL設定
@@ -110,6 +121,7 @@ Accepted
 - [ ] 接続プール・パフォーマンス最適化
 
 ### データベース構成
+
 ```sql
 -- PostgreSQL スキーマ設計例
 CREATE TABLE quizzes (
@@ -130,11 +142,13 @@ CREATE TABLE answers (
 ```
 
 ### Cloudflare Hyperdrive設定
+
 - **接続プール**: 効率的なコネクション管理
 - **キャッシュ**: 頻繁なクエリの結果キャッシュ
 - **レイテンシ最適化**: エッジからの高速アクセス
 
 ### Timeline
+
 - **決定日**: 2025-01-27
 - **実装開始**: データベース設計フェーズ
 - **完了予定**: DB基盤・Hyperdrive設定完了時

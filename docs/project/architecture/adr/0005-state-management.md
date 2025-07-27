@@ -1,17 +1,20 @@
 # ADR-0005: 状態管理ライブラリ選定
 
 ## Status
+
 Accepted
 
 ## Context
 
 ### Background
+
 - クイズアプリケーションのフロントエンド状態管理ライブラリの選択が必要
 - クイズ状態・回答履歴・オフライン同期等の管理が重要
 - TypeScript統一による型安全性と開発体験向上を重視する
 - **2025年最新データ**: Redux依然として最大シェア(1,452万DL/週)、Zustand急成長(854万DL/週)、原子的状態管理の台頭
 
 ### Drivers
+
 - **クイズ状態管理**: 現在問題・回答状況・進捗管理
 - **回答履歴管理**: ローカル・サーバー同期とオフライン対応
 - **TypeScript対応**: 型安全性・IntelliSense・リファクタリング支援
@@ -22,7 +25,8 @@ Accepted
 ## Decision
 
 ### Chosen Option
-**Zustand**
+
+### Zustand
 
 クイズ状態・履歴管理の要件がシンプルで、TypeScriptとの親和性・軽量性・設定容易さが最適であることから、Zustandを採用する。
 
@@ -43,6 +47,7 @@ Accepted
 ## Consequences
 
 ### Positive
+
 - 軽量性によるモバイルパフォーマンス向上（~3KB）
 - TypeScript型安全性とIntelliSense支援
 - 設定・ボイラープレートの最小化による開発効率向上
@@ -54,6 +59,7 @@ Accepted
 - **成長中のエコシステム**: 活発な開発・コミュニティ
 
 ### Negative
+
 - エコシステムの制約（Redux比較でプラグイン・ミドルウェア限定）
 - 複雑状態管理時の制限（大規模になった場合の移行コスト）
 - DevToolsの機能制限（Redux DevToolsほど高機能でない）
@@ -61,6 +67,7 @@ Accepted
 - **企業採用実績**: Reduxほどのエンタープライズ実績なし
 
 ### Neutral
+
 - シンプルなAPI設計による理解容易性
 - 必要十分な機能セットでの要件対応
 
@@ -75,6 +82,7 @@ Accepted
 ## Implementation Notes
 
 ### Action Items
+
 - [ ] Zustand セットアップとNext.js統合
 - [ ] TypeScript型定義設計（Store interfaces）
 - [ ] クイズ状態管理ストア設計
@@ -83,6 +91,7 @@ Accepted
 - [ ] SSR・ハイドレーション対応確認
 
 ### 状態管理設計
+
 ```typescript
 // クイズ状態ストア
 interface QuizStore {
@@ -104,6 +113,7 @@ interface HistoryStore {
 ```
 
 ### Timeline
+
 - **決定日**: 2025-01-27
 - **調査更新**: 2025-07-27（最新トレンド・データ反映）
 - **実装開始**: フロントエンド実装フェーズ
@@ -112,17 +122,20 @@ interface HistoryStore {
 ### 2025年調査結果サマリー
 
 **NPM週間ダウンロード数（2025年）**:
+
 - Redux: 14,526,486 DL/週（業界標準）
 - Zustand: 8,543,642 DL/週（急成長中）
 - Jotai: 1,792,594 DL/週（原子的状態管理）
 - Recoil: 533,741 DL/週（開発停滞）
 
 **バンドルサイズ比較**:
+
 - Zustand: ~3KB (軽量)
 - Jotai: ~4KB (軽量)
 - Redux Toolkit: 大（フル機能セット）
 
 **2025年推奨パターン**:
+
 - **小〜中規模**: Zustand（本プロジェクト該当）
 - **大規模・エンタープライズ**: Redux Toolkit
 - **複雑な状態相互依存**: Jotai

@@ -92,6 +92,7 @@
 
 **選定結果**: Cloudflare Workers + D1 Database
 **選定理由**:
+
 1. HonoはCloudflare Workers向けに設計されており最高の親和性
 2. 100ms要件対応: エッジ実行でコールドスタートなし（~1ms起動）
 3. 十分な無料枠: 100,000リクエスト/日 + 25GB DB - クイズアプリには十分

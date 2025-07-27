@@ -1,17 +1,20 @@
 # ADR-0008: APIホスティング選定
 
 ## Status
+
 Accepted
 
 ## Context
 
 ### Background
+
 - クイズアプリケーションのAPIホスティングプラットフォーム選択が必要
 - Honoフレームワーク使用に最適化されたホスティング環境が重要
 - 費用面（できる限り無料）とパフォーマンス（高速）のバランスを重視
 - 100ms API応答要件の達成が必須
 
 ### Drivers
+
 - **パフォーマンス要件**: 100ms API応答時間の達成
 - **コスト最適化**: 無料枠での運用、最小限のコスト
 - **Hono最適化**: フレームワークとの親和性・最適動作
@@ -22,7 +25,8 @@ Accepted
 ## Decision
 
 ### Chosen Option
-**Cloudflare Workers + D1 Database**
+
+### Cloudflare Workers + D1 Database
 
 HonoがCloudflare Workers向けに設計されており最高の親和性を持ち、エッジ実行でコールドスタートなし（~1ms起動）による100ms要件対応が可能であることから、Cloudflare Workersを採用する。
 
@@ -41,6 +45,7 @@ HonoがCloudflare Workers向けに設計されており最高の親和性を持�
 ## Consequences
 
 ### Positive
+
 - **圧倒的な高速性**: エッジ実行・コールドスタートなし（~1ms起動時間）
 - **100ms要件達成**: グローバルエッジ配信による最適なレイテンシ
 - **Hono最適化**: フレームワーク設計レベルでの親和性・最適化
@@ -49,12 +54,14 @@ HonoがCloudflare Workers向けに設計されており最高の親和性を持�
 - **グローバル配信**: 世界規模でのエッジ配信・高可用性
 
 ### Negative
+
 - **実行時間制限**: 長時間処理には不適（CPUバウンド処理制限）
 - **Node.js制限**: 一部のNode.js機能・ライブラリ使用不可
 - **デバッグ困難**: ローカルデバッグ・ログ取得の制約
 - **ファイルシステムなし**: 一時ファイル作成・永続化不可
 
 ### Neutral
+
 - **Serverless特性**: インフラ管理不要・自動スケール
 - **Web標準API**: モダンなAPIベースの開発
 
@@ -69,6 +76,7 @@ HonoがCloudflare Workers向けに設計されており最高の親和性を持�
 ## Implementation Notes
 
 ### Action Items
+
 - [ ] Cloudflare Workers プロジェクト初期設定
 - [ ] Hono + Workers 統合設定
 - [ ] D1 Database 接続設定
@@ -77,6 +85,7 @@ HonoがCloudflare Workers向けに設計されており最高の親和性を持�
 - [ ] 監視・ログ設定
 
 ### パフォーマンス最適化
+
 ```typescript
 // Cloudflare Workers + Hono 最適化設定
 import { Hono } from 'hono'
@@ -100,11 +109,13 @@ app.get('/api/quiz', async (c) => {
 ```
 
 ### 制約への対応
+
 - **実行時間制限**: CRUD中心の単純処理で対応
 - **Node.js制限**: Web標準API活用、互換ライブラリ使用
 - **デバッグ**: wrangler dev、ログベースデバッグ
 
 ### Timeline
+
 - **決定日**: 2025-01-27
 - **実装開始**: インフラ設定フェーズ
 - **完了予定**: デプロイ環境構築完了時

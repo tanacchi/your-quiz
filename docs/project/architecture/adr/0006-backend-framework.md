@@ -1,16 +1,19 @@
 # ADR-0006: バックエンドAPIフレームワーク選定
 
 ## Status
+
 Accepted
 
 ## Context
 
 ### Background
+
 - クイズアプリケーションのバックエンドAPIフレームワーク選択が必要
 - API応答時間100ms要件とシンプルなCRUD中心の処理が主要な考慮事項
 - TypeScript統一による開発体験向上とCloudflare Workers最適化を重視する
 
 ### Drivers
+
 - **パフォーマンス要件**: API応答時間100ms以内の達成
 - **技術統一**: TypeScriptフルスタック開発
 - **アーキテクチャ適合**: ヘキサゴナルアーキテクチャ対応
@@ -21,7 +24,8 @@ Accepted
 ## Decision
 
 ### Chosen Option
-**Hono**
+
+### Hono
 
 API応答時間100ms要件への最適化、TypeScriptファーストの開発体験、シンプルなAPI要件（CRUD中心）への適合性から、Honoを採用する。
 
@@ -37,6 +41,7 @@ API応答時間100ms要件への最適化、TypeScriptファーストの開発�
 ## Consequences
 
 ### Positive
+
 - 超軽量（~12KB）によるエッジ環境での高速起動・実行
 - TypeScriptファースト設計による型安全性と開発体験
 - Cloudflare Workers最適化による100ms応答要件の達成
@@ -45,12 +50,14 @@ API応答時間100ms要件への最適化、TypeScriptファーストの開発�
 - 設定・ボイラープレートの最小化
 
 ### Negative
+
 - エコシステムの制約（プラグイン・ミドルウェア限定）
 - 実績・コミュニティの小ささによる情報不足
 - 複雑なビジネスロジック実装時の制限
 - エンタープライズ機能（認証・認可・監査等）の制限
 
 ### Neutral
+
 - モダンなWeb標準APIベースの設計
 - 必要十分な機能セットでの要件対応
 
@@ -65,6 +72,7 @@ API応答時間100ms要件への最適化、TypeScriptファーストの開発�
 ## Implementation Notes
 
 ### Action Items
+
 - [ ] Hono プロジェクト初期設定
 - [ ] Cloudflare Workers デプロイ設定
 - [ ] TypeScript設定最適化
@@ -73,6 +81,7 @@ API応答時間100ms要件への最適化、TypeScriptファーストの開発�
 - [ ] エラーハンドリング・ミドルウェア実装
 
 ### アーキテクチャ設計
+
 ```typescript
 // Honoアプリケーション構造
 import { Hono } from 'hono'
@@ -93,11 +102,13 @@ app.get('/api/quiz', async (c) => {
 ```
 
 ### パフォーマンス最適化
+
 - **エッジ実行**: Cloudflare Workers でのコールドスタート最小化
 - **軽量化**: 最小限の依存関係でバンドルサイズ削減
 - **型安全性**: TypeScript厳密モードでの実行時エラー防止
 
 ### Timeline
+
 - **決定日**: 2025-01-27
 - **実装開始**: バックエンド開発フェーズ
 - **完了予定**: API基盤構築完了時
