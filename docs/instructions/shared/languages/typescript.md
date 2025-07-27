@@ -441,6 +441,7 @@ type ApiMethod<T extends string> = T extends `get${string}`
   ? 'DELETE'
   : never;
 
+type CreateUserMethod = ApiMethod<'postUser'>; // 'POST'
 type GetUserMethod = ApiMethod<'getUser'>; // 'GET'
 type CreateUserMethod = ApiMethod<'postUser'>; // 'POST'
 ```
@@ -451,7 +452,7 @@ type CreateUserMethod = ApiMethod<'postUser'>; // 'POST'
 
 #### 10.1 型定義ファイルの配置
 
-```
+```text
 src/
 ├── types/
 │   ├── index.ts          # 共通型のエクスポート

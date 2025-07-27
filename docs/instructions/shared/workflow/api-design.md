@@ -23,6 +23,7 @@
 **基本方針**: APIドキュメントは `docs/project/api/` ディレクトリに配置し、プロジェクトドキュメント体系として整理する
 
 **ファイル命名規則**:
+
 - **メインTypeSpec**: `specs/main.tsp`
 - **モデル定義**: `specs/models/{リソース名}.tsp`
 - **操作定義**: `specs/operations/{機能名}.tsp`
@@ -33,12 +34,14 @@
 ### 1. RESTful設計原則適用
 
 **リソース識別原則**:
+
 - **名詞でリソース表現**: 動詞ではなく名詞を使用せよ
 - **階層構造の活用**: 関連リソースは階層で表現せよ
 - **複数形の使用**: コレクションリソースは複数形使用せよ
 - **一意性の確保**: リソースIDによる一意識別実施せよ
 
 **HTTPメソッド使用原則**:
+
 - GET /api/v1/users - 一覧取得
 - POST /api/v1/users - 作成
 - PUT /api/v1/users/{id} - 全体更新
@@ -46,6 +49,7 @@
 - DELETE /api/v1/users/{id} - 削除
 
 **ステータスコード標準化**:
+
 - **2xx成功**: 200 OK, 201 Created, 204 No Content
 - **4xxクライアントエラー**: 400, 401, 403, 404, 409, 422
 - **5xxサーバーエラー**: 500, 502, 503
@@ -59,6 +63,7 @@
 ### 3. データスキーマ設計
 
 **型システム定義必須項目**:
+
 - プリミティブ型: string, number, integer, boolean
 - 複合型: object, array
 - フォーマット: date, date-time, email, uri, uuid
@@ -69,6 +74,7 @@
 **統一エラーレスポンス形式必須**: error.code, error.message, error.detailsの構造で統一せよ
 
 **エラーコード体系定義必須**:
+
 - **バリデーションエラー（4xx）**: VALIDATION_ERROR, FORMAT_INVALID, REQUIRED_FIELD_MISSING
 - **認証・認可エラー（4xx）**: UNAUTHORIZED, TOKEN_EXPIRED, FORBIDDEN
 - **リソースエラー（4xx）**: RESOURCE_NOT_FOUND, RESOURCE_CONFLICT
@@ -77,10 +83,12 @@
 ### 5. セキュリティ仕様
 
 **認証・認可定義必須**:
+
 - JWT Bearer認証またはOAuth2を選択し詳細仕様定義せよ
 - 各エンドポイントのセキュリティ要件を明示せよ
 
 **入力検証対策必須**:
+
 - SQLインジェクション対策: パラメータ化クエリ必須
 - XSS対策: 出力時エスケープ必須
 - CSRF対策: SameSite Cookie + CSRFトークン
@@ -97,6 +105,7 @@
 **URLパス方式推奨**: `/api/v1/users`形式使用せよ
 
 **後方互換性ガイドライン**:
+
 - 破壊的変更: メジャーバージョンアップ
 - 非破壊的変更: マイナーバージョンアップ
 
