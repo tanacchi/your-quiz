@@ -17,12 +17,14 @@ Your Quizは、ユーザーが投稿したクイズを楽しめるモバイル�
 ## 技術スタック
 
 ### フロントエンド
+
 - **Framework**: Next.js 15 (App Router)
 - **Styling**: Tailwind CSS
 - **State Management**: Jotai
 - **Language**: TypeScript
 
 ### バックエンド
+
 - **Framework**: Hono (TypeScript)
 - **Database**: SQLite + Cloudflare D1
 - **ORM**: Drizzle ORM
@@ -30,12 +32,14 @@ Your Quizは、ユーザーが投稿したクイズを楽しめるモバイル�
 - **Error Handling**: neverthrow
 
 ### インフラ・運用
+
 - **Frontend Hosting**: Vercel
 - **Backend Hosting**: Cloudflare Workers
 - **Database**: D1 Database
 - **CI/CD**: GitHub Actions
 
 ### 開発・テスト
+
 - **Test Framework**: Vitest
 - **E2E Testing**: Playwright
 - **Linting**: Biome
@@ -43,11 +47,13 @@ Your Quizは、ユーザーが投稿したクイズを楽しめるモバイル�
 ## アーキテクチャ
 
 ### アーキテクチャパターン
+
 - **モジュラーモノリス**: 小規模チームでの開発効率と将来の拡張性を両立
 - **ヘキサゴナルアーキテクチャ**: ドメインロジックとインフラストラクチャの分離
 
 ### システム構成
-```
+
+```text
 [Browser] ↔ [Vercel CDN] ↔ [Next.js Frontend]
                                     ↓
 [IndexedDB Cache] ↔ [Cloudflare Workers API (Hono)]
@@ -65,12 +71,14 @@ Your Quizは、ユーザーが投稿したクイズを楽しめるモバイル�
 ## ドキュメント
 
 ### アーキテクチャ設計
+
 - [技術選定](docs/project/architecture/tech-selection.md) - 採用技術とその理由
 - [アーキテクチャパターン](docs/project/architecture/adr/0001-architecture-pattern.md) - システム設計の方針
 - [データアーキテクチャ](docs/project/architecture/data-architecture.md) - データ設計と一貫性方針
 - [非機能要件](docs/project/architecture/non-functional-requirements.md) - パフォーマンス・可用性要件
 
 ### 技術決定記録 (ADR)
+
 - [ADR-0003: フロントエンドフレームワーク](docs/project/architecture/adr/0003-frontend-framework.md)
 - [ADR-0006: バックエンドフレームワーク](docs/project/architecture/adr/0006-backend-framework.md)
 - [ADR-0007: データベース選定](docs/project/architecture/adr/0007-database.md)
@@ -81,10 +89,12 @@ Your Quizは、ユーザーが投稿したクイズを楽しめるモバイル�
 - [ADR-0014: APIホスティング](docs/project/architecture/adr/0014-api-hosting.md)
 
 ### 設計図
+
 - [システムコンテキスト図](docs/project/architecture/diagrams/system-context.md)
 - [クイズフロー](docs/project/architecture/diagrams/quiz-flow.md)
 
 ### 開発ワークフロー
+
 - [ワークフロー概要](docs/instructions/shared/workflow/README.md)
 - [アーキテクチャ工程](docs/instructions/shared/workflow/architecture.md)
 - [開発ルール](docs/instructions/shared/README.md)
@@ -92,6 +102,7 @@ Your Quizは、ユーザーが投稿したクイズを楽しめるモバイル�
 ## 開発環境
 
 ### 前提条件
+
 - Node.js 18+
 - pnpm
 - Cloudflare アカウント (D1 Database)
@@ -139,10 +150,12 @@ pnpm build
 ## デプロイ
 
 ### フロントエンド (Vercel)
+
 - main ブランチへのプッシュで自動デプロイ
 - PR作成時にプレビュー環境自動作成
 
 ### バックエンド (Cloudflare Workers)
+
 - GitHub Actions経由で自動デプロイ
 - D1 Database マイグレーション自動実行
 
