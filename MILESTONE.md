@@ -8,6 +8,9 @@
 - **Backend**: Hono + TypeScript + Cloudflare Workers
 - **Database**: D1 Database (SQLite互換)
 - **ORM**: Drizzle ORM
+- **Validation**: zod
+- **HTTP Client**: fetch (native)
+- **Error Handling**: neverthrow
 - **開発ツール**: Biome (Lint/Format)
 - **CI/CD**: GitHub Actions
 - **ホスティング**: Vercel (Frontend) + Cloudflare Workers (Backend)
@@ -444,6 +447,7 @@ cat > package.json << 'EOF'
     "hono": "^3.12.6",
     "drizzle-orm": "^0.29.1",
     "zod": "^3.22.4",
+    "neverthrow": "^6.2.2",
     "@your-quiz/types": "workspace:*",
     "@your-quiz/utils": "workspace:*"
   },
@@ -1224,7 +1228,7 @@ cat > package.json << 'EOF'
     "react-dom": "^18.2.0",
     "zustand": "^4.4.7",
     "zod": "^3.22.4",
-    "ky": "^1.1.3",
+    "neverthrow": "^6.2.2",
     "@your-quiz/types": "workspace:*",
     "@your-quiz/utils": "workspace:*"
   },
@@ -1429,9 +1433,10 @@ EOF
 mkdir -p src/{stores,lib,components,hooks}
 
 # API クライアント設定
-cat > src/lib/api.ts << 'EOF'
-import ky from 'ky';
-import type { ApiResponse, PaginatedResponse } from '@your-quiz/types';
+# 作成ファイル: src/lib/api.ts
+# - fetch (native) を使用したAPIクライアント実装
+# - neverthrow を使用したエラーハンドリング
+# - タイムアウト・リトライ機能の実装
 
 const api = ky.create({
   prefixUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787',
@@ -3546,6 +3551,7 @@ cat > package.json << 'EOF'
     "hono": "^3.12.6",
     "drizzle-orm": "^0.29.1",
     "zod": "^3.22.4",
+    "neverthrow": "^6.2.2",
     "@your-quiz/types": "workspace:*",
     "@your-quiz/utils": "workspace:*"
   },
@@ -3667,3 +3673,21 @@ cd ..
 ---
 
 このマイルストーンに従って実装することで、アーキテクチャ設計書で定義した技術スタックとアーキテクチャパターンを完全に実現できます。各ステップは依存関係を考慮して順序付けられており、段階的に機能を構築していくことができます。
+
+## 📝 実装時の注意事項
+
+### 技術選定の更新反映
+
+- **HTTPクライアント**: `ky` から `fetch (native)` に変更
+- **エラーハンドリング**: `neverthrow` ライブラリを追加
+- **バリデーション**: `zod` を継続使用
+
+### コード実装詳細
+
+本ドキュメント内の具体的なソースコードは実装例として記載されています。実際の実装時は以下の技術選定ADRを参照してください：
+
+- [ADR-0010: バリデーションライブラリ選定](docs/project/architecture/adr/0010-validation-library.md)
+- [ADR-0011: HTTPクライアント選定](docs/project/architecture/adr/0011-http-client.md)
+- その他のADRドキュメント
+
+最新の技術選定に基づいて実装を行い、ADRで定義された方針に従ってください。
