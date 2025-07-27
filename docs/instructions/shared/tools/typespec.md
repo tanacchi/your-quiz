@@ -16,6 +16,7 @@
 ### 1. ファイル配置の統一
 
 #### 1.1 必須ディレクトリ構造
+
 ```
 [api-project-root]/
 ├── specs/                     # TypeSpec仕様書（ソースファイル）
@@ -30,6 +31,7 @@
 ```
 
 #### 1.2 命名規則
+
 - **メインファイル**: `specs/main.tsp`
 - **モデル定義**: `specs/models/[リソース名].tsp`
 - **操作定義**: `specs/operations/[機能名].tsp`
@@ -38,6 +40,7 @@
 ### 2. OpenAPI生成の統一
 
 #### 2.1 生成コマンドの標準化
+
 ```bash
 # 標準生成コマンド
 tsp compile specs/main.tsp --emit @typespec/openapi3
@@ -47,6 +50,7 @@ tsp compile specs/main.tsp --emit @typespec/openapi3 --output-dir docs/api
 ```
 
 #### 2.2 package.jsonスクリプト
+
 ```json
 {
   "scripts": {
@@ -60,6 +64,7 @@ tsp compile specs/main.tsp --emit @typespec/openapi3 --output-dir docs/api
 ### 3. Git管理方針
 
 #### 3.1 コミット対象
+
 ```bash
 # 必ずコミットするファイル
 specs/                        # TypeSpecソースファイル
@@ -73,6 +78,7 @@ node_modules/
 ```
 
 #### 3.2 コミットメッセージ例
+
 ```bash
 git commit -m "ユーザー管理APIのTypeSpec仕様を追加
 
@@ -87,6 +93,7 @@ git commit -m "ユーザー管理APIのTypeSpec仕様を追加
 ### 4. 開発ワークフロー
 
 #### 4.1 API設計フロー
+
 ```bash
 # 1. TypeSpec仕様作成
 vim specs/models/user.tsp      # モデル定義
@@ -104,6 +111,7 @@ git commit -m "ユーザーAPIの仕様追加"
 ```
 
 #### 4.2 仕様変更時の手順
+
 ```bash
 # 1. TypeSpec修正
 vim specs/models/user.tsp
@@ -122,13 +130,15 @@ git commit -m "User型にprofileUrl属性を追加"
 ## 公式ドキュメント参照
 
 ### TypeSpec学習・詳細仕様
-- **公式サイト**: https://typespec.io/
-- **Getting Started**: https://typespec.io/docs/getting-started
-- **言語仕様**: https://typespec.io/docs/language-basics
-- **REST API定義**: https://typespec.io/docs/libraries/rest
-- **OpenAPI生成**: https://typespec.io/docs/emitters/openapi3
+
+- **公式サイト**: <https://typespec.io/>
+- **Getting Started**: <https://typespec.io/docs/getting-started>
+- **言語仕様**: <https://typespec.io/docs/language-basics>
+- **REST API定義**: <https://typespec.io/docs/libraries/rest>
+- **OpenAPI生成**: <https://typespec.io/docs/emitters/openapi3>
 
 ### インストール・セットアップ
+
 ```bash
 # TypeSpec CLI インストール（mise.tomlで管理）
 mise use typespec@latest
