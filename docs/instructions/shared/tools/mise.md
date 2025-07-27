@@ -16,6 +16,7 @@
 ### 1. ファイル配置の強制
 
 #### 1.1 必須配置場所
+
 ```bash
 # プロジェクトルートに必ず配置
 project-root/
@@ -26,6 +27,7 @@ project-root/
 ```
 
 #### 1.2 mise.toml基本テンプレート
+
 ```toml
 [tools]
 # Node.js環境
@@ -56,6 +58,7 @@ PNPM_HOME = "{{config_dir}}/installs/pnpm/latest"
 ### 2. ツール使用の強制
 
 #### 2.1 グローバルツール使用の禁止
+
 ```bash
 # ❌ 禁止：グローバルインストールされたツール使用
 npm install -g typescript
@@ -69,6 +72,7 @@ mise exec pnpm -- install      # mise管理のpnpm使用
 ```
 
 #### 2.2 ツール実行の統一方法
+
 ```bash
 # mise環境でのコマンド実行
 mise exec node -- src/index.js
@@ -85,6 +89,7 @@ gh pr create
 ### 3. プロジェクト初期化時の必須手順
 
 #### 3.1 新規プロジェクト作成時
+
 ```bash
 # 1. プロジェクトディレクトリ作成
 mkdir new-project
@@ -107,6 +112,7 @@ mise exec pnpm -- add -D typescript @types/node
 ```
 
 #### 3.2 既存プロジェクトへの導入時
+
 ```bash
 # 1. 現在使用中のツールバージョン確認
 node --version
@@ -132,6 +138,7 @@ mise exec pnpm -- --version
 ### 4. チーム開発での統一
 
 #### 4.1 新メンバーのセットアップ手順
+
 ```bash
 # 1. リポジトリクローン
 git clone <repository-url>
@@ -149,6 +156,7 @@ mise current     # 現在有効なツールバージョン
 ```
 
 #### 4.2 ツールバージョン更新時の手順
+
 ```bash
 # 1. mise.tomlの更新
 # 例：Node.jsを20.10.0から20.11.0に更新
@@ -173,6 +181,7 @@ Node.jsを最新の安定版に更新。
 ### 5. CI/CD環境での使用
 
 #### 5.1 GitHub Actions設定例
+
 ```yaml
 name: CI
 on: [push, pull_request]
@@ -202,6 +211,7 @@ jobs:
 ```
 
 #### 5.2 Docker環境での使用
+
 ```dockerfile
 FROM ubuntu:22.04
 
@@ -220,6 +230,7 @@ CMD ["mise", "exec", "node", "--", "src/index.js"]
 ### 6. ツール追加・更新の指針
 
 #### 6.1 新しいツール追加時
+
 ```bash
 # 1. ツールの必要性確認
 # - プロジェクトに必要なツールか
@@ -242,6 +253,7 @@ git commit -m "Prettierをツール管理に追加
 ```
 
 #### 6.2 ツールバージョン更新の判断基準
+
 ```bash
 # 更新すべき場合
 - セキュリティアップデート
@@ -266,6 +278,7 @@ git commit -m "Prettierをツール管理に追加
 ### 7. 避けるべき行為
 
 #### 7.1 グローバルツールの使用禁止
+
 ```bash
 # ❌ 絶対禁止
 npm install -g typescript
@@ -277,6 +290,7 @@ brew install node
 ```
 
 #### 7.2 バージョン不統一の防止
+
 ```bash
 # ❌ 禁止：個人の環境に依存
 "手元のNode.js 18を使用"
@@ -291,6 +305,7 @@ pnpm = "8.15.0"     # 全員が同じバージョン使用
 ### 8. エラー対応
 
 #### 8.1 よくある問題と解決法
+
 ```bash
 # 問題1: mise.tomlが見つからない
 # 解決法: プロジェクトルートにいることを確認
@@ -310,6 +325,7 @@ exec $SHELL
 ```
 
 #### 8.2 トラブルシューティング
+
 ```bash
 # mise状態確認
 mise doctor          # mise環境の診断
@@ -324,6 +340,7 @@ mise install --force
 ### 9. 設定ファイルの管理
 
 #### 9.1 .mise.toml vs mise.toml
+
 ```bash
 # ✅ 推奨：mise.toml （プロジェクト共有）
 mise.toml    # プロジェクト全体で共有
@@ -333,6 +350,7 @@ mise.toml    # プロジェクト全体で共有
 ```
 
 #### 9.2 gitignoreでの管理
+
 ```gitignore
 # mise関連ファイル
 .mise.toml          # 個人設定は無視
@@ -346,6 +364,7 @@ mise.toml    # プロジェクト全体で共有
 ### 10. 設定テンプレート
 
 #### 10.1 TypeScript/Node.jsプロジェクト
+
 ```toml
 [tools]
 # ランタイム
@@ -369,6 +388,7 @@ PNPM_HOME = "{{config_dir}}/installs/pnpm/latest"
 ```
 
 #### 10.2 フロントエンドプロジェクト
+
 ```toml
 [tools]
 # ランタイム
@@ -389,6 +409,7 @@ vitest = "1.1.0"
 ```
 
 #### 10.3 ドキュメント・静的サイト
+
 ```toml
 [tools]
 # ランタイム

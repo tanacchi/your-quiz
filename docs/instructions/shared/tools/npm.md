@@ -13,10 +13,12 @@
 ## 使用ツール
 
 ### 必須ツール
+
 - **pnpm**: 唯一の許可されたパッケージ管理ツール
 - **禁止ツール**: `npm`、`yarn`、`yarn berry`
 
 ### pnpm選択理由
+
 - **高速インストール**: シンboリックリンクによる効率的なnode_modules構成
 - **ディスク容量節約**: グローバルストアによる重複排除
 - **厳密な依存関係**: phantom dependencyの回避
@@ -25,6 +27,7 @@
 ## 基本コマンド
 
 ### インストール関連
+
 ```bash
 # 依存関係のインストール
 pnpm install
@@ -38,6 +41,7 @@ pnpm install --force
 ```
 
 ### パッケージ管理
+
 ```bash
 # パッケージ追加（本番依存）
 pnpm add <package-name>
@@ -56,6 +60,7 @@ pnpm rm <package-name>
 ```
 
 ### スクリプト実行
+
 ```bash
 # package.jsonのscripts実行
 pnpm run <script-name>
@@ -70,6 +75,7 @@ pnpm format        # フォーマット実行
 ```
 
 ### 情報確認
+
 ```bash
 # インストール済みパッケージ一覧
 pnpm list
@@ -88,6 +94,7 @@ pnpm info <package-name>
 ## Git管理
 
 ### コミット対象
+
 ```bash
 # 必ずコミットするファイル
 package.json
@@ -99,6 +106,7 @@ node_modules/
 ```
 
 ### .gitignore設定
+
 ```gitignore
 # Dependencies
 node_modules/
@@ -127,6 +135,7 @@ Thumbs.db
 ```
 
 ### pnpm-lock.yamlの取り扱い
+
 - **必ずコミット**: reproducible buildsの保証
 - **コンフリクト時**: `pnpm install`で解決を試行
 - **手動編集禁止**: 自動生成ファイルのため直接編集しない
@@ -134,6 +143,7 @@ Thumbs.db
 ## プロジェクト設定
 
 ### package.jsonの推奨設定
+
 ```json
 {
   "engines": {
@@ -148,6 +158,7 @@ Thumbs.db
 ```
 
 ### .npmrc設定（プロジェクトルート）
+
 ```ini
 # 厳密なピア依存関係チェック
 strict-peer-dependencies=true
@@ -165,6 +176,7 @@ node-linker=isolated
 ## CI/CD環境での使用
 
 ### GitHub Actions例
+
 ```yaml
 - name: Setup pnpm
   uses: pnpm/action-setup@v2
@@ -182,6 +194,7 @@ node-linker=isolated
 ```
 
 ### Docker環境での使用
+
 ```dockerfile
 # pnpmのインストール
 RUN npm install -g pnpm@8
@@ -196,6 +209,7 @@ RUN pnpm install --frozen-lockfile --prod
 ### よくある問題と解決法
 
 #### 1. lockファイルの不整合
+
 ```bash
 # lockファイル削除して再インストール
 rm pnpm-lock.yaml
@@ -203,6 +217,7 @@ pnpm install
 ```
 
 #### 2. キャッシュ問題
+
 ```bash
 # pnpmストア削除
 pnpm store prune
@@ -213,12 +228,14 @@ pnpm install
 ```
 
 #### 3. phantom dependency エラー
+
 ```bash
 # 厳密モードでインストール確認
 pnpm install --strict-peer-dependencies
 ```
 
 #### 4. 権限エラー
+
 ```bash
 # グローバルディレクトリ確認・変更
 pnpm config get global-dir
@@ -228,6 +245,7 @@ pnpm config set global-dir /path/to/writable/dir
 ## エラーメッセージ対応
 
 ### "ERR_PNPM_PEER_DEP_ISSUES"
+
 ```bash
 # ピア依存関係の自動インストール
 pnpm install --auto-install-peers
@@ -237,6 +255,7 @@ pnpm add <peer-dependency>
 ```
 
 ### "ERR_PNPM_TARBALL_EXTRACT"
+
 ```bash
 # ネットワーク問題の場合、レジストリ確認
 pnpm config get registry
