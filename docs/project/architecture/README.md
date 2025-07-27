@@ -8,36 +8,36 @@
 
 ### 1. system-overview（システム概要）
 
-- **ファイル**: `system-overview.md`
+- **ファイル**: [system-overview.md](./system-overview.md)
 - **内容**: システム全体のアーキテクチャパターンと設計方針
 - **目的**: モジュラーモノリス + ヘキサゴナルアーキテクチャの採用理由と構造を理解
 
 ### 2. tech-selection（技術選定比較表）
 
-- **ファイル**: `tech-selection.md`
+- **ファイル**: [tech-selection.md](./tech-selection.md)
 - **内容**: フロントエンド・バックエンド・インフラの技術比較と選定理由
 - **目的**: 各技術のトレードオフと選定根拠を詳細に把握
 
 ### 3. diagrams/（アーキテクチャ図表類）
 
-- **ディレクトリ**: `diagrams/`
+- **ディレクトリ**: [diagrams/](./diagrams/)
 - **内容**: システム構造を視覚的に表現したMermaid図
 - **読み順**:
-  1. `system-context.md` - システム全体のコンテキスト
-  2. `modular-monolith-structure.md` - モジュラーモノリス構造
-  3. `hexagonal-architecture.md` - ヘキサゴナルアーキテクチャ
-  4. `quiz-flow.md` - クイズ回答フロー
-  5. `data-flow.md` - データフロー
+  1. [system-context.md](./diagrams/system-context.md) - システム全体のコンテキスト
+  2. [modular-monolith-structure.md](./diagrams/modular-monolith-structure.md) - モジュラーモノリス構造
+  3. [hexagonal-architecture.md](./diagrams/hexagonal-architecture.md) - ヘキサゴナルアーキテクチャ
+  4. [quiz-flow.md](./diagrams/quiz-flow.md) - クイズ回答フロー
+  5. [data-flow.md](./diagrams/data-flow.md) - データフロー
 
 ### 4. communication-patterns（通信パターン）
 
-- **ファイル**: `communication-patterns.md`
+- **ファイル**: [communication-patterns.md](./communication-patterns.md)
 - **内容**: REST API設計、エラーハンドリング、オフライン同期戦略
 - **目的**: システム間通信の設計パターンと実装方針を理解
 
 ### 5. data-architecture（データアーキテクチャ）
 
-- **ファイル**: `data-architecture.md`
+- **ファイル**: [data-architecture.md](./data-architecture.md)
 - **内容**: データ保存戦略、ACID vs BASE、Event Sourcing設計
 - **目的**: データ管理の設計思想と実装アプローチを理解
 
