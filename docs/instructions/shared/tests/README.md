@@ -38,7 +38,7 @@
 
 ## ファイル構成
 
-```
+```text
 tests/
 ├── README.md                           # この警告文書
 ├── development-rules-quiz-questions.md # 問題用紙（指示があった場合のみ閲覧）

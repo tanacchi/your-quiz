@@ -12,7 +12,7 @@
 
 ### 出力先ディレクトリ構造
 
-```
+```text
 docs/project/tech-selection/
 ├── overview.md                     # 技術選定概要・方針
 ├── libraries/                      # ライブラリ選定
