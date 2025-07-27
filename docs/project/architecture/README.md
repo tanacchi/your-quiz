@@ -63,7 +63,7 @@
 
 - Framework: Next.js 15 (App Router)
 - Styling: Tailwind CSS
-- State: Zustand
+- State: Jotai
 - Language: TypeScript
 
 ### バックエンド

@@ -19,7 +19,7 @@ Your Quizは、ユーザーが投稿したクイズを楽しめるモバイル�
 ### フロントエンド
 - **Framework**: Next.js 15 (App Router)
 - **Styling**: Tailwind CSS
-- **State Management**: Zustand
+- **State Management**: Jotai
 - **Language**: TypeScript
 
 ### バックエンド
