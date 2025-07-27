@@ -3,9 +3,11 @@
 ## コンテキスト概要
 
 ### 責務
+
 クイズの学習体験提供、回答処理、学習履歴管理を担う顧客接点の中核コンテキスト。
 
 ### ビジネス価値
+
 - 直感的で楽しい学習体験の提供
 - 個人の学習履歴の蓄積・活用
 - 効果的な復習機能の実現
@@ -15,6 +17,7 @@
 ### 集約: Learning Session Aggregate
 
 #### LearningSession（集約ルート）
+
 ```typescript
 interface LearningSession {
   readonly id: SessionId;
@@ -29,6 +32,7 @@ interface LearningSession {
 ```
 
 #### LearningSession の主要な振る舞い
+
 ```typescript
 class LearningSessionAggregate {
   // セッション開始
@@ -163,6 +167,7 @@ class LearningSessionAggregate {
 ### エンティティ: Answer
 
 #### Answer（回答）
+
 ```typescript
 class Answer {
   private constructor(
@@ -217,6 +222,7 @@ class Answer {
 ### 値オブジェクト
 
 #### UserAnswer（ユーザー回答）
+
 ```typescript
 class UserAnswer {
   private constructor(readonly value: boolean) {}
@@ -240,6 +246,7 @@ class UserAnswer {
 ```
 
 #### LearningPreferences（学習設定）
+
 ```typescript
 class LearningPreferences {
   private constructor(
@@ -281,6 +288,7 @@ class LearningPreferences {
 ```
 
 #### LearningProgress（学習進捗）
+
 ```typescript
 class LearningProgress {
   private constructor(
@@ -333,6 +341,7 @@ class LearningProgress {
 ## ドメインサービス
 
 ### QuizRecommendationService
+
 ```typescript
 class QuizRecommendationService {
   constructor(
@@ -417,6 +426,7 @@ class QuizRecommendationService {
 ```
 
 ### AnswerValidationService
+
 ```typescript
 class AnswerValidationService {
   async validateAnswer(
@@ -476,6 +486,7 @@ class AnswerValidationService {
 ## アプリケーションサービス
 
 ### LearningApplicationService
+
 ```typescript
 class LearningApplicationService {
   constructor(
@@ -597,6 +608,7 @@ class LearningApplicationService {
 ## リポジトリインターフェース
 
 ### LearningSessionRepository
+
 ```typescript
 interface LearningSessionRepository {
   findById(id: SessionId): Promise<LearningSession | null>;
@@ -608,6 +620,7 @@ interface LearningSessionRepository {
 ```
 
 ### AnswerHistoryRepository
+
 ```typescript
 interface AnswerHistoryRepository {
   findBySessionId(sessionId: SessionId): Promise<Answer[]>;
@@ -634,6 +647,7 @@ interface AnswerQueryOptions {
 ## ドメインイベント
 
 ### QuizAnsweredEvent
+
 ```typescript
 interface QuizAnsweredEvent extends DomainEvent {
   readonly eventType: 'QuizAnswered';
@@ -646,6 +660,7 @@ interface QuizAnsweredEvent extends DomainEvent {
 ```
 
 ### LearningSessionCompletedEvent
+
 ```typescript
 interface LearningSessionCompletedEvent extends DomainEvent {
   readonly eventType: 'LearningSessionCompleted';
@@ -658,6 +673,7 @@ interface LearningSessionCompletedEvent extends DomainEvent {
 ## 他コンテキストとの統合
 
 ### Quiz Management Context からの情報取得
+
 ```typescript
 // Published Language Interface（Quiz Management Context提供）
 interface PublishedQuizService {
@@ -679,6 +695,7 @@ class QuizLearningServiceAdapter {
 ```
 
 ### User Session Context との連携
+
 ```typescript
 // User Session Context からの情報取得
 interface UserSessionService {

@@ -3,9 +3,11 @@
 ## コンテキスト概要
 
 ### 責務
+
 クイズのライフサイクル管理、品質保証、承認フローの統制を担う中核的なコンテキスト。
 
 ### ビジネス価値
+
 - 高品質なクイズコンテンツの提供
 - 不適切コンテンツの防止
 - 効率的なコンテンツ管理業務
@@ -15,6 +17,7 @@
 ### 集約: Quiz Aggregate
 
 #### Quiz（集約ルート）
+
 ```typescript
 interface Quiz {
   readonly id: QuizId;
@@ -33,6 +36,7 @@ interface Quiz {
 ```
 
 #### 主要な振る舞い
+
 ```typescript
 class QuizAggregate {
   // クイズ作成
@@ -104,6 +108,7 @@ class QuizAggregate {
 ### 値オブジェクト
 
 #### Question（問題文）
+
 ```typescript
 class Question {
   private constructor(
@@ -145,6 +150,7 @@ class Question {
 ```
 
 #### QuizStatus（クイズ状態）
+
 ```typescript
 enum QuizStatusValue {
   PendingApproval = 'pending_approval',
@@ -178,6 +184,7 @@ class QuizStatus {
 ```
 
 #### Tag（タグ）
+
 ```typescript
 class Tag {
   private constructor(
@@ -217,6 +224,7 @@ class Tag {
 ## ドメインサービス
 
 ### QuizDuplicationCheckService
+
 ```typescript
 class QuizDuplicationCheckService {
   constructor(private quizRepository: QuizRepository) {}
@@ -261,6 +269,7 @@ class QuizDuplicationCheckService {
 ## アプリケーションサービス
 
 ### QuizManagementApplicationService
+
 ```typescript
 class QuizManagementApplicationService {
   constructor(
@@ -331,6 +340,7 @@ class QuizManagementApplicationService {
 ## リポジトリインターフェース
 
 ### QuizRepository
+
 ```typescript
 interface QuizRepository {
   findById(id: QuizId): Promise<Quiz | null>;
@@ -354,6 +364,7 @@ interface QuizFilter {
 ## ドメインイベント
 
 ### QuizSubmittedEvent
+
 ```typescript
 interface QuizSubmittedEvent extends DomainEvent {
   readonly eventType: 'QuizSubmitted';
@@ -364,6 +375,7 @@ interface QuizSubmittedEvent extends DomainEvent {
 ```
 
 ### QuizApprovedEvent
+
 ```typescript
 interface QuizApprovedEvent extends DomainEvent {
   readonly eventType: 'QuizApproved';
@@ -374,6 +386,7 @@ interface QuizApprovedEvent extends DomainEvent {
 ```
 
 ### QuizRejectedEvent
+
 ```typescript
 interface QuizRejectedEvent extends DomainEvent {
   readonly eventType: 'QuizRejected';
@@ -387,6 +400,7 @@ interface QuizRejectedEvent extends DomainEvent {
 ## 不変条件（Invariants）
 
 ### Quiz集約の不変条件
+
 1. **問題文必須**: 問題文は必ず存在し、500文字以内
 2. **正解必須**: 正解は必ず◯または×のいずれか
 3. **ステータス遷移**: PendingApproval → (Approved | Rejected) のみ許可
@@ -395,6 +409,7 @@ interface QuizRejectedEvent extends DomainEvent {
 6. **サニタイズ済み**: 問題文・解説はHTMLタグが除去済み
 
 ### ビジネスルール
+
 1. **重複制限**: 同一作成者による同一問題文の投稿制限（警告レベル）
 2. **承認権限**: 管理者のみがクイズを承認・拒否可能
 3. **公開制限**: 承認済みクイズのみ公開対象
@@ -404,16 +419,19 @@ interface QuizRejectedEvent extends DomainEvent {
 ## 技術的制約
 
 ### パフォーマンス考慮
+
 - 承認待ちクイズ一覧の効率的取得（Status + CreatedAt インデックス）
 - 作成者別クイズ取得の最適化（CreatorId インデックス）
 - 重複チェックの高速化（QuestionText ハッシュインデックス）
 
 ### セキュリティ考慮
+
 - 入力サニタイズの徹底実施
 - 承認権限の厳密な検証
 - 作成者識別の匿名化保証
 
 ### データ整合性
+
 - 楽観的ロックによる同時更新制御
 - ドメインイベントによる結果整合性保証
 - 集約境界内での強整合性保証
