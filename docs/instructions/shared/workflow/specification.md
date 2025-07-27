@@ -53,7 +53,7 @@
 
 #### 0.1 ディレクトリ構造
 
-```
+```text
 docs/project/specifications/
 ├── user-stories/           # ユーザーストーリー
 ├── success-scenarios/     # 成功パターン
@@ -74,7 +74,7 @@ docs/project/specifications/
 
 以下の構造でユーザーストーリーを記述する：
 
-```
+```md
 ## ユーザーストーリー: [機能名]
 
 ### Who（誰が）
@@ -118,7 +118,7 @@ docs/project/specifications/
 
 #### 2.1 正常系シナリオ
 
-```
+```md
 ## 成功パターン
 
 ### シナリオ: [シナリオ名]
@@ -152,7 +152,7 @@ docs/project/specifications/
 
 #### 3.1 異常系シナリオ
 
-```
+```md
 ## 失敗パターン
 
 ### エラーシナリオ: [エラー種別]

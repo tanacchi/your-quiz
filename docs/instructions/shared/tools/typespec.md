@@ -17,7 +17,7 @@
 
 #### 1.1 必須ディレクトリ構造
 
-```
+```text
 [api-project-root]/
 ├── specs/                     # TypeSpec仕様書（ソースファイル）
 │   ├── main.tsp              # メインTypeSpec仕様

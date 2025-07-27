@@ -94,7 +94,7 @@ Background:
 
 Scenario: シナリオ名
   Given 前提条件
-  When アクション  
+  When アクション
   Then 期待結果
   And 追加の期待結果
 
@@ -102,7 +102,7 @@ Scenario Outline: パラメータ化されたシナリオ名（必須）
   Given 前提条件 "<パラメータ1>"
   When アクション "<パラメータ2>"
   Then 期待結果 "<パラメータ3>"
-  
+
 Examples:
   | パラメータ1 | パラメータ2 | パラメータ3 |
   | 値1        | 値2        | 値3        |
@@ -112,14 +112,16 @@ Examples:
 **表形式シナリオアウトライン記述必須理由**:
 
 - テストデータのバリエーションを網羅的にカバーする
-- Edge Case（境界値、異常系）を表形式で漏れなく検証する  
+- Edge Case（境界値、異常系）を表形式で漏れなく検証する
 - 同一シナリオの複数パターンを効率的に管理する
+
+  ```gherkin
   | パラメータ1 | パラメータ2 | パラメータ3 |
   | 値1       | 値2       | 値3       |
-
-```
+  ```
 
 #### 2.3 シナリオ記述の原則
+
 - **Given**: システムの初期状態や前提条件を記述
 - **When**: ユーザーのアクションやイベントを記述
 - **Then**: 期待される結果や状態変化を記述
@@ -130,10 +132,12 @@ Examples:
 ### 3. Step Definitions実装
 
 #### 3.1 ステップ定義ファイル作成
+
 - `steps/` または `step_definitions/` ディレクトリ配下にファイルを作成
 - 機能ごとにファイルを分割する（例：`user-registration.steps.js`）
 
 #### 3.2 ステップ定義の実装
+
 ```javascript
 // Given ステップの実装例
 Given('ユーザーが未登録状態である', async function () {
@@ -235,7 +239,7 @@ After(async function (scenario) {
     // スクリーンショット取得
     const screenshot = await this.page.screenshot();
     this.attach(screenshot, 'image/png');
-    
+
     // ログ出力
     console.log('Scenario failed:', scenario.pickle.name);
   }
