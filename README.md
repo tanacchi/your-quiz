@@ -99,7 +99,7 @@ Your Quizは、ユーザーが投稿したクイズを楽しめるモバイル�
 
 #### 全ADR一覧
 
-[全ての技術決定記録を確認](docs/project/adr/README.md)
+[docs/project/adr/README.md](docs/project/adr/README.md)
 
 ### 設計図
 
@@ -178,5 +178,5 @@ MIT License
 
 ---
 
-**Created**: 2025-01-27  
+**Created**: 2025-01-27
 **Maintainer**: [@tanacchi](https://github.com/tanacchi)
