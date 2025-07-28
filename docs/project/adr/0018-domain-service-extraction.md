@@ -24,7 +24,7 @@ Proposed
 
 ### Chosen Option
 
-**4つの主要ドメインサービスの抽出**
+## 4つの主要ドメインサービスの抽出
 
 以下のドメインサービスを各コンテキストに配置する：
 
@@ -76,6 +76,7 @@ Proposed
 ### Domain Service Implementations
 
 #### 1. QuizDuplicationService
+
 ```typescript
 interface QuizDuplicationService {
   isDuplicate(newQuiz: Quiz, existingQuizzes: Quiz[]): Promise<DuplicationResult>;
@@ -87,6 +88,7 @@ interface QuizDuplicationService {
 **ビジネスルール**: 80%以上の類似度で重複判定
 
 #### 2. LearningProgressCalculationService
+
 ```typescript
 interface LearningProgressCalculationService {
   calculateProgress(answers: Answer[]): LearningProgress;
@@ -99,6 +101,7 @@ interface LearningProgressCalculationService {
 **ビジネスルール**: 正答率・回答時間・継続性による総合評価
 
 #### 3. AnonymousUserIdentificationService
+
 ```typescript
 interface AnonymousUserIdentificationService {
   generateCreatorId(deviceFingerprint: DeviceFingerprint): CreatorId;
@@ -111,6 +114,7 @@ interface AnonymousUserIdentificationService {
 **ビジネスルール**: デバイス特性による識別、作成者権限の確認
 
 #### 4. ConflictResolutionService
+
 ```typescript
 interface ConflictResolutionService {
   resolveQuizConflict(localQuiz: Quiz, remoteQuiz: Quiz): ConflictResolution;
@@ -125,6 +129,7 @@ interface ConflictResolutionService {
 ### Service Implementation Patterns
 
 #### 1. インターフェース分離
+
 ```typescript
 // ドメイン層（インターフェース）
 interface LearningProgressCalculationService {
@@ -140,6 +145,7 @@ class LearningProgressCalculationServiceImpl implements LearningProgressCalculat
 ```
 
 #### 2. 依存注入対応
+
 ```typescript
 class LearningSessionAggregate {
   constructor(

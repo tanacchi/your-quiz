@@ -25,7 +25,7 @@ Proposed
 
 ### Chosen Option
 
-**集約単位のリポジトリパターン採用**
+## 集約単位のリポジトリパターン採用
 
 各集約に対して専用のリポジトリインターフェースを定義し、ドメイン層とインフラ層を分離する：
 
@@ -80,6 +80,7 @@ Proposed
 ### Repository Interface Design
 
 #### 1. QuizRepository
+
 ```typescript
 interface QuizRepository {
   save(quiz: QuizAggregate): Promise<void>;
@@ -91,6 +92,7 @@ interface QuizRepository {
 ```
 
 #### 2. LearningSessionRepository
+
 ```typescript
 interface LearningSessionRepository {
   save(session: LearningSessionAggregate): Promise<void>;
@@ -101,6 +103,7 @@ interface LearningSessionRepository {
 ```
 
 #### 3. UserSessionRepository
+
 ```typescript
 interface UserSessionRepository {
   save(session: UserSessionAggregate): Promise<void>;
@@ -111,6 +114,7 @@ interface UserSessionRepository {
 ```
 
 #### 4. SyncSessionRepository
+
 ```typescript
 interface SyncSessionRepository {
   save(session: SyncSessionAggregate): Promise<void>;
@@ -122,6 +126,7 @@ interface SyncSessionRepository {
 ### Implementation Patterns
 
 #### 1. 共通基底インターフェース
+
 ```typescript
 interface BaseRepository<TAggregate, TId> {
   save(aggregate: TAggregate): Promise<void>;
@@ -130,6 +135,7 @@ interface BaseRepository<TAggregate, TId> {
 ```
 
 #### 2. 楽観的ロック対応
+
 ```typescript
 class QuizRepositoryImpl implements QuizRepository {
   async save(quiz: QuizAggregate): Promise<void> {
@@ -150,6 +156,7 @@ class QuizRepositoryImpl implements QuizRepository {
 ```
 
 #### 3. 集約再構築
+
 ```typescript
 class QuizRepositoryImpl implements QuizRepository {
   private fromRecord(record: QuizRecord): QuizAggregate {
@@ -172,6 +179,7 @@ class QuizRepositoryImpl implements QuizRepository {
 ### Technology Integration
 
 #### 1. Drizzle ORM活用
+
 ```typescript
 class LearningSessionRepositoryImpl implements LearningSessionRepository {
   constructor(private db: DrizzleDB) {}
@@ -197,6 +205,7 @@ class LearningSessionRepositoryImpl implements LearningSessionRepository {
 ```
 
 #### 2. SQLite対応
+
 ```typescript
 class SQLiteQuizRepository implements QuizRepository {
   constructor(private db: SQLiteDatabase) {}

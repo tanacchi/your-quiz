@@ -79,9 +79,11 @@ graph LR
     Quiz -->|triggers| Approval
     Approval -->|changes| QuizStatus
 ```
+
 **関与ドメイン**: Creator, Quiz, Question, CorrectAnswer, Explanation, Tag, Approval, QuizStatus
 
 #### UC2: クイズ回答
+
 ```mermaid
 graph LR
     User -->|performs| SwipeGesture
@@ -91,9 +93,11 @@ graph LR
     Answer -->|stored in| Session
     Session -->|manages| AnswerHistory
 ```
+
 **関与ドメイン**: User, SwipeGesture, Answer, Quiz, CorrectAnswer, Session, AnswerHistory
 
 #### UC3: クイズ承認
+
 ```mermaid
 graph LR
     Administrator -->|performs| Approval
@@ -103,9 +107,11 @@ graph LR
     Approval -->|updates| QuizStatus
     Approval -->|creates| ApprovalHistory
 ```
+
 **関与ドメイン**: Administrator, Approval, Quiz, Question, Explanation, QuizStatus, ApprovalHistory
 
 #### UC4: タグ絞り込み
+
 ```mermaid
 graph LR
     User -->|selects| Tag
@@ -113,32 +119,39 @@ graph LR
     Quiz -->|filtered by| QuizStatus
     Quiz -->|displayed as| QuizList
 ```
+
 **関与ドメイン**: User, Tag, Quiz, QuizStatus, QuizList
 
 ### ドメイン間の協調パターン
 
 #### パターン1: 作成-承認フロー
+
 ```
 Creator → Quiz → Approval → QuizStatus → PublicAccess
 ```
+
 - Creator がQuizを作成
 - Quiz がApprovalを要求
 - Approval がQuizStatusを更新
 - QuizStatus が公開可否を決定
 
 #### パターン2: 回答-記録フロー
+
 ```
 User → SwipeGesture → Answer → Quiz → Session → AnswerHistory
 ```
+
 - User がSwipeGestureを実行
 - SwipeGesture がAnswerを生成
 - Answer がQuizを参照して正誤判定
 - Session がAnswerHistoryに記録
 
 #### パターン3: 検索-絞り込みフロー
+
 ```
 User → Tag → Filter → Quiz → QuizStatus → ResultSet
 ```
+
 - User がTagを選択
 - Tag がFilterを適用
 - Filter がQuiz集合を絞り込み
@@ -150,7 +163,9 @@ User → Tag → Filter → Quiz → QuizStatus → ResultSet
 ### ドメイン別ビジネスルール
 
 #### Quiz（クイズ）
+
 **所有するビジネスルール**:
+
 1. **問題文制約**: 500文字以内、HTMLサニタイズ必須
 2. **解説制約**: 1000文字以内、任意項目
 3. **正解形式**: ◯×の2択のみ
@@ -160,7 +175,9 @@ User → Tag → Filter → Quiz → QuizStatus → ResultSet
 **根拠**: requirements-quiz.md#L10-L16, L20
 
 #### Creator（作成者）
+
 **所有するビジネスルール**:
+
 1. **匿名識別**: salt付きハッシュによる識別
 2. **ログイン不要**: 個人情報収集なし
 3. **デバイス識別**: ブラウザローカルストレージ使用
@@ -169,7 +186,9 @@ User → Tag → Filter → Quiz → QuizStatus → ResultSet
 **根拠**: requirements-quiz.md#L22, user-story-quiz.md#L5
 
 #### Answer（回答）
+
 **所有するビジネスルール**:
+
 1. **履歴永続化**: indexedDBでの永続保存
 2. **オフライン対応**: ネットワーク断線時も動作継続
 3. **同期処理**: オンライン復旧時の自動同期
@@ -178,7 +197,9 @@ User → Tag → Filter → Quiz → QuizStatus → ResultSet
 **根拠**: success-quiz.md#L24, requirements-quiz.md#L35
 
 #### Approval（承認）
+
 **所有するビジネスルール**:
+
 1. **管理者権限**: 管理者のみ承認・拒否可能
 2. **個別判定**: クイズごとの個別審査
 3. **承認基準**: 内容適切性チェック（詳細要確認）
@@ -187,7 +208,9 @@ User → Tag → Filter → Quiz → QuizStatus → ResultSet
 **根拠**: requirements-quiz.md#L20-L21
 
 #### SwipeGesture（スワイプ操作）
+
 **所有するビジネスルール**:
+
 1. **Tinder UI**: 右スワイプ=◯、左スワイプ=×
 2. **操作閾値**: 一定距離以上のスワイプで有効
 3. **即座実行**: スワイプ完了と同時に回答確定
@@ -198,6 +221,7 @@ User → Tag → Filter → Quiz → QuizStatus → ResultSet
 ### ルール間の依存関係
 
 #### 依存関係マップ
+
 ```mermaid
 graph TD
     QuizCreation[Quiz作成ルール] --> ApprovalRequired[承認必須ルール]
@@ -215,6 +239,7 @@ graph TD
 ```
 
 #### 重要な制約関係
+
 1. **Quiz → Approval**: Quiz作成は必ずApproval待ち状態で開始
 2. **Creator → Quiz**: 匿名Creatorでも制限なくQuiz作成可能
 3. **Answer → Quiz**: 承認済みQuizのみ回答対象
@@ -233,19 +258,23 @@ graph TD
 ## 実装への示唆
 
 ### 集約設計の方向性
+
 1. **Quiz集約**: Quiz + Question + CorrectAnswer + Explanation + Tag
 2. **LearningSession集約**: Answer + AnswerHistory + Session
 3. **Approval集約**: Approval + ApprovalHistory + QuizStatus
 
 ### ドメインサービス候補
+
 1. **QuizApprovalService**: 承認処理の複雑なロジック
 2. **CreatorIdentificationService**: 匿名作成者の識別・管理
 3. **AnswerSyncService**: オフライン-オンライン間の同期処理
 
 ### リポジトリ設計指針
+
 1. **QuizRepository**: 承認状態による検索、タグ絞り込み
 2. **AnswerRepository**: セッション単位、履歴管理
 3. **ApprovalRepository**: 承認待ち一覧、承認履歴
+
 ```
 
 ## 利点・欠点

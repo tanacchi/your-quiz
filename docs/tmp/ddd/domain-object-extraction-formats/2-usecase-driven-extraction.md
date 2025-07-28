@@ -86,6 +86,7 @@ sequenceDiagram
 ```
 
 **ビジネスルール**:
+
 - Question: 必須、500文字以内、HTMLサニタイズ
 - CorrectAnswer: 必須、◯×の2択
 - Explanation: 任意、1000文字以内
@@ -93,6 +94,7 @@ sequenceDiagram
 - Status: 投稿時は必ず'pendingApproval'
 
 #### ドメイン間相互作用
+
 - **Creator → Quiz**: 作成関係（1対多）
 - **Creator → CreatorId**: 識別関係（1対1）
 - **Quiz → Question**: 包含関係（1対1、必須）
@@ -105,9 +107,11 @@ sequenceDiagram
 ### UC2: クイズ回答
 
 #### 参加者・概念・振る舞い抽出
+
 **アクター**: 匿名ユーザー（User）
 
 **参加ドメイン概念**:
+
 - **Quiz**: 回答対象のクイズ（承認済みのみ）
 - **Question**: 表示される問題文
 - **CorrectAnswer**: 正誤判定の基準
@@ -119,6 +123,7 @@ sequenceDiagram
 - **JudgmentBanner**: 正誤判定UI表示
 
 **主要振る舞い**:
+
 ```mermaid
 sequenceDiagram
     participant U as User
@@ -138,6 +143,7 @@ sequenceDiagram
 ```
 
 **ビジネスルール**:
+
 - SwipeGesture: 右=◯、左=×、Tinder UI形式
 - Answer: 回答と同時に正誤判定実行
 - AnswerHistory: indexedDBに永続保存
@@ -145,6 +151,7 @@ sequenceDiagram
 - JudgmentBanner: バン表示後2秒でフェードアウト
 
 #### ドメイン間相互作用
+
 - **User → SwipeGesture**: 操作関係
 - **SwipeGesture → Answer**: 生成関係
 - **Answer → Quiz**: 参照関係（正誤判定）
@@ -157,9 +164,11 @@ sequenceDiagram
 ### UC3: クイズ承認
 
 #### 参加者・概念・振る舞い抽出
+
 **アクター**: 管理者（Administrator）
 
 **参加ドメイン概念**:
+
 - **Administrator**: 承認権限を持つユーザー
 - **Quiz**: 承認対象のクイズ（pending状態）
 - **Approval**: 承認処理のドメインサービス
@@ -169,6 +178,7 @@ sequenceDiagram
 - **QuizStatus**: クイズの承認状態
 
 **主要振る舞い**:
+
 ```mermaid
 sequenceDiagram
     participant A as Administrator
@@ -187,12 +197,14 @@ sequenceDiagram
 ```
 
 **ビジネスルール**:
+
 - Administrator: 管理者権限必須
 - ApprovalCriteria: 内容適切性チェック（詳細要確認）
 - QuizStatus: pending → approved/rejected
 - ApprovalHistory: 承認者・日時・理由を記録
 
 #### ドメイン間相互作用
+
 - **Administrator → Approval**: 実行関係
 - **Approval → Quiz**: 評価対象関係
 - **Approval → ApprovalCriteria**: 利用関係
@@ -204,9 +216,11 @@ sequenceDiagram
 ### UC4: 回答履歴確認
 
 #### 参加者・概念・振る舞い抽出
+
 **アクター**: ユーザー
 
 **参加ドメイン概念**:
+
 - **User**: 履歴確認ユーザー
 - **AnswerHistory**: 回答履歴集約
 - **Answer**: 個別の回答記録
@@ -215,6 +229,7 @@ sequenceDiagram
 - **Statistics**: 統計情報（正答率等）
 
 **ビジネスルール**:
+
 - AnswerHistory: ブラウザローカルに永続保存
 - Answer: 問題文・回答・正誤・日時を記録
 - Statistics: 総回答数・正答率を算出
@@ -224,9 +239,11 @@ sequenceDiagram
 ### UC5: タグ絞り込み
 
 #### 参加者・概念・振る舞い抽出
+
 **アクター**: ユーザー
 
 **参加ドメイン概念**:
+
 - **User**: 絞り込み実行ユーザー
 - **Tag**: 絞り込み条件
 - **Filter**: 絞り込み処理
@@ -234,6 +251,7 @@ sequenceDiagram
 - **QuizList**: 絞り込み結果
 
 **ビジネスルール**:
+
 - Tag: クイズに複数設定可能
 - Filter: 承認済みクイズのみ対象
 - QuizList: タグ一致するクイズ一覧
@@ -243,9 +261,11 @@ sequenceDiagram
 ### UC6: オフライン利用
 
 #### 参加者・概念・振る舞い抽出
+
 **アクター**: ユーザー
 
 **参加ドメイン概念**:
+
 - **User**: オフライン利用ユーザー
 - **OfflineMode**: オフライン状態管理
 - **LocalStorage**: ローカルデータ保存
@@ -254,6 +274,7 @@ sequenceDiagram
 - **Answer**: ローカル保存される回答
 
 **ビジネスルール**:
+
 - OfflineMode: ネットワーク断線検出で自動移行
 - LocalStorage: 事前ダウンロード済みデータで動作
 - SyncService: オンライン復旧時に自動同期
@@ -263,6 +284,7 @@ sequenceDiagram
 ### ユースケース間の共通ドメイン特定
 
 #### 高頻度共通ドメイン（コアドメイン）
+
 | ドメイン | 関与UC | 重要度 | 共通振る舞い |
 |----------|--------|--------|-------------|
 | **Quiz** | UC1,UC2,UC3,UC4,UC5 | ✅ 超高 | 作成・表示・承認・検索・回答対象 |
@@ -270,6 +292,7 @@ sequenceDiagram
 | **User/Creator** | UC1,UC2,UC4,UC5,UC6 | ✅ 高 | 匿名識別・操作実行・セッション管理 |
 
 #### 中頻度共通ドメイン（サポートドメイン）
+
 | ドメイン | 関与UC | 重要度 | 共通振る舞い |
 |----------|--------|--------|-------------|
 | **Tag** | UC1,UC5 | 🔶 中 | クイズ分類・絞り込み検索 |
@@ -277,6 +300,7 @@ sequenceDiagram
 | **QuizStatus** | UC1,UC2,UC3 | 🔶 中 | 状態管理・公開制御 |
 
 #### 低頻度・固有ドメイン（専門ドメイン）
+
 | ドメイン | 関与UC | 重要度 | 特化振る舞い |
 |----------|--------|--------|-------------|
 | **Approval** | UC3 | 🟡 専門 | 承認処理のみ |
@@ -286,6 +310,7 @@ sequenceDiagram
 ### 固有ドメインと共通ドメインの分離
 
 #### 境界づけられたコンテキスト候補
+
 ```mermaid
 graph TB
     subgraph "Quiz Management Context"
@@ -324,6 +349,7 @@ graph TB
 ### 全ユースケース統合後のドメインモデル
 
 #### コアドメイン（Quiz集約）
+
 ```mermaid
 classDiagram
     class Quiz {
@@ -357,6 +383,7 @@ classDiagram
 ```
 
 #### サポートドメイン（Learning集約）
+
 ```mermaid
 classDiagram
     class Answer {
@@ -391,6 +418,7 @@ classDiagram
 ### ドメイン間の依存関係・制約
 
 #### 依存関係マップ
+
 ```mermaid
 graph TD
     UC1[UC1:クイズ投稿] --> Quiz
@@ -417,6 +445,7 @@ graph TD
 ```
 
 #### 重要な制約
+
 1. **UC1 → UC3 → UC2**: クイズ投稿→承認→回答の順序制約
 2. **Quiz.status == 'approved'**: UC2でのクイズ回答前提条件
 3. **Creator.anonymous == true**: 全UCで匿名性保持必須
@@ -425,6 +454,7 @@ graph TD
 ### ユースケース実現のためのドメイン協調
 
 #### UC2（クイズ回答）の詳細協調
+
 ```mermaid
 sequenceDiagram
     participant User
@@ -448,19 +478,23 @@ sequenceDiagram
 ## 実装への示唆
 
 ### 集約設計
+
 1. **Quiz集約**: UC1,UC2,UC3,UC5で共通利用
 2. **LearningSession集約**: UC2,UC4,UC6で学習状態管理
 3. **Approval集約**: UC3専用、管理機能
 
 ### ドメインサービス
+
 1. **QuizApprovalService**: UC3の承認ロジック
 2. **AnswerJudgmentService**: UC2の正誤判定ロジック
 3. **OfflineSyncService**: UC6の同期ロジック
 
 ### リポジトリ設計
+
 1. **QuizRepository**: UC別の検索条件対応
 2. **AnswerRepository**: セッション単位、履歴管理
 3. **SessionRepository**: 匿名ユーザーセッション管理
+
 ```
 
 ## 利点・欠点

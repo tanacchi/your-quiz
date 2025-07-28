@@ -24,7 +24,7 @@ Proposed
 
 ### Chosen Option
 
-**4つの主要集約による設計**
+## 4つの主要集約による設計
 
 各境界づけられたコンテキストに1つずつ、計4つの集約を設計する：
 
@@ -80,43 +80,51 @@ Proposed
 ### Aggregate Design Principles
 
 #### 1. 整合性境界
+
 - 集約内の不変条件を常に保証
 - トランザクション境界と一致
 - 強一貫性の要求範囲
 
 #### 2. 集約ルート経由アクセス
+
 - 集約への操作は全て集約ルートから
 - 内部エンティティへの直接アクセス禁止
 - カプセル化の徹底
 
 #### 3. ID参照原則
+
 - 他集約への参照はIDのみ
 - 集約間の結合度最小化
 - 独立した永続化
 
 #### 4. 最小サイズ
+
 - 必要最小限の要素のみ含める
 - パフォーマンスとスケーラビリティの確保
 
 ### Individual Aggregate Details
 
 #### Quiz Aggregate
+
 - **集約ルート**: Quiz
 - **主要不変条件**: 問題文制約、ステータス遷移制御、承認者必須
 - **責務**: クイズ内容整合性、承認フロー制御
 
 #### Learning Session Aggregate
+
 - **集約ルート**: LearningSession
 - **集約メンバー**: Answer（複数）
 - **主要不変条件**: セッション状態制約、回答順序性、クイズ参照整合性
 - **責務**: 学習セッション内回答整合性、学習進捗計算
 
 #### User Session Aggregate
+
 - **集約ルート**: UserSession
 - **主要不変条件**: 識別子一意性、セッション有効性、匿名性保証
 - **責務**: 匿名ユーザー識別、デバイス認証
 
 #### Sync Session Aggregate
+
 - **集約ルート**: SyncSession
 - **集約メンバー**: SyncItem（複数）
 - **主要不変条件**: 同期状態整合性、タイムスタンプ順序、競合解決規則
@@ -125,6 +133,7 @@ Proposed
 ### Inter-Aggregate Communication
 
 #### 1. ドメインイベント経由
+
 ```typescript
 // Quiz承認時のイベント発行
 class QuizAggregate {
@@ -136,6 +145,7 @@ class QuizAggregate {
 ```
 
 #### 2. アプリケーションサービス経由
+
 ```typescript
 class LearningApplicationService {
   async answerQuiz(command: AnswerQuizCommand): Promise<Result<AnswerResult, ApplicationError>> {

@@ -107,6 +107,7 @@ class Question {
 ```
 
 #### BR004: 承認必須（管理者承認後のみ公開）
+
 **責任者**: `Quiz`エンティティ + `ApprovalService`
 **検証タイミング**: 公開時、回答時
 **実行場所**: `Quiz.isAvailableForAnswer()`, `ApprovalService.approve()`
@@ -134,6 +135,7 @@ class ApprovalService {
 ```
 
 #### BR005: 匿名識別（salt付きハッシュ）
+
 **責任者**: `CreatorId`値オブジェクト + `CreatorIdentificationService`
 **検証タイミング**: 作成者識別時
 **実行場所**: `CreatorId.generate()`, `CreatorIdentificationService.identify()`
@@ -156,6 +158,7 @@ class CreatorId {
 ```
 
 #### BR008: スワイプ操作形式（右◯左×）
+
 **責任者**: `SwipeGesture`値オブジェクト
 **検証タイミング**: スワイプ検出時
 **実行場所**: `SwipeGesture.interpret()`
@@ -181,6 +184,7 @@ class SwipeGesture {
 #### タイミング分類
 
 ##### 1. 生成時検証（Creation Time）
+
 - **BR001**: 問題文文字数制限
 - **BR002**: 解説文字数制限
 - **BR003**: 正解形式制限
@@ -188,14 +192,17 @@ class SwipeGesture {
 - **BR007**: HTMLサニタイズ
 
 ##### 2. 状態変更時検証（State Change Time）
+
 - **BR004**: 承認必須（状態変更時）
 - **BR011**: 管理者権限（承認操作時）
 
 ##### 3. 利用時検証（Usage Time）
+
 - **BR012**: 承認済み回答制限（回答時）
 - **BR008**: スワイプ操作形式（操作時）
 
 ##### 4. 継続的検証（Continuous）
+
 - **BR009**: 履歴永続化（データ保存時）
 - **BR010**: オフライン継続（ネットワーク状態変化時）
 
@@ -204,6 +211,7 @@ class SwipeGesture {
 ### ルール間の依存関係・優先度
 
 #### 依存関係マップ
+
 ```mermaid
 graph TD
     BR005[匿名識別] --> BR006[重複投稿許可]
@@ -218,11 +226,13 @@ graph TD
 #### 優先度階層
 
 ##### Tier 1: システム整合性（最高優先度）
+
 - **BR004**: 承認必須
 - **BR011**: 管理者権限
 - **BR012**: 承認済み回答制限
 
 ##### Tier 2: セキュリティ・品質（高優先度）
+
 - **BR001**: 問題文文字数制限
 - **BR003**: 正解形式制限
 - **BR005**: 匿名識別
@@ -230,6 +240,7 @@ graph TD
 - **BR008**: スワイプ操作形式
 
 ##### Tier 3: ユーザビリティ・利便性（中優先度）
+
 - **BR002**: 解説文字数制限
 - **BR006**: 重複投稿許可
 - **BR009**: 履歴永続化
@@ -240,18 +251,21 @@ graph TD
 #### 潜在的競合ルール
 
 ##### 競合1: 重複投稿許可 vs 品質管理
+
 - **BR006**: 重複投稿許可（同一問題の複数投稿を許可）
 - **BR004**: 承認必須（品質管理のため承認が必要）
 - **競合内容**: 重複投稿により承認負荷が増加
 - **解決方針**: 承認時に重複チェックを行い、明らかな重複は拒否
 
 ##### 競合2: オフライン継続 vs 承認済み制限
+
 - **BR010**: オフライン継続（ネットワーク断線時も動作）
 - **BR012**: 承認済み回答制限（承認済みのみ回答可能）
 - **競合内容**: オフライン時は最新の承認状態を確認できない
 - **解決方針**: 事前ダウンロード時に承認済みクイズのみを対象とする
 
 ##### 競合3: 匿名識別 vs 履歴永続化
+
 - **BR005**: 匿名識別（プライバシー保護）
 - **BR009**: 履歴永続化（学習記録保持）
 - **競合内容**: 匿名性と履歴の永続化のバランス
@@ -262,7 +276,9 @@ graph TD
 ### 不変条件から見た集約設計
 
 #### 集約1: Quiz集約
+
 **保護する不変条件**:
+
 - **BR001**: 問題文は500文字以内
 - **BR002**: 解説は1000文字以内
 - **BR003**: 正解は◯×の2択
@@ -270,6 +286,7 @@ graph TD
 - **BR007**: 入力内容のサニタイズ
 
 **集約境界の根拠**:
+
 - これらのルールは密接に関連し、同時に満たされる必要がある
 - Quiz作成・更新時に一貫して検証が必要
 - 他の集約からは参照のみ、変更は不可
@@ -309,13 +326,16 @@ class QuizAggregate {
 ```
 
 #### 集約2: LearningSession集約
+
 **保護する不変条件**:
+
 - **BR008**: スワイプ操作形式（右◯左×）
 - **BR009**: 履歴永続化
 - **BR010**: オフライン継続性
 - **BR012**: 承認済みクイズのみ回答可能
 
 **集約境界の根拠**:
+
 - 学習セッション内での回答の整合性保証
 - オフライン・オンライン状態での一貫した動作
 - セッション単位での履歴管理
@@ -365,11 +385,14 @@ class LearningSessionAggregate {
 ```
 
 #### 集約3: Identity集約
+
 **保護する不変条件**:
+
 - **BR005**: 匿名識別（salt付きハッシュ）
 - **BR006**: 重複投稿許可（同一作成者の識別）
 
 **集約境界の根拠**:
+
 - 作成者の識別情報の一意性・匿名性保証
 - デバイス変更時の継続性制御
 
@@ -402,11 +425,13 @@ class IdentityAggregate {
 ### ルール整合性保証の範囲
 
 #### 集約内整合性（Strong Consistency）
+
 - **同一トランザクション内**で全ルールを検証・実行
 - **即座の整合性**保証
 - **ロールバック**による原子性確保
 
 #### 集約間整合性（Eventual Consistency）
+
 - **ドメインイベント**による結果整合性
 - **サーガパターン**による長期実行プロセス
 - **補償アクション**によるエラー時復旧
@@ -451,6 +476,7 @@ class QuizApprovalSaga {
 ### ルール実現のために必要なオブジェクト
 
 #### ルール実行オブジェクト（Rule Executors）
+
 | ルールID | 実行オブジェクト | 責任 | インターフェース |
 |----------|----------------|------|-----------------|
 | **BR001-BR003** | Question, CorrectAnswer, Explanation | 入力値制約実行 | `validate(): ValidationResult` |
@@ -461,6 +487,7 @@ class QuizApprovalSaga {
 | **BR009** | AnswerHistory, PersistenceService | 履歴永続化実行 | `persist(): void`, `restore(): AnswerHistory` |
 
 #### ルール検証オブジェクト（Rule Validators）
+
 | ルールカテゴリ | 検証オブジェクト | 責任 | 検証タイミング |
 |-------------|-----------------|------|---------------|
 | **制約ルール** | ConstraintValidator | 値・形式の制約チェック | 値生成時 |
@@ -523,16 +550,19 @@ class BusinessFlowValidator {
 #### 責任分散の原則
 
 ##### 1. 単一責任の原則（Single Responsibility）
+
 - 各オブジェクトは1つのルールカテゴリのみ担当
 - ルール実行と検証の責任分離
 - 値オブジェクトは自身の制約のみ保証
 
 ##### 2. オープン・クローズの原則（Open/Closed）
+
 - 新しいルール追加時は拡張のみ（既存コード修正なし）
 - ルール検証インターフェースの標準化
 - プラガブルなルール実行機構
 
 ##### 3. 依存性逆転の原則（Dependency Inversion）
+
 - 高レベルルール（業務フロー）は低レベルルール（制約）に依存しない
 - ルール実行者はルール定義に依存、逆は禁止
 - インターフェースによる疎結合
@@ -540,6 +570,7 @@ class BusinessFlowValidator {
 #### 実装パターン
 
 ##### パターン1: ルール実行の委譲
+
 ```typescript
 class Quiz {
   private constructor(
@@ -570,6 +601,7 @@ class Quiz {
 ```
 
 ##### パターン2: ルール検証のチェーン
+
 ```typescript
 class RuleValidationChain {
   private validators: RuleValidator[] = [];
@@ -605,6 +637,7 @@ const validationResult = quizValidationChain.validate(quiz);
 ```
 
 ##### パターン3: ルール実行のイベント駆動
+
 ```typescript
 class RuleExecutionEventBus {
   public async executeRule(ruleId: string, context: RuleExecutionContext): Promise<void> {
@@ -634,16 +667,19 @@ class BR004_ApprovalRuleHandler implements RuleExecutionHandler {
 ### ビジネスルール中心設計の原則
 
 #### 1. ルールファーストアプローチ
+
 - **ルール定義**から設計を開始
 - **制約から責任**への自然な導出
 - **ビジネス価値**との直接的な対応
 
 #### 2. ルール実行の可視性
+
 - **ルール違反**の明確なエラーメッセージ
 - **ルール実行履歴**の追跡可能性
 - **ルール変更**の影響範囲分析
 
 #### 3. ルールの進化対応
+
 - **新ルール追加**の容易さ
 - **既存ルール変更**の影響最小化
 - **ルール間競合**の早期発見
@@ -651,6 +687,7 @@ class BR004_ApprovalRuleHandler implements RuleExecutionHandler {
 ### TypeScript実装ガイドライン
 
 #### ルール表現の型安全性
+
 ```typescript
 // ルール定義の型安全性
 type BusinessRule<T> = {
@@ -680,6 +717,7 @@ class RuleEngine {
 ```
 
 #### 不変条件の実装
+
 ```typescript
 // 集約での不変条件保証
 abstract class AggregateRoot {
@@ -721,6 +759,7 @@ class QuizAggregate extends AggregateRoot {
   }
 }
 ```
+
 ```
 
 ## 利点・欠点
