@@ -73,20 +73,33 @@ Your Quizは、ユーザーが投稿したクイズを楽しめるモバイル�
 ### アーキテクチャ設計
 
 - [技術選定](docs/project/architecture/tech-selection.md) - 採用技術とその理由
-- [アーキテクチャパターン](docs/project/architecture/adr/0001-architecture-pattern.md) - システム設計の方針
+- [アーキテクチャパターン](docs/project/adr/0001-architecture-pattern.md) - システム設計の方針
 - [データアーキテクチャ](docs/project/architecture/data-architecture.md) - データ設計と一貫性方針
 - [非機能要件](docs/project/architecture/non-functional-requirements.md) - パフォーマンス・可用性要件
 
 ### 技術決定記録 (ADR)
 
-- [ADR-0003: フロントエンドフレームワーク](docs/project/architecture/adr/0003-frontend-framework.md)
-- [ADR-0006: バックエンドフレームワーク](docs/project/architecture/adr/0006-backend-framework.md)
-- [ADR-0007: データベース選定](docs/project/architecture/adr/0007-database.md)
-- [ADR-0010: バリデーションライブラリ](docs/project/architecture/adr/0010-validation-library.md)
-- [ADR-0011: HTTPクライアント](docs/project/architecture/adr/0011-http-client.md)
-- [ADR-0012: データベースホスティング](docs/project/architecture/adr/0012-database-hosting.md)
-- [ADR-0013: フロントエンドホスティング](docs/project/architecture/adr/0013-frontend-hosting.md)
-- [ADR-0014: APIホスティング](docs/project/architecture/adr/0014-api-hosting.md)
+#### アーキテクチャ・技術選定
+
+- [ADR-0003: フロントエンドフレームワーク](docs/project/adr/0003-frontend-framework.md)
+- [ADR-0006: バックエンドフレームワーク](docs/project/adr/0006-backend-framework.md)
+- [ADR-0007: データベース選定](docs/project/adr/0007-database.md)
+- [ADR-0010: バリデーションライブラリ](docs/project/adr/0010-validation-library.md)
+- [ADR-0011: HTTPクライアント](docs/project/adr/0011-http-client.md)
+- [ADR-0012: データベースホスティング](docs/project/adr/0012-database-hosting.md)
+- [ADR-0013: フロントエンドホスティング](docs/project/adr/0013-frontend-hosting.md)
+- [ADR-0014: APIホスティング](docs/project/adr/0014-api-hosting.md)
+
+#### DDD設計決定
+
+- [ADR-0016: 境界づけられたコンテキスト分割決定](docs/project/adr/0016-bounded-context-division.md)
+- [ADR-0017: 集約設計とルート決定](docs/project/adr/0017-aggregate-design.md)
+- [ADR-0018: ドメインサービス抽出決定](docs/project/adr/0018-domain-service-extraction.md)
+- [ADR-0019: リポジトリパターン採用決定](docs/project/adr/0019-repository-pattern-adoption.md)
+
+#### 全ADR一覧
+
+[全ての技術決定記録を確認](docs/project/adr/README.md)
 
 ### 設計図
 
