@@ -15,7 +15,6 @@
 | **タグ** | Tag | クイズの分類・検索を目的としたラベル（複数設定可能） | When User selects Tag |
 | **回答** | Answer | ユーザーがクイズに対して行った◯または×の選択 | When User submits Answer |
 | **回答履歴** | AnswerHistory | ユーザーの過去の回答記録（ブラウザ保存） | Then AnswerHistory is updated |
-
 | **匿名ユーザー** | AnonymousUser | ログイン不要でアプリを利用するユーザー | Given AnonymousUser accesses app |
 | **作成者** | Creator | クイズを投稿したユーザー（salt付きハッシュで識別） | When Creator submits Quiz |
 | **管理者** | Administrator | クイズの承認・管理権限を持つユーザー | When Administrator approves Quiz |
