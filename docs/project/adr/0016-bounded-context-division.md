@@ -114,7 +114,7 @@ src/
 
 - [境界づけられたコンテキスト詳細](docs/project/ddd-design/bounded-contexts/README.md)
 - [ドメインモデル概要](docs/project/ddd-design/domain-model-overview.md)
-- [DDD設計手順書](docs/instructions/shared/workflow/ddd-design.md)
+- [DDD設計手順書](docs/instructions/shared/workflow/03.01_ddd-design.md)
 - [Eric Evans "Domain-Driven Design"](https://domainlanguage.com/ddd/)
 - [Vaughn Vernon "Implementing Domain-Driven Design"](https://kalele.io/books/)
 
