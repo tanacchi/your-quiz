@@ -8,6 +8,8 @@
 		"npm-run-all2": "^8.0.4"
 	},
 	"scripts": {
+    "dev": "run-p dev:*",
+		"dev:api": "pnpm --filter api dev",
 		"lint": "run-p lint:*",
 		"lint:md": "sh ./scripts/lint-md.sh",
 		"lint:biome": "biome check",
