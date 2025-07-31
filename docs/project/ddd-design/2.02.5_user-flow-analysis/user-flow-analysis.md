@@ -1,8 +1,12 @@
-# 業務フローとユーザーストーリー
+# ユーザーフロー分析
+
+## 目的
+
+[ユーザーストーリー](docs/project/specifications/user-stories/user-story-quiz.md)で定義された機能要件を詳細なユーザーフローに展開し、ビジネス価値・技術難易度・ROI分析に基づく段階的実装計画を策定する。
 
 ## 概要
 
-クイズアプリケーションにおける主要なユーザー操作と業務フローを、正常系・異常系を含めて整理し、ドメインロジックの境界を明確化します。
+クイズアプリケーションにおける主要なユーザー操作と業務フローを、正常系・異常系を含めて整理し、ドメインロジックの境界を明確化します。本分析は`specifications/user-stories/user-story-quiz.md`の5W1H分析と`requirements-quiz.md`の制約条件に基づいています。
 
 ## 主要ユーザーストーリー
 
@@ -261,3 +265,21 @@
 4. **Offline Sync Context**
    - オフライン対応・同期処理
    - 責務: データ同期・競合解決
+
+## まとめ
+
+クイズアプリケーションの主要ユーザーフローを5つのストーリー（US-01〜US-05）として整理し、それぞれの正常系・異常系・ビジネス価値を明確化しました。特に**匿名ユーザーによる継続的な学習体験**と**品質統制された承認フロー**が、このドメインの中核的価値を提供します。
+
+これらのフロー分析により、4つの境界づけられたコンテキスト候補（Quiz Management・Answer・User Session・Offline Sync）が特定され、後続のDDD設計における確固たる基盤が構築されました。
+
+## 関連ドキュメント
+
+- [ユーザーストーリー](docs/project/specifications/user-stories/user-story-quiz.md)
+- [要件定義](docs/project/specifications/requirements/requirements-quiz.md)
+- [ドメインモデル概要](docs/project/ddd-design/2.00_domain-model-overview.md)
+- [境界づけられたコンテキスト定義](docs/project/ddd-design/2.09_bounded-context-definition/README.md)
+
+---
+**作成工程**: DDD設計
+**作成日**: 2025-01-30
+**更新日**: 2025-01-30

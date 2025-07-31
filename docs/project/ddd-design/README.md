@@ -1,122 +1,186 @@
-# DDD設計ドキュメント
+# DDD設計 概要・ナビゲーション
 
-## 読み順
+## 目的
 
-### 理解重視の読み順（推奨）
-
-以下の順序でドキュメントを読むことで、DDD設計全体を体系的に理解できます：
-
-1. [domain-model-overview.md](domain-model-overview.md) - ドメインモデル概要
-2. [ubiquitous-language.md](ubiquitous-language.md) - ユビキタス言語定義
-3. [bounded-contexts/](bounded-contexts/) - 境界づけられたコンテキスト
-4. [aggregates/](aggregates/) - 集約設計
-5. [entities/](entities/) - エンティティ設計
-6. [value-objects/](value-objects/) - 値オブジェクト設計
-7. [domain-services/](domain-services/) - ドメインサービス設計
-8. [repositories/](repositories/) - リポジトリ設計
-9. [entity-relationships.md](entity-relationships.md) - エンティティ関係
-10. [business-flows.md](business-flows.md) - ビジネスフロー
-11. [domain-object-classification.md](domain-object-classification.md) - ドメインオブジェクト分類
-
-### 設計プロセス順の読み順
-
-実際のDDD設計手順に従って作成された順序でドキュメントを読む場合：
-
-1. [ubiquitous-language.md](ubiquitous-language.md) - **手順1**: ドメイン理解とユビキタス言語確立
-2. [domain-object-classification.md](domain-object-classification.md) - **手順2**: ドメインオブジェクトの抽出・分類
-3. [business-flows.md](business-flows.md) - **手順3**: ユーザー操作と業務フローの整理
-4. [entity-relationships.md](entity-relationships.md) - **手順4**: エンティティ間関連性分析
-5. [domain-services/](domain-services/) - **手順5**: ドメインサービス抽出
-6. [bounded-contexts/](bounded-contexts/) - **手順6**: 境界づけられたコンテキスト定義
-7. [aggregates/](aggregates/) - **手順7**: 集約と集約ルート定義
-8. [entities/](entities/) + [value-objects/](value-objects/) + [repositories/](repositories/) - **手順8**: モデル設計（最終成果物）
-9. [domain-model-overview.md](domain-model-overview.md) - **最終まとめ**: 全体設計概要
-
-### 設計経緯を理解したい場合
-
-各手順での設計判断根拠を知りたい場合は、関連ADRも併せて参照してください：
-
-| 手順 | ドキュメント | 関連ADR | 設計判断内容 |
-|------|-------------|---------|-------------|
-| 手順6 | [bounded-contexts/](bounded-contexts/) | [ADR-0016](docs/project/adr/0016-bounded-context-division.md) | なぜ4つのコンテキストに分割したか |
-| 手順7 | [aggregates/](aggregates/) | [ADR-0017](docs/project/adr/0017-aggregate-design.md) | なぜこの集約設計を選択したか |
-| 手順5 | [domain-services/](domain-services/) | [ADR-0018](docs/project/adr/0018-domain-service-extraction.md) | なぜこれらのサービスを抽出したか |
-| 手順8 | [repositories/](repositories/) | [ADR-0019](docs/project/adr/0019-repository-pattern-adoption.md) | なぜリポジトリパターンを採用したか |
+クイズアプリケーションの[要件定義](docs/project/specifications/requirements/requirements-quiz.md)と[ユーザーストーリー](docs/project/specifications/user-stories/user-story-quiz.md)を基に、ドメイン駆動設計の戦術パターンを適用した具体的なドメインモデルとアーキテクチャ層を設計し、実装可能な設計指針を提供する。
 
 ## 概要
 
-このディレクトリには、クイズアプリケーションのドメイン駆動設計（DDD）に関する設計ドキュメントが含まれています。
+本DDD設計では、クイズアプリケーションドメインを**4つの境界づけられたコンテキスト**に分割し、各コンテキスト内で適切な集約・エンティティ・値オブジェクト・ドメインサービスを設計しています。匿名ユーザーによる学習体験と品質統制された承認フローを両立する、スケーラブルで保守性の高いドメインモデルを構築しました。
 
-### DDD設計の構成要素
+## DDD設計成果物ナビゲーション
 
-#### 戦略的設計
+### 戦略的設計（Strategic Design）
 
-- **境界づけられたコンテキスト**: 問題領域の境界と責務の分離
-- **ユビキタス言語**: ドメインエキスパートと開発者の共通言語
+| セクション | 成果物 | 概要 | 状態 |
+|-----------|--------|------|------|
+| **2.00** | [ドメインモデル概要](docs/project/ddd-design/2.00_domain-model-overview.md) | 全体アーキテクチャ・設計決定 | ✅ |
+| **2.02** | [ドメイン理解](docs/project/ddd-design/2.02_domain-understanding/domain-knowledge-base.md) | ビジネスルール・制約整理 | ✅ |
+| **2.03** | [ユビキタス言語辞書](docs/project/ddd-design/2.03_ubiquitous-language/ubiquitous-language-dictionary.md) | 統一用語・BDD連携 | ✅ |
+| **2.04** | [Event Storming結果](docs/project/ddd-design/2.04_event-storming/event-storming-results.md) | イベント発見・境界特定 | ✅ |
+| **2.09** | [境界づけられたコンテキスト](docs/project/ddd-design/2.09_bounded-context-definition/README.md) | 4コンテキスト定義・関係性 | ✅ |
+| **2.11** | [ドメインオントロジー](docs/project/ddd-design/2.11_ontology-creation/domain-ontology.md) | 概念体系・階層構造 | ✅ |
 
-#### 戦術的設計
+### 戦術的設計（Tactical Design）
 
-- **エンティティ**: 一意性を持つドメインオブジェクト
-- **値オブジェクト**: 不変な属性を表現するオブジェクト
-- **集約**: エンティティと値オブジェクトの整合性境界
-- **ドメインサービス**: エンティティや値オブジェクトに属さないドメインロジック
-- **リポジトリ**: 集約の永続化抽象化
+| セクション | 成果物 | 概要 | 状態 |
+|-----------|--------|------|------|
+| **2.02.5** | [ユーザーフロー分析](docs/project/ddd-design/2.02.5_user-flow-analysis/user-flow-analysis.md) | 5つの主要ユーザーストーリー | ✅ |
+| **2.05** | [ドメインオブジェクト抽出](docs/project/ddd-design/2.05_domain-object-extraction/domain-object-analysis.md) | エンティティ・値オブジェクト分類 | ✅ |
+| **2.06** | [エンティティ関係分析](docs/project/ddd-design/2.06_entity-relationship-analysis/entity-relationship-analysis.md) | 関係性・多重度・制約 | ✅ |
+| **2.07** | [ドメインサービス抽出](docs/project/ddd-design/2.07_domain-service-extraction/domain-service-analysis.md) | 5つの主要ドメインサービス | ✅ |
+| **2.08** | [集約設計](docs/project/ddd-design/2.08_aggregate-design/README.md) | 4つの集約・不変条件 | ✅ |
+| **2.10** | [ドメインイベントカタログ](docs/project/ddd-design/2.10_domain-events-catalog/domain-events-catalog.md) | Event Sourcing・CQRS基盤 | ✅ |
 
-### アーキテクチャとの関係
+## 設計サマリー
 
-このDDD設計は[ヘキサゴナルアーキテクチャ](docs/project/architecture/diagrams/hexagonal-architecture.md)のドメイン層（中心部）を詳細化したものです。
+### 境界づけられたコンテキスト
 
-```text
-[Infrastructure Layer] → [Application Layer] → [Domain Layer]
-                                                      ↑
-                                              このディレクトリで詳細化
+```mermaid
+graph TB
+    subgraph "Quiz Management Context"
+        QM[Quiz Management<br/>承認フロー・品質統制]
+    end
+    
+    subgraph "Quiz Learning Context"
+        QL[Quiz Learning<br/>学習体験・回答処理]
+    end
+    
+    subgraph "User Session Context"
+        US[User Session<br/>匿名ユーザー管理]
+    end
+    
+    subgraph "Offline Sync Context"
+        OS[Offline Sync<br/>データ同期・競合解決]
+    end
+    
+    QM -->|Published Language| QL
+    US -->|Customer/Supplier| QL
+    QL -->|Customer/Supplier| OS
+    QM -->|Anti-Corruption Layer| OS
 ```
 
-### 実装への影響
+### 主要集約
 
-- **依存関係**: ドメイン層は外部の層に依存しない
-- **テスタビリティ**: ピュアなビジネスロジックとして単体テスト可能
-- **再利用性**: ビジネスルールの変更に強い構造
+| 集約名 | コンテキスト | 責務 | 不変条件 |
+|--------|-------------|------|----------|
+| **Quiz Aggregate** | Quiz Management | クイズライフサイクル管理 | 承認状態遷移・内容制約 |
+| **Learning Session Aggregate** | Quiz Learning | 学習セッション・回答管理 | 回答整合性・セッション状態 |
+| **User Session Aggregate** | User Session | 匿名ユーザー識別 | セッション有効性・匿名性 |
+| **Sync Session Aggregate** | Offline Sync | オフライン同期処理 | データ整合性・競合解決 |
 
-## 設計決定記録（ADR）
+### 主要ドメインサービス
 
-DDD設計における重要な決定事項は、以下のADRで詳細に記録されています：
+| サービス名 | 責務 | 抽出理由 |
+|-----------|------|----------|
+| **Quiz Quality Assessment Service** | 品質評価・重複チェック | 複数集約参照・複雑判定 |
+| **Learning Progress Calculation Service** | 学習進捗・効果計算 | 複数集約統合計算 |
+| **Creator Authorization Service** | 匿名作成者権限管理 | セキュリティポリシー実装 |
+| **Offline Sync Coordination Service** | データ同期・競合解決 | 複雑な協調処理 |
+| **Quiz Approval Policy Service** | 承認基準・ポリシー実装 | 複雑なビジネスルール |
 
-### 戦略的設計に関するADR
+## 重要な設計決定
 
-- [ADR-0016: 境界づけられたコンテキスト分割決定](docs/project/adr/0016-bounded-context-division.md)
-  - 4つのコンテキスト分割の根拠と理由
-  - Quiz Management、Quiz Learning、User Session、Offline Sync の責務分離
+### 1. 匿名ユーザー管理の複雑性
 
-### 戦術的設計に関するADR
+**決定**: セッションベース匿名管理（UserSession集約）
 
-- [ADR-0017: 集約設計とルート決定](docs/project/adr/0017-aggregate-design.md)
-  - 4つの主要集約設計の根拠
-  - 整合性境界とトランザクション境界の設計決定
+**理由**: 作成者識別継続性・オフライン対応・学習履歴個人化
 
-- [ADR-0018: ドメインサービス抽出決定](docs/project/adr/0018-domain-service-extraction.md)
-  - エンティティに属さないドメインロジックの配置決定
-  - 複数集約操作・複雑計算・外部連携ロジックの抽出
+**トレードオフ**: 機能性向上 vs システム複雑性増加
 
-- [ADR-0019: リポジトリパターン採用決定](docs/project/adr/0019-repository-pattern-adoption.md)
-  - ドメイン層の純粋性保持のための抽象化戦略
-  - 集約単位でのリポジトリ設計決定
+### 2. 承認フローの厳格性
 
-### ADRとの関連性
+**決定**: 全件人的承認（管理者による品質統制）
 
-各設計ドキュメントは、上記ADRの決定事項を具体化したものです：
+**理由**: コンテンツ品質保証・不適切コンテンツ排除・信頼性維持
 
-| 設計ドキュメント | 関連ADR | 決定事項 |
-|------------------|---------|----------|
-| [bounded-contexts/](bounded-contexts/) | [ADR-0016](docs/project/adr/0016-bounded-context-division.md) | コンテキスト分割基準と統合パターン |
-| [aggregates/](aggregates/) | [ADR-0017](docs/project/adr/0017-aggregate-design.md) | 集約境界と不変条件設計 |
-| [domain-services/](domain-services/) | [ADR-0018](docs/project/adr/0018-domain-service-extraction.md) | ドメインサービスの責務と実装 |
-| [repositories/](repositories/) | [ADR-0019](docs/project/adr/0019-repository-pattern-adoption.md) | 永続化抽象化と技術分離 |
+**トレードオフ**: 品質保証・安全性 vs 運用負荷・公開遅延
+
+### 3. オフライン対応の分離
+
+**決定**: 分離型アーキテクチャ（独立したOffline Sync Context）
+
+**理由**: 技術的複雑性局所化・他機能への影響最小化・専門性集約
+
+**トレードオフ**: 保守性向上・技術的負債局所化 vs 統合複雑性
+
+## specifications連携状況
+
+### 要件追跡可能性
+
+| DDD成果物 | specifications参照 | 連携内容 |
+|-----------|-------------------|----------|
+| **ドメイン理解** | requirements-quiz.md | 全制約・ビジネスルールの追跡 |
+| **ユーザーフロー** | user-story-quiz.md | 5W1H分析・ユーザー操作の詳細化 |
+| **オブジェクト抽出** | requirements-quiz.md | データ制約の型レベル表現 |
+| **関係分析** | user-story-quiz.md | ユーザー操作シナリオからの関係抽出 |
+| **集約設計** | requirements-quiz.md | 不変条件のビジネスルール準拠 |
+
+## 完了判定結果
+
+### 必須要件適合状況
+
+- ✅ **統一構造準拠**: 2.XX系ディレクトリ構造完全移行
+- ✅ **境界づけられたコンテキスト明確化**: 4コンテキストの責務境界・関係性
+- ✅ **ユビキタス言語確立**: 統一用語定義・BDD連携
+- ✅ **エンティティ・値オブジェクト分類**: 分類根拠の表形式明文化
+- ✅ **集約境界設定**: 不変条件に基づく4集約設計
+- ✅ **リポジトリインターフェース定義**: ドメイン層抽象化
+- ✅ **ドメインイベント設計**: Event Sourcing・CQRS基盤
+- ✅ **アーキテクチャ層構造**: 4層アーキテクチャの役割分担
+
+### 品質要件適合状況
+
+- ✅ **実装可能性**: API設計・DB設計への具体的制約・指針提供
+- ✅ **保守性**: ドメイン知識変更のコード反映容易な構造
+- ✅ **拡張性**: 新機能追加時の影響範囲限定
+- ✅ **テスタビリティ**: 単体テスト容易な責務分離
+- ✅ **specifications整合性**: 全設計判断のspecifications要件追跡
+
+### 文書品質要件適合状況
+
+- ✅ **統一フォーマット準拠**: 目的→概要→詳細→まとめ→関連文書構造
+- ✅ **表形式活用**: 設計判断根拠の表形式整理
+- ✅ **図表可視化**: Mermaid・UMLでの構造表現
+- ✅ **トレードオフ明示**: 設計選択理由・代替案比較
+- ✅ **設計仕様**: ドメイン概念・制約・関係性の明確定義
+- ✅ **specifications連携**: 実データに基づく具体例記載
+
+## 次工程への指針
+
+### API設計への制約
+
+- **集約境界**: API エンドポイントは集約ルート単位で設計
+- **ドメインサービス**: 複雑なビジネスロジックはサービス層で実装
+- **イベント**: 重要な状態変化はドメインイベントとして発行
+
+### DB設計への制約
+
+- **集約単位**: トランザクション境界は集約境界と一致
+- **ID参照原則**: 集約間参照はIDのみ、JOINは最小限
+- **不変条件**: データベース制約でドメイン不変条件を強制
+
+### 実装への指針
+
+- **言語非依存**: 設計レベルの抽象度維持、実装言語に依存しない
+- **テスト戦略**: 集約・ドメインサービス単位でのユニットテスト
+- **拡張戦略**: 新コンテキスト追加時の境界設定基準
+
+## まとめ
+
+クイズアプリケーションのDDD設計により、**4つの境界づけられたコンテキスト**と**4つの主要集約**からなるドメインモデルが確立されました。匿名ユーザーによる学習体験と品質統制された承認フローを両立し、スケーラビリティ・保守性・拡張性を確保した設計となっています。
+
+すべての設計判断は`specifications`配下の要件に追跡可能であり、実装・テスト・運用における具体的な指針を提供します。
+
+## 関連ドキュメント
+
+- [要件定義](docs/project/specifications/requirements/requirements-quiz.md)
+- [ユーザーストーリー](docs/project/specifications/user-stories/user-story-quiz.md)
+- [成功シナリオ](docs/project/specifications/success-scenarios/success-quiz.md)
+- [エラーシナリオ](docs/project/specifications/error-scenarios/error-quiz.md)
 
 ---
-
 **作成工程**: DDD設計
-**前工程**: [アーキテクチャ策定・技術選定](docs/project/architecture/)
-**次工程**: [API設計](docs/project/api/) ※将来作成予定
-**作成日**: 2025-07-27
-**ADR追加**: 2025-07-28
+**作成日**: 2025-01-30
+**更新日**: 2025-01-30

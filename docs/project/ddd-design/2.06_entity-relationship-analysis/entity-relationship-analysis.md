@@ -1,8 +1,12 @@
 # エンティティ関連性分析
 
+## 目的
+
+[ドメインオブジェクト分類](docs/project/ddd-design/2.05_domain-object-extraction/domain-object-analysis.md)で特定したエンティティ間の関連性を体系的に分析し、集約境界設計・リポジトリ設計・DB設計への制約と指針を明確化する。
+
 ## 概要
 
-クイズアプリケーションにおけるエンティティ間の関連性を分析し、所有関係・参照関係・集約境界を明確化します。
+クイズアプリケーションにおけるエンティティ間の関連性を分析し、所有関係・参照関係・集約境界を明確化します。この分析は`specifications/user-stories/user-story-quiz.md`のユーザー操作シナリオと`requirements-quiz.md`のデータ関係制約に基づいています。
 
 ## エンティティ関連性マップ
 
@@ -326,3 +330,21 @@ class QuizAnswerService {
 
 - 時系列分割（月次パーティション）
 - 機能分割（読み書き分離）
+
+## まとめ
+
+クイズアプリケーションにおけるエンティティ間関係を3つの主要パターン（Quiz↔Answer、QuizSession↔Answer、QuizSession↔Quiz）として整理し、それぞれの関係性・多重度・整合性制約を明確化しました。
+
+**ハイブリッド境界設定**（Quiz集約 + Session集約）により、承認フローとユーザー活動を適切に分離しながら、必要な整合性保証を実現します。この設計により、スケーラビリティと保守性を両立した実装が可能になります。
+
+## 関連ドキュメント
+
+- [ドメインオブジェクト分類](docs/project/ddd-design/2.05_domain-object-extraction/domain-object-analysis.md)
+- [集約設計](docs/project/ddd-design/2.08_aggregate-design/README.md)
+- [境界づけられたコンテキスト定義](docs/project/ddd-design/2.09_bounded-context-definition/README.md)
+- [ドメインサービス抽出](docs/project/ddd-design/2.07_domain-service-extraction/domain-service-analysis.md)
+
+---
+**作成工程**: DDD設計
+**作成日**: 2025-01-30
+**更新日**: 2025-01-30
