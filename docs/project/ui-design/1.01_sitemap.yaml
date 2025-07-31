@@ -1,0 +1,188 @@
+site:
+  title: "Your Quiz"
+  description: "クイズアプリケーション - 匿名で手軽にクイズを解いて学習"
+  base_url: "/"
+  responsive: "mobile-first-375px"
+  offline_support: true
+  
+navigation:
+  main:
+    - name: "Play"
+      url: "/"
+      icon: "play-circle"
+      description: "クイズを解く・検索"
+    - name: "Create"
+      url: "/create"
+      icon: "plus-circle"
+      description: "クイズを作成"
+    - name: "MyPage"
+      url: "/mypage"
+      icon: "user-circle"
+      description: "実績・投稿・履歴"
+      
+pages:
+  public:
+    # Play タブ関連
+    - path: "/"
+      name: "ホーム（Play）"
+      component: "HomePage"
+      description: "クイズ一覧・検索・Deck選択"
+      layout: "MobilePageTemplate"
+      features:
+        - "承認済みクイズ一覧"
+        - "タグによる絞り込み検索"
+        - "過去に解いたDeck表示"
+        - "間違い問題集へのアクセス"
+        
+    - path: "/quiz"
+      name: "クイズ一覧"
+      component: "QuizListPage"
+      description: "検索結果・カテゴリ別クイズ表示"
+      layout: "MobilePageTemplate"
+      features:
+        - "検索条件による絞り込み"
+        - "Deck生成（最大100問）"
+        - "タグ・難易度フィルター"
+        
+    - path: "/quiz/:id"
+      name: "クイズ回答"
+      component: "QuizAnswerPage"
+      description: "Tinder UI形式でのクイズ回答画面"
+      layout: "QuizAnswerTemplate"
+      features:
+        - "スワイプ操作による回答（右=◯、左=×）"
+        - "正誤判定の即座表示"
+        - "解説表示"
+        - "進捗表示"
+        - "次問への遷移"
+        
+    - path: "/quiz/:id/result"
+      name: "クイズ完了"
+      component: "QuizResultPage"
+      description: "Deck完了後の結果・次アクション画面"
+      layout: "MobilePageTemplate"
+      features:
+        - "正答率・結果サマリー"
+        - "間違い問題集生成"
+        - "新しい検索への導線"
+        - "MyPageへの導線"
+        
+    # Create タブ関連
+    - path: "/create"
+      name: "クイズ作成（Create）"
+      component: "QuizCreationPage"
+      description: "新しいクイズの作成フォーム"
+      layout: "MobilePageTemplate"
+      features:
+        - "問題文入力（500文字以内）"
+        - "正解選択（◯/×）"
+        - "解説入力（任意、1000文字以内）"
+        - "タグ設定（公認・ユーザタグ）"
+        - "プレビュー機能"
+        - "投稿機能"
+        
+    - path: "/create/preview"
+      name: "クイズプレビュー"
+      component: "QuizPreviewPage"
+      description: "作成したクイズのプレビュー表示"
+      layout: "QuizAnswerTemplate"
+      features:
+        - "Play画面ライクなプレビュー"
+        - "修正・投稿選択"
+        
+    - path: "/create/success"
+      name: "投稿完了"
+      component: "QuizSubmissionSuccessPage"
+      description: "クイズ投稿完了・承認待ち状態表示"
+      layout: "MobilePageTemplate"
+      features:
+        - "投稿完了メッセージ"
+        - "承認待ち状態説明"
+        - "作成者限定プレビュー"
+        - "次のアクション導線"
+        
+    # MyPage タブ関連
+    - path: "/mypage"
+      name: "マイページ（MyPage）"
+      component: "MyPageHomePage"
+      description: "ユーザーの実績・履歴・投稿管理"
+      layout: "MobilePageTemplate"
+      features:
+        - "回答履歴サマリー"
+        - "間違い問題集一覧"
+        - "投稿したクイズ管理"
+        - "実績・統計表示"
+        
+    - path: "/mypage/history"
+      name: "回答履歴"
+      component: "AnswerHistoryPage"
+      description: "過去の回答履歴一覧・詳細"
+      layout: "MobilePageTemplate"
+      features:
+        - "日付・Deck・正答率表示"
+        - "詳細確認・再解答機能"
+        - "間違い問題絞り込み"
+        
+    - path: "/mypage/wrong-quiz"
+      name: "間違い問題集"
+      component: "WrongQuizCollectionPage"
+      description: "自動生成された間違い問題のDeck"
+      layout: "MobilePageTemplate"
+      features:
+        - "間違えた問題の自動Deck化"
+        - "再チャレンジ機能"
+        - "習得状況追跡"
+        
+    - path: "/mypage/created"
+      name: "投稿管理"
+      component: "CreatedQuizManagementPage"
+      description: "自作クイズの承認状況・統計"
+      layout: "MobilePageTemplate"
+      features:
+        - "承認待ち・承認済み・拒否状況"
+        - "正答率・保存数・難易度統計"
+        - "編集・削除機能（承認前のみ）"
+        
+    - path: "/mypage/achievements"
+      name: "実績・ランキング"
+      component: "AchievementsPage"
+      description: "タグ別レベル・偏差値・バッジ表示"
+      layout: "MobilePageTemplate"
+      features:
+        - "タグ別習熟度"
+        - "偏差値・ランキング"
+        - "獲得バッジ・称号"
+        
+  # オフライン対応ページ
+  offline:
+    - path: "/offline"
+      name: "オフラインモード"
+      component: "OfflineModePage"
+      description: "ネットワーク断線時の代替画面"
+      layout: "MobilePageTemplate"
+      features:
+        - "オフライン状態通知"
+        - "キャッシュ済みDeck表示"
+        - "同期待ち回答管理"
+
+# URL設計パターン
+url_patterns:
+  quiz_answer: "/quiz/{quiz_id}"
+  quiz_result: "/quiz/{quiz_id}/result"
+  deck_play: "/play/deck/{deck_id}"
+  tag_filter: "/quiz?tag={tag_name}"
+  search_result: "/quiz?q={search_query}"
+  
+# PWA設定
+pwa:
+  start_url: "/"
+  display: "standalone"
+  theme_color: "#3B82F6"
+  background_color: "#FFFFFF"
+  orientation: "portrait"
+  
+# オフライン対応
+offline_strategy:
+  quiz_data: "cache_first"
+  user_answers: "network_first_with_fallback"
+  assets: "stale_while_revalidate"
