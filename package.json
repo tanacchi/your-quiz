@@ -10,6 +10,7 @@
 	"scripts": {
 		"dev": "run-p dev:*",
 		"dev:api": "pnpm --filter api dev",
+		"dev:ui": "pnpm --filter ui dev",
 		"lint": "run-p lint:*",
 		"lint:md": "sh ./scripts/lint-md.sh",
 		"lint:biome": "biome check",
