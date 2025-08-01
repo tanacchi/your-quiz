@@ -712,8 +712,9 @@ export const ComponentName: React.FC<ComponentNameProps> = ({
     </element>
   );
 };
-```
-```
+```text
+
+```text
 
 ### 2. GitHub Actions統合
 
