@@ -29,10 +29,14 @@ pages:
       description: "クイズ一覧・検索・Deck選択"
       layout: "MobilePageTemplate"
       features:
-        - "承認済みクイズ一覧"
-        - "タグによる絞り込み検索"
-        - "過去に解いたDeck表示"
-        - "間違い問題集へのアクセス"
+        - name: "承認済みクイズ一覧"
+          offline: true
+        - name: "タグによる絞り込み検索"
+          offline: false  # 検索API必要
+        - name: "過去に解いたDeck表示"
+          offline: true
+        - name: "間違い問題集へのアクセス"
+          offline: true
         
     - path: "/quiz"
       name: "クイズ一覧"
@@ -40,9 +44,12 @@ pages:
       description: "検索結果・カテゴリ別クイズ表示"
       layout: "MobilePageTemplate"
       features:
-        - "検索条件による絞り込み"
-        - "Deck生成（最大100問）"
-        - "タグ・難易度フィルター"
+        - name: "検索条件による絞り込み"
+          offline: false  # 検索API必要
+        - name: "Deck生成（最大100問）"
+          offline: true   # キャッシュされたクイズから生成
+        - name: "タグ・難易度フィルター"
+          offline: true   # ローカルフィルタリング
         
     - path: "/quiz/:id"
       name: "クイズ回答"
@@ -50,11 +57,16 @@ pages:
       description: "Tinder UI形式でのクイズ回答画面"
       layout: "QuizAnswerTemplate"
       features:
-        - "スワイプ操作による回答（右=◯、左=×）"
-        - "正誤判定の即座表示"
-        - "解説表示"
-        - "進捗表示"
-        - "次問への遷移"
+        - name: "スワイプ操作による回答（右=◯、左=×）"
+          offline: true   # ダウンロード済みDeckのみ
+        - name: "正誤判定の即座表示"
+          offline: true   # ダウンロード済みDeckのみ
+        - name: "解説表示"
+          offline: true   # ダウンロード済みDeckのみ
+        - name: "進捗表示"
+          offline: true   # ローカル管理
+        - name: "次問への遷移"
+          offline: true   # ダウンロード済みDeckのみ
         
     - path: "/quiz/:id/result"
       name: "クイズ完了"
@@ -62,10 +74,14 @@ pages:
       description: "Deck完了後の結果・次アクション画面"
       layout: "MobilePageTemplate"
       features:
-        - "正答率・結果サマリー"
-        - "間違い問題集生成"
-        - "新しい検索への導線"
-        - "MyPageへの導線"
+        - name: "正答率・結果サマリー"
+          offline: true   # ローカル計算
+        - name: "間違い問題集生成"
+          offline: true   # ローカル生成
+        - name: "新しい検索への導線"
+          offline: false  # オンライン検索が必要
+        - name: "MyPageへの導線"
+          offline: true
         
     # Create タブ関連
     - path: "/create"
@@ -74,12 +90,18 @@ pages:
       description: "新しいクイズの作成フォーム"
       layout: "MobilePageTemplate"
       features:
-        - "問題文入力（500文字以内）"
-        - "正解選択（◯/×）"
-        - "解説入力（任意、1000文字以内）"
-        - "タグ設定（公認・ユーザタグ）"
-        - "プレビュー機能"
-        - "投稿機能"
+        - name: "問題文入力（500文字以内）"
+          offline: true   # ローカル下書き保存
+        - name: "正解選択（◯/×）"
+          offline: true
+        - name: "解説入力（任意、1000文字以内）"
+          offline: true   # ローカル下書き保存
+        - name: "タグ設定（公認・ユーザタグ）"
+          offline: true   # キャッシュされたタグ情報
+        - name: "プレビュー機能"
+          offline: true
+        - name: "投稿機能"
+          offline: false  # サーバー送信が必要
         
     - path: "/create/preview"
       name: "クイズプレビュー"
@@ -87,8 +109,10 @@ pages:
       description: "作成したクイズのプレビュー表示"
       layout: "QuizAnswerTemplate"
       features:
-        - "Play画面ライクなプレビュー"
-        - "修正・投稿選択"
+        - name: "Play画面ライクなプレビュー"
+          offline: true
+        - name: "修正・投稿選択"
+          offline: true   # 修正はローカル、投稿は同期待ち
         
     - path: "/create/success"
       name: "投稿完了"
@@ -96,10 +120,14 @@ pages:
       description: "クイズ投稿完了・承認待ち状態表示"
       layout: "MobilePageTemplate"
       features:
-        - "投稿完了メッセージ"
-        - "承認待ち状態説明"
-        - "作成者限定プレビュー"
-        - "次のアクション導線"
+        - name: "投稿完了メッセージ"
+          offline: true   # ローカル表示
+        - name: "承認待ち状態説明"
+          offline: true
+        - name: "作成者限定プレビュー"
+          offline: true
+        - name: "次のアクション導線"
+          offline: true
         
     # MyPage タブ関連
     - path: "/mypage"
@@ -108,10 +136,14 @@ pages:
       description: "ユーザーの実績・履歴・投稿管理"
       layout: "MobilePageTemplate"
       features:
-        - "回答履歴サマリー"
-        - "間違い問題集一覧"
-        - "投稿したクイズ管理"
-        - "実績・統計表示"
+        - name: "回答履歴サマリー"
+          offline: true   # ローカル履歴
+        - name: "間違い問題集一覧"
+          offline: true
+        - name: "投稿したクイズ管理"
+          offline: true   # ローカルキャッシュ、同期は後で
+        - name: "実績・統計表示"
+          offline: true   # ローカル計算
         
     - path: "/mypage/history"
       name: "回答履歴"
@@ -119,9 +151,12 @@ pages:
       description: "過去の回答履歴一覧・詳細"
       layout: "MobilePageTemplate"
       features:
-        - "日付・Deck・正答率表示"
-        - "詳細確認・再解答機能"
-        - "間違い問題絞り込み"
+        - name: "日付・Deck・正答率表示"
+          offline: true
+        - name: "詳細確認・再解答機能"
+          offline: true   # ダウンロード済みDeckのみ
+        - name: "間違い問題絞り込み"
+          offline: true
         
     - path: "/mypage/wrong-quiz"
       name: "間違い問題集"
@@ -129,9 +164,12 @@ pages:
       description: "自動生成された間違い問題のDeck"
       layout: "MobilePageTemplate"
       features:
-        - "間違えた問題の自動Deck化"
-        - "再チャレンジ機能"
-        - "習得状況追跡"
+        - name: "間違えた問題の自動Deck化"
+          offline: true
+        - name: "再チャレンジ機能"
+          offline: true   # ダウンロード済み問題のみ
+        - name: "習得状況追跡"
+          offline: true
         
     - path: "/mypage/created"
       name: "投稿管理"
@@ -139,9 +177,12 @@ pages:
       description: "自作クイズの承認状況・統計"
       layout: "MobilePageTemplate"
       features:
-        - "承認待ち・承認済み・拒否状況"
-        - "正答率・保存数・難易度統計"
-        - "編集・削除機能（承認前のみ）"
+        - name: "承認待ち・承認済み・拒否状況"
+          offline: true   # ローカルキャッシュ表示
+        - name: "正答率・保存数・難易度統計"
+          offline: false  # リアルタイム統計が必要
+        - name: "編集・削除機能（承認前のみ）"
+          offline: true   # ローカル編集、同期は後で
         
     - path: "/mypage/achievements"
       name: "実績・ランキング"
@@ -149,9 +190,12 @@ pages:
       description: "タグ別レベル・偏差値・バッジ表示"
       layout: "MobilePageTemplate"
       features:
-        - "タグ別習熟度"
-        - "偏差値・ランキング"
-        - "獲得バッジ・称号"
+        - name: "タグ別習熟度"
+          offline: true   # ローカル計算
+        - name: "偏差値・ランキング"
+          offline: false  # 全体統計が必要
+        - name: "獲得バッジ・称号"
+          offline: true
         
   # オフライン対応ページ
   offline:
@@ -161,9 +205,12 @@ pages:
       description: "ネットワーク断線時の代替画面"
       layout: "MobilePageTemplate"
       features:
-        - "オフライン状態通知"
-        - "キャッシュ済みDeck表示"
-        - "同期待ち回答管理"
+        - name: "オフライン状態通知"
+          offline: true
+        - name: "キャッシュ済みDeck表示"
+          offline: true
+        - name: "同期待ち回答管理"
+          offline: true
 
 # URL設計パターン
 url_patterns:
@@ -183,6 +230,16 @@ pwa:
   
 # オフライン対応
 offline_strategy:
-  quiz_data: "cache_first"
-  user_answers: "network_first_with_fallback"
-  assets: "stale_while_revalidate"
+  quiz_data: "cache_first"                    # ダウンロード済みDeck優先
+  user_answers: "local_storage_with_sync"     # ローカル保存後、同期
+  search_api: "network_only"                  # 検索は常にオンライン必要
+  assets: "stale_while_revalidate"            # 静的リソース
+  user_drafts: "local_storage"                # 下書きはローカル保存
+  statistics_real_time: "network_only"        # リアルタイム統計はオンライン必要
+  
+# オフライン機能制限
+offline_limitations:
+  - "新規クイズ検索は不可（キャッシュ済みのみ）"
+  - "リアルタイム統計・ランキングは不可"
+  - "クイズ投稿は同期待ち状態"
+  - "他ユーザーとの比較機能は制限"
