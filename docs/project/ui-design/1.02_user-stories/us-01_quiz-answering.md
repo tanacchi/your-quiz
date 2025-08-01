@@ -2,9 +2,9 @@
 
 ## 概要
 
-**アクター**: 匿名ユーザー  
-**目的**: 承認済みクイズに回答して学習する  
-**優先度**: 高（MVP対象）  
+**アクター**: 匿名ユーザー
+**目的**: 承認済みクイズに回答して学習する
+**優先度**: 高（MVP対象）
 
 ## UI要件
 
@@ -31,15 +31,15 @@ graph TD
         C --> D[Swipe Interaction Area]
         D --> E[Footer: ヒント表示]
     end
-    
+
     subgraph "Header (60px)"
         A1[戻るボタン] --> A2[進捗 3/10] --> A3[メニュー]
     end
-    
+
     subgraph "Question Area (Auto Height)"
         C1[問題文<br/>最大500文字] --> C2[画像・メディア<br/>Optional]
     end
-    
+
     subgraph "Swipe Area (300px)"
         D1[スワイプジェスチャー検出エリア]
         D2[左スワイプ: × 不正解]
@@ -47,7 +47,7 @@ graph TD
         D4[上スワイプ: 次問]
         D5[下スワイプ: 前問]
     end
-    
+
     subgraph "Footer (60px)"
         E1[スワイプヒント] --> E2[代替ボタン]
     end
@@ -88,7 +88,7 @@ flowchart TD
     C -->|左スワイプ| E[× 回答登録]
     C -->|上スワイプ| F[スキップ登録]
     C -->|下スワイプ| G[前問に戻る]
-    
+
     D --> H[正誤判定表示]
     E --> H
     F --> H
@@ -97,7 +97,7 @@ flowchart TD
     J --> K{次問あり?}
     K -->|Yes| B
     K -->|No| L[結果画面]
-    
+
     G --> M{前問あり?}
     M -->|Yes| B
     M -->|No| N[先頭問題メッセージ]
@@ -192,11 +192,11 @@ flowchart TD
 
 ## 関連ドキュメント
 
-- [ユーザーフロー分析: US-01](docs/project/ddd-design/2.02.5_user-flow-analysis/user-flow-analysis.md#us-01-クイズ回答匿名ユーザー)
+- [ユーザーフロー分析: US-01](docs/project/ddd-design/2.02_user-flow-analysis/user-flow-analysis.md#us-01-クイズ回答匿名ユーザー)
 - [要件定義](docs/project/specifications/requirements/requirements-quiz.md#ユーザー体験要件)
 - [サイトマップ](docs/project/ui-design/1.01_sitemap.yaml)
 
 ---
-**作成工程**: UI設計  
-**作成日**: 2025-01-31  
+**作成工程**: UI設計
+**作成日**: 2025-01-31
 **更新日**: 2025-01-31

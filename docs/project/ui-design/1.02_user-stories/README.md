@@ -2,7 +2,7 @@
 
 ## 概要
 
-[DDD設計のユーザーフロー分析](docs/project/ddd-design/2.02.5_user-flow-analysis/user-flow-analysis.md)で定義されたユーザーストーリーをUI/UX視点で具体化し、画面設計・操作体験の要件を定義します。クイズ検索機能（US-06）を追加し、より充実したユーザー体験を提供します。
+[DDD設計のユーザーフロー分析](docs/project/ddd-design/2.02_user-flow-analysis/user-flow-analysis.md)で定義されたユーザーストーリーをUI/UX視点で具体化し、画面設計・操作体験の要件を定義します。クイズ検索機能（US-06）を追加し、より充実したユーザー体験を提供します。
 
 ## ユーザーストーリー一覧
 
@@ -69,10 +69,10 @@
 
 - [ユーザーストーリー（specifications）](docs/project/specifications/user-stories/user-story-quiz.md)
 - [要件定義](docs/project/specifications/requirements/requirements-quiz.md)
-- [ユーザーフロー分析](docs/project/ddd-design/2.02.5_user-flow-analysis/user-flow-analysis.md)
+- [ユーザーフロー分析](docs/project/ddd-design/2.02_user-flow-analysis/user-flow-analysis.md)
 - [サイトマップ](docs/project/ui-design/1.01_sitemap.yaml)
 
 ---
-**作成工程**: UI設計  
-**作成日**: 2025-01-31  
+**作成工程**: UI設計
+**作成日**: 2025-01-31
 **更新日**: 2025-01-31

@@ -29,6 +29,10 @@
 | **スワイプ操作** | SwipeGesture | Tinder UI形式の左右スワイプによる回答入力 | When User performs SwipeGesture |
 | **正誤判定** | CorrectJudgment | 回答と正解の比較結果の表示 | Then CorrectJudgment is displayed |
 | **絞り込み** | Filter | タグによるクイズの検索・絞り込み機能 | When User applies Filter |
+| **問題集** | Deck | 検索結果や選択されたクイズの集合で構成される学習単位 | Given Deck is created |
+| **セッション** | QuizSession | 問題集（Deck）に対する学習セッション（1対1関係） | When QuizSession starts |
+| **検索結果保存** | SaveSearchResults | 検索でヒットした問題を問題集として保存する操作 | When User saves SearchResults as Deck |
+| **問題集作成** | CreateDeck | 検索結果やクイズ選択から問題集を作成すること | When User creates Deck |
 | **オフラインモード** | OfflineMode | ネットワーク断線時に事前ダウンロード済みデータで動作するモード | Given OfflineMode is active |
 | **同期処理** | Synchronization | オンライン復旧時にブラウザ保存データをサーバーと同期する処理 | When Synchronization occurs |
 | **作成者識別情報** | CreatorIdentification | salt付きハッシュによるブラウザでの作成者判定情報 | Given CreatorIdentification exists |
@@ -79,6 +83,20 @@
 * **英語/変数名**: Administrator
 * **定義**: クイズの承認・管理権限を持つユーザー
 * **関連概念**: Quiz, Approved, Rejected
+
+### Deck
+
+* **日本語**: 問題集
+* **英語/変数名**: Deck
+* **定義**: 検索結果や選択されたクイズの集合で構成される学習単位
+* **関連概念**: Quiz, QuizSession, SaveSearchResults, CreateDeck
+
+### QuizSession
+
+* **日本語**: セッション
+* **英語/変数名**: QuizSession
+* **定義**: 問題集（Deck）に対する学習セッション（1対1関係）
+* **関連概念**: Deck, Answer, AnswerHistory
 
 ## 値オブジェクト（Value Object）
 
@@ -203,6 +221,20 @@
 * **定義**: 問題文500文字、解説1000文字の入力制限
 * **関連概念**: Question, Explanation
 
+### SaveSearchResults
+
+* **日本語**: 検索結果保存
+* **英語/変数名**: SaveSearchResults
+* **定義**: 検索でヒットした問題を問題集として保存する操作
+* **関連概念**: Deck, Filter, Quiz
+
+### CreateDeck
+
+* **日本語**: 問題集作成
+* **英語/変数名**: CreateDeck
+* **定義**: 検索結果やクイズ選択から問題集を作成すること
+* **関連概念**: Deck, Quiz, QuizSession
+
 ## BDD表現ガイドライン
 
 ### Given（前提条件）
@@ -240,3 +272,4 @@
 |------|----------|--------|
 | 2025-01-27 | 初版作成 | Claude |
 | 2025-01-28 | ドラフト版フォーマット統合、DDD分類追加、BDD英語化 | Claude |
+| 2025-01-31 | Deck・QuizSession概念追加、検索結果保存機能統合 | Claude |

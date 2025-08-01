@@ -2,9 +2,9 @@
 
 ## 概要
 
-**アクター**: 匿名ユーザー  
-**目的**: 過去の回答を確認・復習する  
-**優先度**: 高（MVP対象）  
+**アクター**: 匿名ユーザー
+**目的**: 過去の回答を確認・復習する
+**優先度**: 高（MVP対象）
 
 ## UI要件
 
@@ -28,21 +28,21 @@ graph TD
         C --> D[History List Area]
         D --> E[Footer: Navigation]
     end
-    
+
     subgraph "Header (60px)"
         A1[回答履歴] --> A2[検索アイコン] --> A3[フィルター]
     end
-    
+
     subgraph "Filter (40px)"
         B1[全期間] --> B2[正答率] --> B3[タグ] --> B4[並び順]
     end
-    
+
     subgraph "Summary (80px)"
         C1[総回答数: 156問]
         C2[平均正答率: 78%]
         C3[連続回答: 7日]
     end
-    
+
     subgraph "List Area (Auto Height)"
         D1[履歴アイテム1: 2025/01/30 一般常識 85%]
         D2[履歴アイテム2: 2025/01/29 歴史 72%]
@@ -107,25 +107,25 @@ graph TD
         C --> D[Statistics Chart]
         D --> E[Action Buttons]
     end
-    
+
     subgraph "Session Info (100px)"
         B1[日時・タグ・総問題数]
         B2[正答率・平均回答時間]
         B3[間違い問題数・スキップ数]
     end
-    
+
     subgraph "Question List (Auto Height)"
         C1[問題1: ✅ 正解 地球は丸い？]
         C2[問題2: ❌ 不正解 月の距離は？]
         C3[問題3: ⏭️ スキップ 歴史問題]
         C4[More questions...]
     end
-    
+
     subgraph "Statistics (120px)"
         D1[正答率推移グラフ]
         D2[分野別成績]
     end
-    
+
     subgraph "Actions (60px)"
         E1[間違い問題のみ再挑戦] --> E2[全問題再挑戦]
     end
@@ -147,17 +147,17 @@ flowchart TD
     A[履歴分析] --> B{間違い・スキップあり?}
     B -->|Yes| C[間違い問題抽出]
     B -->|No| D[完璧！メッセージ]
-    
+
     C --> E[習熟度分析]
     E --> F[優先度付けソート]
     F --> G[間違い問題Deck生成]
     G --> H[再挑戦開始]
-    
+
     H --> I[正解判定]
     I --> J{習得完了?}
     J -->|Yes| K[問題除去]
     J -->|No| L[継続対象]
-    
+
     K --> M[Deck更新]
     L --> M
 ```
@@ -208,11 +208,11 @@ flowchart TD
     A[MyPageタブ] --> B[回答履歴選択]
     B --> C[履歴一覧表示]
     C --> D{操作選択}
-    
+
     D --> E[フィルター] --> F[絞り込み結果] --> C
     D --> G[詳細確認] --> H[個別履歴詳細]
     D --> I[統計確認] --> J[グラフ・分析表示]
-    
+
     H --> K{次のアクション}
     K --> L[再挑戦] --> M[クイズ回答画面]
     K --> N[間違い問題のみ] --> O[間違い問題Deck]
@@ -276,11 +276,11 @@ interface Question {
 
 ## 関連ドキュメント
 
-- [ユーザーフロー分析: US-04](docs/project/ddd-design/2.02.5_user-flow-analysis/user-flow-analysis.md#us-04-回答履歴確認匿名ユーザー)
+- [ユーザーフロー分析: US-04](docs/project/ddd-design/2.02_user-flow-analysis/user-flow-analysis.md#us-04-回答履歴確認匿名ユーザー)
 - [要件定義](docs/project/specifications/requirements/requirements-quiz.md#データ保存要件)
 - [サイトマップ](docs/project/ui-design/1.01_sitemap.yaml)
 
 ---
-**作成工程**: UI設計  
-**作成日**: 2025-01-31  
+**作成工程**: UI設計
+**作成日**: 2025-01-31
 **更新日**: 2025-01-31

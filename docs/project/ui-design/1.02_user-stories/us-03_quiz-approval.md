@@ -2,9 +2,9 @@
 
 ## 概要
 
-**アクター**: 管理者  
-**目的**: 投稿されたクイズを審査・承認する  
-**優先度**: 低（管理者機能・将来実装）  
+**アクター**: 管理者
+**目的**: 投稿されたクイズを審査・承認する
+**優先度**: 低（管理者機能・将来実装）
 
 ## UI要件
 
@@ -28,21 +28,21 @@ graph TD
         C --> D[Approval Queue List]
         D --> E[Pagination & Batch Actions]
     end
-    
+
     subgraph "Header (60px)"
         A1[承認管理] --> A2[統計] --> A3[設定] --> A4[ログアウト]
     end
-    
+
     subgraph "Filter Bar (50px)"
         B1[優先度順] --> B2[投稿日順] --> B3[タグ絞込] --> B4[検索]
     end
-    
+
     subgraph "Statistics (80px)"
         C1[承認待ち: 23件]
         C2[本日処理: 15件]
         C3[平均処理時間: 2.3分]
     end
-    
+
     subgraph "Queue List (Auto Height)"
         D1[高優先度: 投稿1時間以内]
         D2[中優先度: 投稿1-24時間]
@@ -101,19 +101,19 @@ graph TD
         B --> E[Similar Quiz Check]
         E --> F[Action Buttons]
     end
-    
+
     subgraph "Content Tabs"
         B --> G[問題プレビュー]
         B --> H[投稿者情報]
         B --> I[品質分析]
     end
-    
+
     subgraph "Quiz Preview (400px)"
         G --> J[Play画面形式表示]
         G --> K[問題文・選択肢・解説]
         G --> L[タグ・メタデータ]
     end
-    
+
     subgraph "Action Panel (100px)"
         F --> M[承認理由入力]
         F --> N[✅ 承認実行]
@@ -139,29 +139,29 @@ flowchart TD
     B -->|高品質| C[即座承認]
     B -->|要確認| D[詳細レビュー]
     B -->|低品質| E[即座拒否]
-    
+
     D --> F[類似問題チェック]
     F --> G{重複・類似あり?}
     G -->|Yes| H[重複処理判定]
     G -->|No| I[承認・拒否判定]
-    
+
     H --> J[統合承認]
     H --> K[個別承認]
     H --> L[重複拒否]
-    
+
     I --> M[承認]
     I --> N[拒否]
     I --> O[保留]
-    
+
     C --> P[承認完了処理]
     M --> P
     J --> P
     K --> P
-    
+
     E --> Q[拒否完了処理]
     N --> Q
     L --> Q
-    
+
     O --> R[保留キューに移動]
 ```
 
@@ -220,19 +220,19 @@ graph TD
         B --> C[投稿者分析]
         C --> D[タグ分析]
     end
-    
+
     subgraph "Processing Stats"
         A --> E[本日処理: 15件]
         A --> F[承認率: 78%]
         A --> G[平均処理時間: 2.3分]
     end
-    
+
     subgraph "Quality Analysis"
         B --> H[品質スコア分布]
         B --> I[拒否理由ランキング]
         B --> J[改善傾向分析]
     end
-    
+
     subgraph "Creator Analysis"
         C --> K[新規投稿者: 3名]
         C --> L[リピート率: 45%]
@@ -315,11 +315,11 @@ interface ApprovalLog {
 
 ## 関連ドキュメント
 
-- [ユーザーフロー分析: US-03](docs/project/ddd-design/2.02.5_user-flow-analysis/user-flow-analysis.md#us-03-クイズ承認管理者)
+- [ユーザーフロー分析: US-03](docs/project/ddd-design/2.02_user-flow-analysis/user-flow-analysis.md#us-03-クイズ承認管理者)
 - [要件定義](docs/project/specifications/requirements/requirements-quiz.md#セキュリティ要件)
 - [サイトマップ](docs/project/ui-design/1.01_sitemap.yaml)
 
 ---
-**作成工程**: UI設計  
-**作成日**: 2025-01-31  
+**作成工程**: UI設計
+**作成日**: 2025-01-31
 **更新日**: 2025-01-31
