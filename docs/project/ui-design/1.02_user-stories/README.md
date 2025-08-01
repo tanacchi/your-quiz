@@ -2,7 +2,7 @@
 
 ## 概要
 
-[DDD設計のユーザーフロー分析](docs/project/ddd-design/2.02.5_user-flow-analysis/user-flow-analysis.md)で定義された5つのユーザーストーリー（US-01〜US-05）をUI/UX視点で具体化し、画面設計・操作体験の要件を定義します。
+[DDD設計のユーザーフロー分析](docs/project/ddd-design/2.02.5_user-flow-analysis/user-flow-analysis.md)で定義されたユーザーストーリーをUI/UX視点で具体化し、画面設計・操作体験の要件を定義します。クイズ検索機能（US-06）を追加し、より充実したユーザー体験を提供します。
 
 ## ユーザーストーリー一覧
 
@@ -15,6 +15,7 @@
 
 1. **[US-02: クイズ作成](us-02_quiz-creation.md)** - 匿名ユーザーによるクイズ投稿体験
 2. **[US-05: オフライン利用](us-05_offline-sync.md)** - ネットワーク断線時の継続利用
+3. **[US-06: クイズ検索](us-06_quiz-search.md)** - キーワード・カテゴリによる効率的なクイズ発見
 
 ### 管理者機能（低優先度）
 
