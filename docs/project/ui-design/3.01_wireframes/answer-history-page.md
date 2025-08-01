@@ -59,7 +59,9 @@ graph TD
     end
     
     subgraph "Footer (60px)"
-        F --> F1[Play] --> F2[Create] --> F3["MyPage (Active)"]
+        F --> F1[Play]
+        F --> F2[Create]
+        F --> F3["MyPage (Active)"]
     end
 ```
 

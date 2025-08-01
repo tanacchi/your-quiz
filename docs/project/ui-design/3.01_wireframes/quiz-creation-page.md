@@ -65,7 +65,7 @@ graph TD
     end
     
     subgraph "Navigation (80px)"
-        G --> G1[← 戻る (無効)]
+        G --> G1["← 戻る (無効)"]
         G --> G2[プレビュー]
         G --> G3[次へ →]
     end

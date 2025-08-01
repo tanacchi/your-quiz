@@ -54,11 +54,11 @@ graph TD
         E --> E1[クイズカード1: タイトル + 問題数 + 難易度]
         E --> E2[クイズカード2: 内容プレビュー + 統計]
         E --> E3[クイズカード3: 作成者 + 日時]
-        E --> E4[More Items... (無限スクロール)]
+        E --> E4["More Items... 無限スクロール"]
     end
     
     subgraph "Footer Navigation (60px)"
-        F --> F1[Play (アクティブ)]
+        F --> F1["Play (アクティブ)"]
         F --> F2[Create]
         F --> F3[MyPage]
     end
@@ -237,8 +237,8 @@ graph TD
     end
     
     subgraph "Card Animations"
-        D --> D1[ホバー: scale(1.02)]
-        D --> D2[タップ: scale(0.98)]
+        D --> D1["ホバー: scale(1.02)"]
+        D --> D2["タップ: scale(0.98)"]
         D --> D3[選択: 影の拡大]
         D --> D4[読み込み: スケルトン]
     end
@@ -266,7 +266,7 @@ graph TD
     B -->|〜374px| C[Extra Small Mobile]
     B -->|375px〜414px| D[Standard Mobile]
     B -->|415px〜768px| E[Large Mobile/Small Tablet]
-    B -->|769px〜| F[Tablet+ (未対応)]
+    B -->|769px〜| F["Tablet+ (未対応)"]
     
     subgraph "XS Mobile (〜374px)"
         C --> C1[1カラムレイアウト]
@@ -360,14 +360,14 @@ graph TD
     A --> E[Actions]
     
     subgraph "Basic Information"
-        B --> B1[タイトル (最大50文字)]
+        B --> B1["タイトル (最大50文字)"]
         B --> B2[問題数]
         B --> B3[推定所要時間]
-        B --> B4[難易度 (★1-5)]
+        B --> B4["難易度 (★1-5)"]
     end
     
     subgraph "Statistics"
-        C --> C1[正答率 (%)]
+        C --> C1["正答率 (%)"]
         C --> C2[挑戦者数]
         C --> C3[作成日時]
         C --> C4[最終更新日]

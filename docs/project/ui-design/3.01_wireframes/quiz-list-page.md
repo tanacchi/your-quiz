@@ -61,7 +61,9 @@ graph TD
     end
     
     subgraph "Footer (60px)"
-        G --> G1[Play] --> G2[Create] --> G3[MyPage]
+        G --> G1[Play]
+        G --> G2[Create] 
+        G --> G3[MyPage]
     end
 ```
 
@@ -151,7 +153,7 @@ graph TD
     end
     
     subgraph "Action Buttons (60px)"
-        G --> G1[適用 (23件)]
+        G --> G1["適用 (23件)"]
         G --> G2[キャンセル]
     end
 ```

@@ -33,7 +33,7 @@ graph TD
     subgraph "Question Area (200px)"
         B --> B1[Question Card Container]
         B1 --> B2["🌍 地球は太陽系の第3惑星である。"]
-        B1 --> B3[Question Image (Optional)]
+        B1 --> B3["Question Image (Optional)"]
         B1 --> B4[Difficulty: ★★☆☆☆]
     end
     
