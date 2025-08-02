@@ -36,13 +36,9 @@ export default function QuizList() {
           </button>
         </div>
         <div className="mt-3">
-          <button
-            type="button"
-            className="w-full flex items-center gap-2 bg-white rounded-full shadow px-3 py-2 border border-base hover:bg-base-light transition focus:ring-2 focus:ring-base"
-            aria-label="検索条件の変更"
-          >
+          <div className="w-full flex items-center gap-2 bg-white rounded-full shadow px-3 py-2 border border-base">
             {/* 検索条件バッジ群 */}
-            <span className="flex flex-wrap gap-1 flex-1">
+            <div className="flex flex-wrap gap-1 flex-1">
               <span className="flex items-center px-2 py-0.5 bg-base-light text-base text-xs rounded-full font-semibold">
                 #数学
                 <button
@@ -100,9 +96,13 @@ export default function QuizList() {
                   </svg>
                 </button>
               </span>
-            </span>
+            </div>
             {/* フィルターアイコン＋下矢印 */}
-            <span className="flex items-center gap-1 text-base opacity-70">
+            <button
+              type="button"
+              className="flex items-center gap-1 text-base opacity-70"
+              aria-label="検索条件の変更"
+            >
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -123,8 +123,8 @@ export default function QuizList() {
                 <title>下矢印アイコン</title>
                 <path d="M19 9l-7 7-7-7" />
               </svg>
-            </span>
-          </button>
+            </button>
+          </div>
         </div>
       </section>
 
