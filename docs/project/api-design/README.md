@@ -82,7 +82,7 @@ API Flow: GET /api/quiz/v1/learning/search → POST /api/quiz/v1/learning/decks/
 
 - [API機能カタログ](api-catalog.md) - 87エンドポイントの詳細仕様
 - [非機能要件仕様書](non-functional-requirements.md) - パフォーマンス・スケーラビリティ・可用性要件
-- [イベント駆動API統合](event-integration.md) - イベント連携の詳細設計
+- [Pub/Subシステム統合](pub-sub-integration.md) - Publisher/Subscriber連携の詳細設計
 
 ---
 **作成工程**: API設計  
