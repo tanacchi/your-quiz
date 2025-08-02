@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -140,7 +140,7 @@ interface BaseRepository<TAggregate, TId> {
 class QuizRepositoryImpl implements QuizRepository {
   async save(quiz: QuizAggregate): Promise<void> {
     const record = this.toRecord(quiz);
-    
+
     const updated = await this.db.update('quizzes')
       .set(record)
       .where('id', quiz.id.value)
@@ -212,8 +212,8 @@ class SQLiteQuizRepository implements QuizRepository {
 
   async findApprovedQuizzes(): Promise<QuizAggregate[]> {
     const records = await this.db.all(`
-      SELECT * FROM quizzes 
-      WHERE status = ? 
+      SELECT * FROM quizzes
+      WHERE status = ?
       ORDER BY approved_at DESC
     `, ['Approved']);
 

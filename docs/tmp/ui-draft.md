@@ -154,7 +154,7 @@ graph TD
 
 ## 9. 関連ドキュメント
 
-- [UI 設計ガイドライン（Markdown+Mermaid+Storybook）](sandbox:/canvas/6888449eacec8191b032841f1aea27a6)
+- [UI 設計ガイドライン（Markdown+Mermaid+Storybook）](/docs/ui-guidelines.md)
 - ページ階層: `/docs/pages.yaml`（未作成）
 - ワイヤーフレーム: `/docs/wireframes/` 以下に順次追加
 
