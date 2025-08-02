@@ -2,7 +2,7 @@
 
 ## 目的
 
-[ユーザーフロー分析](docs/project/ddd-design/2.02.5_user-flow-analysis/user-flow-analysis.md)で特定されたドメインイベントを、Event Stormingワークショップを通じて体系的に整理し、境界づけられたコンテキストの発見と[ドメインイベントカタログ](docs/project/ddd-design/2.10_domain-events-catalog/domain-events-catalog.md)の基盤を構築する。
+[ユーザーフロー分析](docs/project/ddd-design/2.02_user-flow-analysis/user-flow-analysis.md)で特定されたドメインイベントを、Event Stormingワークショップを通じて体系的に整理し、境界づけられたコンテキストの発見と[ドメインイベントカタログ](docs/project/ddd-design/2.10_domain-events-catalog/domain-events-catalog.md)の基盤を構築する。
 
 ## 概要
 
@@ -22,26 +22,26 @@
 ```mermaid
 timeline
     title クイズアプリケーション Event Timeline
-    
+
     section Quiz Creation Flow
         QuizSubmitted           : 匿名ユーザーがクイズを投稿
         QuizValidated          : 入力バリデーション実行
         CreatorIdGenerated     : 作成者識別子生成
         QuizPendingApproval    : 承認待ち状態設定
-        
-    section Quiz Approval Flow  
+
+    section Quiz Approval Flow
         QuizReviewed           : 管理者がクイズ内容確認
         QuizApproved           : 管理者がクイズ承認
         QuizRejected           : 管理者がクイズ拒否
         QuizPublished          : 承認済みクイズ公開
-        
+
     section Learning Flow
         LearningSessionStarted : 学習セッション開始
         QuizPresented          : クイズ問題表示
         AnswerSubmitted        : ユーザー回答送信
         AnswerEvaluated        : 正誤判定実行
         LearningProgressUpdated: 学習進捗更新
-        
+
     section Offline Sync Flow
         OfflineModeActivated   : ネットワーク断線検出
         OfflineAnswerRecorded  : オフライン回答記録
@@ -175,7 +175,7 @@ graph LR
 - **境界理由**: 承認業務の独立性、品質統制の専門性
 - **安定性**: 承認基準変更はあるが、承認フロー自体は安定
 
-#### Quiz Learning Context  
+#### Quiz Learning Context
 
 - **イベント特性**: 学習者中心、高頻度、パフォーマンス重視
 - **境界理由**: 学習体験の独立性、スケーラビリティ要求
@@ -215,7 +215,7 @@ graph LR
 Event Stormingにより、クイズアプリケーションドメインの**4つの明確な境界づけられたコンテキスト**が発見されました：
 
 1. **Quiz Management Context**: 品質統制・承認業務に特化
-2. **Quiz Learning Context**: 学習体験・パフォーマンスに特化  
+2. **Quiz Learning Context**: 学習体験・パフォーマンスに特化
 3. **User Session Context**: 匿名ユーザー管理・プライバシーに特化
 4. **Offline Sync Context**: 同期技術・データ整合性に特化
 
@@ -223,7 +223,7 @@ Event Stormingにより、クイズアプリケーションドメインの**4つ
 
 ## 関連ドキュメント
 
-- [ユーザーフロー分析](docs/project/ddd-design/2.02.5_user-flow-analysis/user-flow-analysis.md)
+- [ユーザーフロー分析](docs/project/ddd-design/2.02_user-flow-analysis/user-flow-analysis.md)
 - [ドメインイベントカタログ](docs/project/ddd-design/2.10_domain-events-catalog/domain-events-catalog.md)
 - [境界づけられたコンテキスト定義](docs/project/ddd-design/2.09_bounded-context-definition/README.md)
 - [集約設計](docs/project/ddd-design/2.08_aggregate-design/README.md)

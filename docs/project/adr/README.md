@@ -25,6 +25,7 @@
 | [0017](0017-aggregate-design.md) | 集約設計とルート決定 | Proposed | 2025-07-28 | 4つの集約設計採用 |
 | [0018](0018-domain-service-extraction.md) | ドメインサービス抽出決定 | Proposed | 2025-07-28 | 4つのドメインサービス抽出 |
 | [0019](0019-repository-pattern-adoption.md) | リポジトリパターン採用決定 | Proposed | 2025-07-28 | 集約単位リポジトリ採用 |
+| [0020](0020-bdd-testing-framework.md) | BDDテスティングフレームワーク選定 | Proposed | 2025-01-31 | Cucumber.js + Vitest採用決定 |
 
 ## ステータス定義
 
