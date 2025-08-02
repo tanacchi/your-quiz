@@ -8,28 +8,89 @@ Your QuizアプリケーションのAPI設計における統一的な原則・�
 
 ### 1. RESTful設計原則
 
-#### リソース中心設計
+#### ハイブリッドAPI設計（名詞+動詞）
 
-- **リソース識別**: URL はリソースを表し、動詞ではなく名詞を使用
-- **階層構造**: リソース間の関係を URL 階層で表現
-- **統一インターフェース**: HTTP メソッドの意味に従った利用
+**基本方針**: RESTful原則をベースに、複雑なビジネスロジックには動詞APIを併用
+
+##### 名詞API（リソース中心）
+
+- **基本CRUD操作**: 単純な作成・読取・更新・削除
+- **リソース階層**: 親子関係の明確な操作
+- **統一インターフェース**: HTTP メソッドの標準的利用
 
 ```http
-# Good Examples
-GET    /api/v1/quizzes           # クイズ一覧取得
-POST   /api/v1/quizzes           # クイズ作成
-GET    /api/v1/quizzes/123       # 特定クイズ取得
-PUT    /api/v1/quizzes/123       # クイズ更新
-DELETE /api/v1/quizzes/123       # クイズ削除
+# ✅ 名詞API - 基本CRUD操作
+GET    /api/quiz/v1/manage/quizzes           # クイズ一覧取得
+POST   /api/quiz/v1/manage/quizzes           # クイズ作成
+GET    /api/quiz/v1/manage/quizzes/123       # 特定クイズ取得
+PUT    /api/quiz/v1/manage/quizzes/123       # クイズ更新
+DELETE /api/quiz/v1/manage/quizzes/123       # クイズ削除
 
-# Nested Resources
-GET    /api/v1/decks/456/sessions        # Deck内のセッション一覧
-POST   /api/v1/sessions/789/answers      # セッション内に回答作成
+# ✅ リソース階層操作
+GET    /api/quiz/v1/learning/decks/456/sessions     # Deck内のセッション一覧
+POST   /api/user/v1/sessions/789/answers            # セッション内に回答作成
+GET    /api/quiz/v1/learning/published              # 公開クイズ一覧
+```
 
-# Bad Examples (動作中心)
-POST   /api/v1/createQuiz               # 動詞を使用
-GET    /api/v1/getQuizById/123          # 動詞を使用
-POST   /api/v1/submitAnswer             # リソース階層が不明確
+##### 動詞API（ビジネスロジック中心）
+
+- **複合操作**: 複数リソースに跨る処理
+- **ワークフロー**: 承認・同期・変換などの業務プロセス
+- **複雑な状態変更**: 単純更新では表現困難な操作
+
+```http
+# ✅ 動詞API - 複雑ビジネスロジック
+POST   /api/quiz/v1/manage/quizzes/123/approve      # 承認ワークフロー
+POST   /api/quiz/v1/manage/quizzes/123/reject       # 却下処理
+POST   /api/quiz/v1/manage/quizzes/123/publish      # 公開処理
+
+POST   /api/quiz/v1/learning/decks/from-search      # 検索結果からDeck生成
+POST   /api/quiz/v1/learning/sessions/789/submit    # セッション提出・結果計算
+POST   /api/sync/v1/synchronize                     # データ同期・競合解決
+
+POST   /api/user/v1/sessions/456/pause              # セッション一時停止
+POST   /api/user/v1/sessions/456/resume             # セッション再開
+```
+
+##### 使い分け基準
+
+| 操作の複雑さ | API種別 | 判断基準 | 実装例 |
+|-------------|---------|----------|--------|
+| **単純** | 名詞API | 単一リソースのCRUD | `GET /quizzes`, `POST /quizzes` |
+| **中程度** | 名詞API | 関連リソースの操作 | `POST /sessions/123/answers` |
+| **複雑** | 動詞API | 複数ステップの業務処理 | `POST /quizzes/123/approve` |
+| **ワークフロー** | 動詞API | 状態遷移・外部連携 | `POST /sync/v1/synchronize` |
+
+```typescript
+// 実装判断フローチャート
+interface APIDesignDecision {
+  // Step 1: 操作の複雑さ評価
+  isSimpleCRUD(): boolean;           // true → 名詞API
+  involvesMultipleResources(): boolean;  // true → 検討が必要
+  requiresComplexValidation(): boolean;  // true → 動詞API候補
+  
+  // Step 2: ビジネスロジック評価
+  hasWorkflowSteps(): boolean;       // true → 動詞API
+  changesMultipleStates(): boolean;  // true → 動詞API
+  requiresExternalIntegration(): boolean; // true → 動詞API
+  
+  // Step 3: 最終判定
+  recommendedAPIType: 'noun' | 'verb';
+}
+```
+
+##### 避けるべきパターン
+
+```http
+# ❌ 悪い例 - 混在パターン
+POST   /api/v1/createQuiz               # 動詞のみ（古いパターン）
+GET    /api/v1/getQuizById/123          # 動詞のみ
+POST   /api/v1/submitAnswer             # リソース階層不明確
+
+# ❌ 動詞の乱用
+POST   /api/v1/quiz/update              # PUTで十分
+POST   /api/v1/quiz/delete              # DELETEで十分
+GET    /api/v1/quiz/get                 # GETで十分
 ```
 
 #### HTTP メソッド利用方針
@@ -78,9 +139,17 @@ const SERVER_ERROR_CODES = {
 #### バージョニング戦略
 
 ```http
-# URL Path Versioning（採用）
-/api/v1/quizzes
-/api/v2/quizzes
+# Domain-based Versioning（採用）
+/api/{domain}/v1/{context}/{resource}
+
+# 具体例
+/api/quiz/v1/manage/quizzes        # Quiz Domain - Manage Context
+/api/quiz/v1/learning/decks        # Quiz Domain - Learning Context
+/api/user/v1/sessions              # User Domain
+/api/sync/v1/cache-manifest        # Sync Domain
+
+# 従来方式（非推奨）
+/api/v1/quiz-management/quizzes    # 旧形式
 
 # Header Versioning（将来検討）
 Accept: application/vnd.yourquiz.v1+json
@@ -106,15 +175,31 @@ interface ResourceNamingRules {
   quiz_sessions: '/api/v1/quiz_sessions';       // ✗ snake_case
 }
 
-// Context Prefix規約
-const CONTEXT_PREFIXES = {
-  'quiz-management': '/api/v1/quiz-management',
-  'quiz-learning': '/api/v1/quiz-learning',
-  'user-session': '/api/v1/user-session',
-  'offline-sync': '/api/v1/offline-sync',
-  'search': '/api/v1/search',
-  'recommendations': '/api/v1/recommendations'
+// Domain-based URL Structure
+const DOMAIN_STRUCTURE = {
+  // Quiz Domain
+  'quiz-manage': '/api/quiz/v1/manage',           // クイズ管理・承認
+  'quiz-learning': '/api/quiz/v1/learning',       // 学習・Deck・回答
+  
+  // User Domain  
+  'user-sessions': '/api/user/v1/sessions',       // セッション管理
+  'user-profiles': '/api/user/v1/profiles',       // プロファイル管理
+  
+  // Sync Domain
+  'sync-data': '/api/sync/v1',                    // オフライン同期
+  
+  // 旧形式（非推奨）
+  'quiz-management': '/api/v1/quiz-management',   // ❌ 削除予定
+  'offline-sync': '/api/v1/offline-sync'          // ❌ 削除予定
 };
+
+// Domain分割の利点
+interface DomainBenefits {
+  independentVersioning: true;    // ドメイン別バージョン管理
+  contextualClarity: true;        // 文脈の明確化
+  teamOwnership: true;           // チーム別責任範囲
+  scalableRouting: true;         // ルーティング拡張性
+}
 ```
 
 #### クエリパラメータ規約
@@ -141,12 +226,14 @@ interface QueryParameterRules {
   format?: 'json' | 'xml';      // レスポンス形式
 }
 
-// 実際の使用例
+// 実際の使用例（新URL構造）
 const QUERY_EXAMPLES = [
-  '/api/v1/quizzes?limit=20&offset=40&sort=popularity&order=desc',
-  '/api/v1/quizzes?tags=javascript,react&difficulty=intermediate',
-  '/api/v1/search/quizzes?q=関数&filter_difficulty=beginner&limit=10',
-  '/api/v1/decks?include=statistics,creator&fields=id,name,quiz_count'
+  '/api/quiz/v1/learning/published?limit=20&offset=40&sort=popularity&order=desc',
+  '/api/quiz/v1/learning/search?tags=javascript,react&difficulty=intermediate',
+  '/api/quiz/v1/learning/search?q=関数&filter_difficult=beginner&limit=10',
+  '/api/quiz/v1/learning/decks?include=statistics,creator&fields=id,name,quiz_count',
+  '/api/user/v1/sessions?include=progress&status=active',
+  '/api/sync/v1/cache-manifest?resource_types=quizzes,sessions'
 ];
 ```
 
@@ -251,81 +338,186 @@ interface PaginatedResponse<T> {
 
 ### 4. 認証・セキュリティ原則
 
-#### JWT認証設計
+#### 匿名認証・デバイス識別設計
+
+**基本戦略**: ユーザー登録不要で学習・投稿を可能にしつつ、デバイス識別により一定の連続性を確保
+
+##### JWT設計（匿名ユーザー対応）
 
 ```typescript
-// JWT Payload構造
-interface JWTPayload {
+// 匿名JWT Payload構造
+interface AnonymousJWTPayload {
   // 標準クレーム
   iss: 'your-quiz-api';         // Issuer
-  sub: string;                  // Subject（ユーザーID）
+  sub: string;                  // Subject（匿名ユーザーID）
   aud: 'your-quiz-app';         // Audience
-  exp: number;                  // Expiration Time
+  exp: number;                  // Expiration Time（24時間）
   iat: number;                  // Issued At
   jti: string;                  // JWT ID
   
-  // カスタムクレーム
-  device_id: string;            // デバイス識別子
-  session_type: 'anonymous';    // セッション種別
-  permissions: string[];        // 権限リスト
-  created_at: number;          // 作成日時
+  // 匿名認証専用クレーム
+  user_type: 'anonymous';       // ユーザー種別
+  device_id: string;            // デバイス識別子（SHA-256ハッシュ）
+  device_fingerprint: string;   // デバイスフィンガープリント
+  anonymous_id: string;         // 匿名ユーザーID（ano_xxxxxxxx）
+  
+  // 権限・制限
+  permissions: string[];        // 基本権限（create_quiz, answer_quiz）
+  daily_quiz_limit: number;     // 日次投稿制限（10件）
+  session_duration: number;     // セッション持続時間（24時間）
+  
+  // 追跡情報
+  first_seen: number;           // 初回アクセス時刻
+  device_platform: string;      // プラットフォーム（mobile/desktop/web）
 }
 
-// リフレッシュトークン設計
-interface RefreshTokenInfo {
+// デバイスフィンガープリント生成
+interface DeviceFingerprint {
+  // 収集要素
+  userAgent: string;            // User-Agent文字列
+  screenResolution: string;     // 画面解像度
+  timezone: string;             // タイムゾーン
+  language: string;             // 言語設定
+  platform: string;            // OS/プラットフォーム
+  
+  // セキュリティ考慮
+  hashAlgorithm: 'SHA-256';     // ハッシュアルゴリズム
+  saltRotation: 7;              // ソルトローテーション（日数）
+  privacyCompliant: true;       // プライバシー準拠
+  
+  // 生成例
+  generate(): string; // → "df_a1b2c3d4e5f6..."
+}
+
+// リフレッシュトークン設計（匿名対応）
+interface AnonymousRefreshToken {
   token: string;                // リフレッシュトークン
-  expiresAt: string;           // 有効期限（長期）
-  deviceFingerprint: string;    // 発行デバイス
+  expiresAt: string;           // 有効期限（30日）
+  deviceFingerprint: string;    // 発行デバイスのフィンガープリント
+  anonymousId: string;         // 紐づく匿名ユーザーID
   lastUsed: string;            // 最終使用日時
+  
+  // 匿名認証特有の制限
+  maxRefreshCount: number;      // 最大更新回数（100回）
+  currentRefreshCount: number;  // 現在の更新回数
+  deviceMigrationAllowed: boolean; // デバイス移行許可
 }
 ```
 
-#### セキュリティヘッダー
+##### デバイス識別・移行戦略
+
+```typescript
+// デバイス間移行設計
+interface DeviceMigrationStrategy {
+  // 移行トリガー
+  triggers: {
+    deviceFingerprintMismatch: boolean;   // フィンガープリント不一致
+    newDeviceDetection: boolean;          // 新デバイス検出
+    manualMigrationRequest: boolean;      // ユーザー明示的要求
+  };
+  
+  // 移行プロセス
+  migrationProcess: {
+    // Step 1: 既存データ検証
+    verifyExistingData: () => Promise<boolean>;
+    
+    // Step 2: 移行コード生成・表示
+    generateMigrationCode: () => Promise<string>; // 6桁コード
+    
+    // Step 3: 新デバイスでの認証
+    authenticateWithMigrationCode: (code: string) => Promise<boolean>;
+    
+    // Step 4: データ統合
+    mergeDeviceData: () => Promise<void>;
+  };
+  
+  // セキュリティ制限
+  security: {
+    migrationCodeExpiry: 3600;           // 1時間有効
+    maxMigrationAttempts: 3;             // 最大試行回数
+    cooldownPeriod: 86400;               // 24時間クールダウン
+  };
+}
+```
+
+#### セキュリティヘッダー（匿名認証対応）
 
 ```http
 # 必須セキュリティヘッダー
-Authorization: Bearer <JWT_TOKEN>
-X-Device-Fingerprint: <DEVICE_ID>
+Authorization: Bearer <ANONYMOUS_JWT_TOKEN>
+X-Device-Fingerprint: <DEVICE_FINGERPRINT_HASH>
+X-Anonymous-ID: <ANONYMOUS_USER_ID>
 X-Request-ID: <UNIQUE_REQUEST_ID>
 
-# オプショナルヘッダー
-X-User-Agent: <USER_AGENT_STRING>
+# デバイス識別ヘッダー
+X-Device-Platform: mobile|desktop|web
 X-Client-Version: <APP_VERSION>
-X-Platform: mobile|desktop|web
+X-Device-Timezone: <TIMEZONE_STRING>
+
+# オプショナル・プライバシー対応ヘッダー
+X-Privacy-Mode: strict|normal
+X-Tracking-Consent: granted|denied
+X-Data-Retention: 30d|1y|permanent
 ```
 
-#### レート制限設計
+#### レート制限設計（コンテキスト別）
 
 ```typescript
-// レート制限設定
-interface RateLimitRules {
-  // IP別制限
-  perIP: {
-    requests: 1000;             // 1時間あたり
-    window: 3600;               // 秒
-  };
-  
-  // ユーザー別制限
-  perUser: {
-    quizCreation: {
-      requests: 10;             // 1日あたり
-      window: 86400;
+// コンテキスト別レート制限設定
+interface ContextBasedRateLimits {
+  // Quiz Domain - Manage Context
+  quizManage: {
+    // 匿名ユーザー制限
+    anonymousUser: {
+      dailyQuizCreation: { requests: 10, window: 86400 };    // 10件/日
+      draftOperations: { requests: 50, window: 3600 };      // 50回/時間
+      imageUploads: { requests: 5, window: 3600 };          // 5回/時間
     };
-    searchRequests: {
-      requests: 100;            // 1時間あたり
-      window: 3600;
-    };
-    answerSubmission: {
-      requests: 300;            // 5分あたり
-      window: 300;
+    
+    // IP別制限
+    perIP: {
+      quizSubmission: { requests: 100, window: 3600 };      // 100回/時間
+      bulkOperations: { requests: 10, window: 3600 };       // 10回/時間
     };
   };
   
-  // エンドポイント別制限
-  perEndpoint: {
-    '/api/v1/search/quizzes': {
-      requests: 60;             // 1分あたり
-      window: 60;
+  // Quiz Domain - Learning Context  
+  quizLearning: {
+    anonymousUser: {
+      sessionCreation: { requests: 20, window: 3600 };      // 20セッション/時間
+      answerSubmission: { requests: 300, window: 300 };     // 300回/5分
+      deckGeneration: { requests: 10, window: 600 };        // 10件/10分
+    };
+    
+    // 検索機能の制限
+    searchOperations: {
+      keywordSearch: { requests: 100, window: 3600 };       // 100回/時間
+      complexFilters: { requests: 50, window: 3600 };       // 50回/時間
+      recommendationFetch: { requests: 30, window: 3600 };   // 30回/時間
+    };
+  };
+  
+  // User Domain
+  userDomain: {
+    anonymousUser: {
+      sessionManagement: { requests: 100, window: 3600 };   // 100回/時間
+      profileOperations: { requests: 20, window: 3600 };    // 20回/時間
+      deviceMigration: { requests: 3, window: 86400 };      // 3回/日
+    };
+  };
+  
+  // Sync Domain
+  syncDomain: {
+    anonymousUser: {
+      dataSync: { requests: 10, window: 600 };              // 10回/10分
+      conflictResolution: { requests: 5, window: 3600 };    // 5回/時間
+      cacheOperations: { requests: 100, window: 3600 };     // 100回/時間
+    };
+    
+    // 重い同期処理
+    heavyOperations: {
+      fullSync: { requests: 2, window: 3600 };              // 2回/時間
+      bulkUpload: { requests: 1, window: 1800 };            // 1回/30分
     };
   };
 }
@@ -420,33 +612,102 @@ interface ValidationErrorResponse {
 
 ### 6. パフォーマンス最適化原則
 
-#### キャッシュ戦略
+#### コンテキスト別パフォーマンス目標
 
 ```typescript
-// Cache-Control設計
-interface CacheControlRules {
-  // 静的リソース（長期キャッシュ）
-  staticContent: {
-    'Cache-Control': 'public, max-age=31536000, immutable'; // 1年
-    'ETag': true;
-    'Last-Modified': true;
+// 境界づけられたコンテキスト別パフォーマンス目標
+interface ContextPerformanceTargets {
+  // Quiz Domain - Manage Context
+  quizManage: {
+    quizCreation: { target: 200, threshold: 300 };        // 95%ile ≤200ms
+    draftSaving: { target: 100, threshold: 150 };         // 95%ile ≤100ms
+    approvalProcess: { target: 500, threshold: 750 };     // 95%ile ≤500ms
+    bulkOperations: { target: 2000, threshold: 3000 };    // バルク処理
   };
   
-  // 準静的データ（中期キャッシュ）
-  publishedQuizzes: {
-    'Cache-Control': 'public, max-age=3600'; // 1時間
-    'ETag': true;
+  // Quiz Domain - Learning Context
+  quizLearning: {
+    deckGeneration: { target: 150, threshold: 200 };      // 95%ile ≤150ms
+    sessionStart: { target: 100, threshold: 150 };        // 95%ile ≤100ms
+    answerSubmission: { target: 50, threshold: 100 };     // 95%ile ≤50ms
+    historyFetch: { target: 200, threshold: 300 };        // 95%ile ≤200ms
+    
+    // 検索パフォーマンス
+    keywordSearch: { target: 200, threshold: 300 };       // 95%ile ≤200ms
+    complexFilters: { target: 300, threshold: 500 };      // 複合検索
+    recommendations: { target: 150, threshold: 200 };     // 推奨取得
   };
   
-  // 動的データ（短期キャッシュ）
-  searchResults: {
-    'Cache-Control': 'private, max-age=300'; // 5分
+  // User Domain
+  userDomain: {
+    sessionCreation: { target: 100, threshold: 150 };     // 95%ile ≤100ms
+    authVerification: { target: 20, threshold: 50 };      // 95%ile ≤20ms
+    deviceMigration: { target: 1000, threshold: 1500 };   // デバイス移行
   };
   
-  // 個人データ（キャッシュ禁止）
-  personalData: {
-    'Cache-Control': 'private, no-cache, no-store, must-revalidate';
-    'Pragma': 'no-cache';
+  // Sync Domain
+  syncDomain: {
+    dataUpload: { target: 1000, threshold: 1500 };        // 95%ile ≤1000ms
+    conflictResolution: { target: 300, threshold: 500 };  // 95%ile ≤300ms
+    cacheManifest: { target: 100, threshold: 150 };       // キャッシュ状態
+  };
+}
+```
+
+#### キャッシュ戦略（匿名ユーザー対応）
+
+```typescript
+// コンテキスト別キャッシュ戦略
+interface ContextBasedCacheStrategy {
+  // Quiz Domain - 公開データのキャッシュ
+  quizDomain: {
+    // 長期キャッシュ（承認済みクイズ）
+    publishedQuizzes: {
+      'Cache-Control': 'public, max-age=3600';            // 1時間
+      'ETag': true;
+      'Vary': 'Accept-Language, X-Device-Platform';
+    };
+    
+    // 検索結果キャッシュ
+    searchResults: {
+      'Cache-Control': 'public, max-age=300';             // 5分
+      'Vary': 'X-Anonymous-ID';                           // 個人化考慮
+    };
+    
+    // Deckメタデータ
+    deckMetadata: {
+      'Cache-Control': 'private, max-age=1800';           // 30分
+      'ETag': true;
+    };
+  };
+  
+  // User Domain - 個人データ
+  userDomain: {
+    // セッション情報（キャッシュ禁止）
+    sessionData: {
+      'Cache-Control': 'private, no-cache, no-store, must-revalidate';
+      'Pragma': 'no-cache';
+    };
+    
+    // 学習進捗（短期キャッシュ）
+    learningProgress: {
+      'Cache-Control': 'private, max-age=60';             // 1分
+      'ETag': true;
+    };
+  };
+  
+  // Sync Domain - 同期最適化
+  syncDomain: {
+    // キャッシュマニフェスト
+    cacheManifest: {
+      'Cache-Control': 'private, max-age=300';            // 5分
+      'ETag': true;
+    };
+    
+    // 同期状態（キャッシュ禁止）
+    syncStatus: {
+      'Cache-Control': 'private, no-cache';
+    };
   };
 }
 
@@ -503,10 +764,14 @@ enum ErrorCategory {
 
 // 具体的エラーコード
 const ERROR_CODES = {
-  // 認証エラー
+  // 認証エラー（匿名ユーザー対応）
   AUTH_INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
   AUTH_TOKEN_EXPIRED: 'AUTH_TOKEN_EXPIRED',
   AUTH_INVALID_DEVICE: 'AUTH_INVALID_DEVICE',
+  AUTH_DEVICE_FINGERPRINT_MISMATCH: 'AUTH_DEVICE_FINGERPRINT_MISMATCH',
+  AUTH_ANONYMOUS_SESSION_EXPIRED: 'AUTH_ANONYMOUS_SESSION_EXPIRED',
+  AUTH_DEVICE_MIGRATION_REQUIRED: 'AUTH_DEVICE_MIGRATION_REQUIRED',
+  AUTH_DEVICE_MIGRATION_FAILED: 'AUTH_DEVICE_MIGRATION_FAILED',
   
   // 認可エラー
   AUTHZ_INSUFFICIENT_PERMISSIONS: 'AUTHZ_INSUFFICIENT_PERMISSIONS',
@@ -524,10 +789,14 @@ const ERROR_CODES = {
   RESOURCE_CONFLICT: 'RESOURCE_CONFLICT',
   RESOURCE_DELETED: 'RESOURCE_DELETED',
   
-  // ビジネスエラー
+  // ビジネスエラー（匿名ユーザー対応）
   BUSINESS_QUIZ_LIMIT_EXCEEDED: 'BUSINESS_QUIZ_LIMIT_EXCEEDED',
   BUSINESS_SESSION_EXPIRED: 'BUSINESS_SESSION_EXPIRED',
   BUSINESS_INVALID_STATE: 'BUSINESS_INVALID_STATE',
+  BUSINESS_ANONYMOUS_DAILY_LIMIT: 'BUSINESS_ANONYMOUS_DAILY_LIMIT',
+  BUSINESS_DEVICE_MIGRATION_LIMIT: 'BUSINESS_DEVICE_MIGRATION_LIMIT',
+  BUSINESS_SYNC_CONFLICT_UNRESOLVABLE: 'BUSINESS_SYNC_CONFLICT_UNRESOLVABLE',
+  BUSINESS_OFFLINE_DATA_CORRUPTED: 'BUSINESS_OFFLINE_DATA_CORRUPTED',
   
   // 外部システムエラー
   EXTERNAL_SERVICE_UNAVAILABLE: 'EXTERNAL_SERVICE_UNAVAILABLE',
@@ -762,21 +1031,27 @@ interface APIDocumentationStructure {
 #### Controller層設計パターン
 
 ```typescript
-// 標準Controller構造
-export class QuizManagementController {
+// 標準Controller構造（新URL構造・匿名認証対応）
+@Controller('/api/quiz/v1/manage')
+export class QuizManageController {
   constructor(
     private quizService: QuizService,
+    private eventBus: EventBus,
     private validator: RequestValidator,
     private logger: Logger
   ) {}
 
   @Post('/quizzes')
-  @UseGuards(AuthGuard, RateLimitGuard)
-  @ApiOperation({ summary: 'Create new quiz' })
+  @UseGuards(AnonymousAuthGuard, RateLimitGuard)
+  @ApiOperation({ 
+    summary: 'Create new quiz',
+    description: 'Anonymous user can create quiz with device fingerprint'
+  })
   async createQuiz(
     @Body() request: CreateQuizRequest,
-    @Headers('x-device-fingerprint') deviceId: string,
-    @Req() req: AuthenticatedRequest
+    @Headers('x-device-fingerprint') deviceFingerprint: string,
+    @Headers('x-anonymous-id') anonymousId: string,
+    @Req() req: AnonymousAuthenticatedRequest
   ): Promise<CreateQuizResponse> {
     // 1. リクエストバリデーション
     const validatedData = await this.validator.validate(
@@ -784,14 +1059,23 @@ export class QuizManagementController {
       request
     );
     
-    // 2. ビジネスロジック実行
+    // 2. ビジネスロジック実行（イベント駆動）
     const quiz = await this.quizService.createQuiz({
       ...validatedData,
-      creatorFingerprint: deviceId,
-      createdBy: req.user.id
+      creatorFingerprint: deviceFingerprint,
+      createdBy: anonymousId
     });
     
-    // 3. レスポンス構築
+    // 3. ドメインイベント発行
+    await this.eventBus.publish(new QuizSubmittedEvent({
+      quizId: quiz.id,
+      creatorId: anonymousId,
+      deviceFingerprint,
+      tags: quiz.tags,
+      submittedAt: new Date()
+    }));
+    
+    // 4. レスポンス構築
     return {
       success: true,
       data: {
@@ -810,32 +1094,81 @@ export class QuizManagementController {
     };
   }
 
-  @Get('/quizzes/:id')
-  @UseGuards(AuthGuard)
-  @ApiParam({ name: 'id', type: 'string', description: 'Quiz ID' })
-  async getQuiz(
+  // 動詞API - 複雑ビジネスロジック
+  @Post('/quizzes/:id/approve')
+  @UseGuards(AnonymousAuthGuard, AdminRoleGuard)
+  @ApiOperation({ summary: 'Approve quiz for publication' })
+  async approveQuiz(
     @Param('id') quizId: string,
-    @Query('include') include?: string[],
-    @Req() req: AuthenticatedRequest
-  ): Promise<QuizDetailResponse> {
-    const quiz = await this.quizService.getById(quizId, {
-      includeStatistics: include?.includes('statistics'),
-      includeCreator: include?.includes('creator'),
-      requesterId: req.user.id
+    @Body() request: ApproveQuizRequest,
+    @Headers('x-anonymous-id') reviewerId: string,
+    @Req() req: AnonymousAuthenticatedRequest
+  ): Promise<ApproveQuizResponse> {
+    // 1. 承認権限確認
+    await this.quizService.verifyApprovalPermissions(reviewerId);
+    
+    // 2. 複雑な承認処理実行
+    const approvalResult = await this.quizService.approveQuiz({
+      quizId,
+      reviewerId,
+      reviewComment: request.comment,
+      qualityScore: request.qualityScore
     });
-
-    if (!quiz) {
-      throw new NotFoundException('RESOURCE_NOT_FOUND', 'Quiz not found');
-    }
-
+    
+    // 3. 承認イベント発行（WebSocket通知トリガー）
+    await this.eventBus.publish(new QuizApprovedEvent({
+      quizId,
+      reviewerId,
+      creatorId: approvalResult.creatorId,
+      approvedAt: new Date(),
+      publicationSchedule: approvalResult.publicationSchedule
+    }));
+    
     return {
       success: true,
-      data: this.transformQuizToResponse(quiz, include),
-      meta: {
-        requestId: req.requestId,
-        timestamp: new Date().toISOString()
+      data: {
+        approvalId: approvalResult.approvalId,
+        status: 'approved',
+        publicationScheduledAt: approvalResult.publicationSchedule.toISOString(),
+        qualityScore: approvalResult.qualityScore
       }
     };
+  }
+}
+
+// WebSocket Gateway - リアルタイム通知
+@WebSocketGateway({
+  cors: { origin: '*' },
+  path: '/api/realtime'
+})
+export class QuizNotificationGateway {
+  constructor(private eventBus: EventBus) {
+    // イベント→WebSocket通知の統合
+    this.setupEventSubscriptions();
+  }
+  
+  private setupEventSubscriptions() {
+    // クイズ承認通知
+    this.eventBus.subscribe(QuizApprovedEvent, async (event) => {
+      await this.notifyCreator(event.creatorId, {
+        type: 'quiz_approved',
+        quizId: event.quizId,
+        message: 'Your quiz has been approved!',
+        timestamp: event.approvedAt.toISOString()
+      });
+    });
+  }
+  
+  @SubscribeMessage('subscribe_creator_notifications')
+  async subscribeCreatorNotifications(
+    @MessageBody() data: { anonymousId: string },
+    @ConnectedSocket() client: Socket
+  ): Promise<void> {
+    await client.join(`creator_${data.anonymousId}`);
+  }
+
+  async notifyCreator(creatorId: string, notification: any): Promise<void> {
+    this.server.to(`creator_${creatorId}`).emit('notification', notification);
   }
 }
 ```
@@ -926,8 +1259,8 @@ describe('Quiz Management API', () => {
     authToken = await getTestAuthToken();
   });
 
-  describe('POST /api/v1/quiz-management/quizzes', () => {
-    it('should create quiz successfully', async () => {
+  describe('POST /api/quiz/v1/manage/quizzes', () => {
+    it('should create quiz successfully with anonymous auth', async () => {
       const request = {
         question: 'JavaScriptで配列を作成する方法は？',
         correctAnswer: true,
@@ -937,9 +1270,10 @@ describe('Quiz Management API', () => {
       };
 
       const response = await supertest(app.getHttpServer())
-        .post('/api/v1/quiz-management/quizzes')
+        .post('/api/quiz/v1/manage/quizzes')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Device-Fingerprint', 'test-device-123')
+        .set('X-Device-Fingerprint', 'df_a1b2c3d4e5f6789abcdef')
+        .set('X-Anonymous-ID', 'ano_test123456')
         .send(request)
         .expect(201);
 
@@ -963,9 +1297,10 @@ describe('Quiz Management API', () => {
       };
 
       const response = await supertest(app.getHttpServer())
-        .post('/api/v1/quiz-management/quizzes')
+        .post('/api/quiz/v1/manage/quizzes')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Device-Fingerprint', 'test-device-123')
+        .set('X-Device-Fingerprint', 'df_a1b2c3d4e5f6789abcdef')
+        .set('X-Anonymous-ID', 'ano_test123456')
         .send(request)
         .expect(422);
 
@@ -991,9 +1326,10 @@ describe('Quiz Management API', () => {
       // レート制限テスト用の大量リクエスト送信
       const requests = Array.from({ length: 15 }, () =>
         supertest(app.getHttpServer())
-          .post('/api/v1/quiz-management/quizzes')
+          .post('/api/quiz/v1/manage/quizzes')
           .set('Authorization', `Bearer ${authToken}`)
-          .set('X-Device-Fingerprint', 'test-device-123')
+          .set('X-Device-Fingerprint', 'df_a1b2c3d4e5f6789abcdef')
+          .set('X-Anonymous-ID', 'ano_test123456')
           .send({
             question: `Test question ${Math.random()}`,
             correctAnswer: true,
@@ -1036,11 +1372,12 @@ describe('Quiz Management API', () => {
 
 ## 関連ドキュメント
 
-- [API設計概要](README.md) - 全体アーキテクチャ・方針
-- [API機能カタログ](api-catalog.md) - 詳細なエンドポイント仕様
-- [イベント駆動API統合](event-integration.md) - イベント連携の詳細設計
+- [API設計概要](../project/api-design/README.md) - 全体アーキテクチャ・方針
+- [API機能カタログ](../project/api-design/api-catalog.md) - 87エンドポイントの詳細仕様
+- [非機能要件仕様書](../project/api-design/non-functional-requirements.md) - パフォーマンス・スケーラビリティ要件
+- [イベント駆動API統合](../project/api-design/event-integration.md) - イベント連携・リアルタイム機能
 
 ---
 **作成工程**: API設計  
 **作成日**: 2025-08-01  
-**更新日**: 2025-08-01
+**更新日**: 2025-08-02

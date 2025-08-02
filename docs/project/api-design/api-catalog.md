@@ -52,18 +52,19 @@ POST   /api/quiz/v1/manage/quizzes/:id/publish
 
 **対応UI**: Create → 投稿ボタン
 
-**リクエスト**:
+**リクエストボディ**:
 
-```typescript
-interface CreateQuizRequest {
-  question: string;              // 必須、500文字以内
-  correctAnswer: boolean;        // true=◯, false=×
-  explanation?: string;          // 任意、1000文字以内
-  tags: string[];               // 必須1個以上（公認タグ含む）
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  creatorFingerprint: string;   // デバイス識別子
-}
-```
+| フィールド名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
+|-------------|------|------|----|-----------|----|---------|
+| question | body | ✓ | string | - | 10-500文字、HTMLタグ禁止 | 問題文<br/>例: "JavaScriptで配列を作成する方法は？" |
+| correctAnswer | body | ✓ | boolean | - | - | 正解フラグ（true=◯, false=×）<br/>例: true |
+| tags | body | ✓ | string[] | - | 1-10個、各1-50文字、英数字・ハイフン・アンダースコアのみ | タグ一覧<br/>例: ["javascript", "array", "programming"] |
+| difficulty | body | ✓ | enum | - | beginner/intermediate/advanced | 難易度<br/>例: "beginner" |
+| explanation | body | 任意 | string | - | 最大1000文字、HTMLタグ禁止 | 解説文<br/>例: "[]を使用して空の配列を作成できます。" |
+| creatorFingerprint | body | ✓ | string | - | - | デバイス識別子<br/>例: "df_a1b2c3d4e5f6789abcdef" |
+| source | body | 任意 | string | - | 最大200文字 | 出典・参考元<br/>例: "MDN Web Docs" |
+| imageUrl | body | 任意 | string | - | HTTPS必須、jpg/png/gif形式、最大2MB | 画像URL<br/>例: "<https://example.com/quiz-image.png>" |
+| estimatedTime | body | 任意 | number | - | 5-300秒 | 予想回答時間（秒）<br/>例: 30 |
 
 **レスポンス**:
 
@@ -827,6 +828,23 @@ interface CreateCreatorClaimRequest {
 
 **対応UI**: MyPage → 投稿管理
 
+**クエリパラメータ**:
+
+| パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
+|-------------|------|------|----|-----------|----|---------|
+| status | query | 任意 | enum | "all" | all/pending/approved/rejected/published | ステータスフィルター<br/>例: "pending" |
+| tags | query | 任意 | string[] | - | 1-10個、各1-50文字 | タグフィルター（カンマ区切り）<br/>例: "javascript,react" |
+| difficulty | query | 任意 | enum | "all" | beginner/intermediate/advanced/all | 難易度フィルター |
+| sort | query | 任意 | enum | "created_at" | created_at/updated_at/popularity/accuracy | ソート基準 |
+| order | query | 任意 | enum | "desc" | asc/desc | ソート順序 |
+| limit | query | 任意 | number | 20 | 1-100 | 取得件数 |
+| offset | query | 任意 | number | 0 | ≥0 | オフセット |
+| created_after | query | 任意 | string | - | ISO 8601 | 作成日時以降<br/>例: "2024-01-01T00:00:00Z" |
+| created_before | query | 任意 | string | - | ISO 8601 | 作成日時以前 |
+| include | query | 任意 | string[] | - | statistics/approval_history/recent_answers | 含める関連データ<br/>例: "statistics,approval_history" |
+| min_answers | query | 任意 | number | - | ≥0 | 最小回答数フィルター<br/>例: 10 |
+| min_accuracy | query | 任意 | number | - | 0-100 | 最小正答率フィルター（%）<br/>例: 70 |
+
 **レスポンス**:
 
 ```typescript
@@ -1209,8 +1227,62 @@ GET    /api/quiz/v1/learning/popular
 ##### GET /api/quiz/v1/learning/search
 
 **目的**: 基本的なクイズ検索
-
 **対応UI**: 検索画面 → 検索実行
+
+**クエリパラメータ**:
+
+| パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
+|-------------|------|------|----|-----------|----|---------|
+| q | query | 任意 | string | - | 1-50文字 | キーワード検索<br/>例: "JavaScript", "配列" |
+| tags | query | 任意 | string[] | - | 1-10個、各1-50文字 | タグフィルター（カンマ区切り）<br/>例: "javascript,react" |
+| difficulty | query | 任意 | enum | "all" | beginner/intermediate/advanced/all | 難易度フィルター |
+| sort | query | 任意 | enum | "popularity" | popularity/latest/difficulty/accuracy | ソート基準 |
+| order | query | 任意 | enum | "desc" | asc/desc | ソート順序 |
+| limit | query | 任意 | number | 20 | 1-50 | 取得件数 |
+| offset | query | 任意 | number | 0 | ≥0 | オフセット |
+| cursor | query | 任意 | string | - | - | 次ページカーソル |
+| accuracy_min | query | 任意 | number | - | 0-100 | 正答率下限（%）<br/>例: 70 |
+| accuracy_max | query | 任意 | number | - | 0-100 | 正答率上限（%） |
+| created_after | query | 任意 | string | - | ISO 8601 | 作成日時以降<br/>例: "2024-01-01T00:00:00Z" |
+| created_before | query | 任意 | string | - | ISO 8601 | 作成日時以前 |
+| exclude_answered | query | 任意 | boolean | false | - | 回答済み除外 |
+| user_preference | query | 任意 | boolean | false | - | 個人化推奨適用 |
+| include | query | 任意 | string[] | - | statistics/creator/tags/related | 含める関連データ<br/>例: "statistics,creator" |
+| fields | query | 任意 | string[] | - | - | 返すフィールド指定<br/>例: "id,question,tags" |
+
+**レスポンス**:
+
+| フィールド名 | 型 | 必須 | 条件 | 説明・例 |
+|-------------|----|----|------|---------|
+| quizzes | array | ✓ | - | 検索結果配列 |
+| quizzes[].id | string | ✓ | - | クイズID<br/>例: "qz_abc123def456" |
+| quizzes[].question | string | ✓ | - | 問題文 |
+| quizzes[].tags | string[] | ✓ | - | タグ一覧 |
+| quizzes[].difficulty | string | ✓ | - | 難易度 |
+| quizzes[].createdAt | string | ✓ | - | 作成日時（ISO 8601） |
+| quizzes[].statistics | object | - | include指定時 | 統計情報 |
+| quizzes[].statistics.totalAnswers | number | - | include指定時 | 総回答数 |
+| quizzes[].statistics.correctRate | number | - | include指定時 | 正答率（0-100） |
+| quizzes[].statistics.averageTime | number | - | include指定時 | 平均回答時間（秒） |
+| quizzes[].creator | object | - | include指定時 | 作成者情報 |
+| pagination | object | ✓ | - | ページネーション情報 |
+| pagination.total | number | ✓ | - | 総件数 |
+| pagination.count | number | ✓ | - | 現在件数 |
+| pagination.limit | number | ✓ | - | ページサイズ |
+| pagination.offset | number | ✓ | - | オフセット |
+| pagination.hasMore | boolean | ✓ | - | 次頁存在フラグ |
+| pagination.nextCursor | string | - | カーソル利用時 | 次ページカーソル |
+| searchMeta | object | ✓ | - | 検索メタ情報 |
+| searchMeta.query | string | ✓ | - | 検索クエリ |
+| searchMeta.executionTime | number | ✓ | - | 実行時間（ms） |
+| searchMeta.suggestedTags | string[] | - | 候補がある場合 | 推奨タグ |
+| searchMeta.didYouMean | string | - | 候補がある場合 | 検索候補 |
+
+**エラー**:
+
+- 400: パラメータ不正（文字数制限、範囲外の値）
+- 422: 検索クエリ不正（特殊文字、SQLインジェクション対策）
+- 429: 検索レート制限（100回/時間）
 
 **クエリパラメータ**:
 
