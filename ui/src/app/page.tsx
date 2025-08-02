@@ -5,11 +5,9 @@ export default function Home() {
         {/* 作る（左）: 白地＋オレンジ文字・枠 */}
         <button
           type="button"
-          className="flex-1 py-10 rounded-2xl bg-white text-base text-xl font-bold border-2 border-base shadow-lg hover:bg-base-light transition flex flex-col items-center focus:outline-none"
+          className="flex-1 py-10 rounded-2xl bg-white text-xl font-bold border-2 border-base shadow-lg hover:bg-base-light transition flex flex-col items-center focus:outline-none"
         >
-          <span className="text-xs font-semibold text-base opacity-80">
-            問題を
-          </span>
+          <span className="text-xs font-semibold opacity-80">問題を</span>
           <span className="text-2xl font-bold tracking-wide text-wide">
             作る
           </span>
