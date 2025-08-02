@@ -67,7 +67,6 @@ graph TB
         L --> M[Event Sourcing]
     end
     
-    % Connections
     A --> D
     B --> E
     C --> F
