@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuizPocket タイトル画面</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      .bg-base { background-color: #f5835c; }
+      .bg-base-light { background-color: #ffe4da; }
+      .text-base { color: #f5835c; }
+      .border-base { border-color: #f5835c; }
+      .hover\:bg-base-dark:hover { background-color: #d15d34 !important; }
+      .hover\:bg-base-light:hover { background-color: #ffd3c2 !important; }
+    </style>
+  </head>
+  <body class="bg-base-light min-h-screen flex flex-col">
+    <!-- App Bar -->
+    <header class="flex justify-between items-center px-4 pt-4 pb-2">
+      <div class="flex items-center space-x-2">
+        <!-- Logo/Icon -->
+        <div class="bg-base rounded-full w-10 h-10 flex items-center justify-center text-white text-2xl font-bold shadow-md">
+          <span>Q</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xl font-bold text-base tracking-tight">QuizPocket</span>
+          <span class="text-xs text-base font-medium opacity-70">いつでもどこでも、手軽にクイズ学習</span>
+        </div>
+      </div>
+      <!-- MyPage Icon -->
+      <button aria-label="マイページ" class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center border border-base hover:bg-base-light transition">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#f5835c" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 7.5a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.25a8.38 8.38 0 0115 0v.25A2.25 2.25 0 0117.25 21.5H6.75A2.25 2.25 0 014.5 19.5v-.25z" />
+        </svg>
+      </button>
+    </header>
+
+    <main class="flex-1 flex flex-col items-center justify-center px-4">
+      <div class="w-full max-w-md flex flex-row gap-6 mt-10 justify-center">
+        <!-- 作る（左）: 白地＋オレンジ文字・枠 -->
+        <button class="flex-1 py-10 rounded-2xl bg-white text-base text-xl font-bold border-2 border-base shadow-lg hover:bg-base-light transition flex flex-col items-center focus:outline-none">
+          <span class="text-xs font-semibold text-base opacity-80">問題を</span>
+          <span class="text-2xl font-bold tracking-wide text-wide">作る</span>
+        </button>
+        <!-- 解く（右）: オレンジ地＋白文字 -->
+        <button class="flex-1 py-10 rounded-2xl bg-base text-white text-xl font-bold shadow-lg hover:bg-base-dark transition flex flex-col items-center focus:outline-none">
+          <span class="text-xs font-semibold opacity-80">問題を</span>
+          <span class="text-2xl font-bold tracking-wide">解く</span>
+        </button>
+      </div>
+    </main>
+    
+    <!-- Pocket Motif Illustration -->
+    <div class="flex justify-center mt-10">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect x="12" y="12" width="40" height="40" rx="12" fill="#f5835c"/>
+        <path d="M20 32a12 12 0 0024 0" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="24" y="24" width="16" height="8" rx="2" fill="#fff"/>
+        <circle cx="32" cy="28" r="2" fill="#d15d34"/>
+      </svg>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="text-center text-xs text-base py-4 opacity-30">&copy; 2025 QuizPocket</footer>
+  </body>
+</html>

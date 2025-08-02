@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuizPocket クイズ一覧</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      .bg-base { background-color: #f5835c; }
+      .bg-base-light { background-color: #fff3ec; }
+      .text-base { color: #f5835c; }
+      .border-base { border-color: #f5835c; }
+      .hover\:bg-base-dark:hover { background-color: #d15d34 !important; }
+      .hover\:bg-base-light:hover { background-color: #ffe2cf !important; }
+      .shadow-card { box-shadow: 0 2px 16px 0 rgba(245, 131, 92, 0.07), 0 1.5px 4px rgba(0,0,0,0.04); }
+      .bg-wrong { background-color: #ffd2d2; }
+      .text-wrong { color: #f25555; }
+      .border-wrong { border-color: #f25555; }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-base-light min-h-screen flex flex-col font-['Noto_Sans_JP','Inter',sans-serif]">
+    <!-- App Bar -->
+    <header class="flex justify-between items-center px-4 pt-4 pb-2 bg-base-light sticky top-0 z-10">
+      <div class="flex items-center space-x-2">
+        <div class="bg-base rounded-full w-10 h-10 flex items-center justify-center text-white text-2xl font-bold shadow-md">
+          <span>Q</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xl font-bold text-base tracking-tight">QuizPocket</span>
+          <span class="text-xs text-base font-medium opacity-70">クイズ一覧</span>
+        </div>
+      </div>
+      <!-- マイページ -->
+      <button aria-label="マイページ" class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center border border-base hover:bg-base-light transition">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#f5835c" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 7.5a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.25a8.38 8.38 0 0115 0v.25A2.25 2.25 0 0117.25 21.5H6.75A2.25 2.25 0 014.5 19.5v-.25z" />
+        </svg>
+      </button>
+    </header>
+    
+    <!-- タグフィルタ・検索バー -->
+    <section class="w-full max-w-md mx-auto px-4 mt-2">
+      <div class="flex gap-2 overflow-x-auto pb-1">
+        <button class="px-3 py-1 bg-base text-white rounded-full text-xs font-semibold shadow hover:bg-base-dark transition whitespace-nowrap">#数学</button>
+        <button class="px-3 py-1 bg-white text-base border border-base rounded-full text-xs font-semibold shadow hover:bg-base-light transition whitespace-nowrap">#歴史</button>
+        <button class="px-3 py-1 bg-white text-base border border-base rounded-full text-xs font-semibold shadow hover:bg-base-light transition whitespace-nowrap">#英語</button>
+        <button class="px-3 py-1 bg-white text-base border border-base rounded-full text-xs font-semibold shadow hover:bg-base-light transition whitespace-nowrap">#理科</button>
+        <button class="px-3 py-1 bg-white text-base border border-base rounded-full text-xs font-semibold shadow hover:bg-base-light transition whitespace-nowrap">#雑学</button>
+      </div>
+      <div class="mt-3">
+  <button
+    class="w-full flex items-center gap-2 bg-white rounded-full shadow px-3 py-2 border border-base hover:bg-base-light transition focus:ring-2 focus:ring-base"
+    aria-label="検索条件の変更"
+    type="button"
+  >
+    <!-- 検索条件バッジ群 -->
+    <span class="flex flex-wrap gap-1 flex-1">
+      <span class="flex items-center px-2 py-0.5 bg-base-light text-base text-xs rounded-full font-semibold">
+        #数学
+        <span class="ml-1 cursor-pointer hover:text-base transition" aria-label="この条件を削除">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg>
+        </span>
+      </span>
+      <span class="flex items-center px-2 py-0.5 bg-base-light text-base text-xs rounded-full font-semibold">
+        #図形
+        <span class="ml-1 cursor-pointer hover:text-base transition" aria-label="この条件を削除">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg>
+        </span>
+      </span>
+      <span class="flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full font-medium">
+        五角形
+        <span class="ml-1 cursor-pointer hover:text-base transition" aria-label="この条件を削除">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg>
+        </span>
+      </span>
+    </span>
+    <!-- フィルターアイコン＋下矢印 -->
+    <span class="flex items-center gap-1 text-base opacity-70">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M3 6h18M6 6v6a6 6 0 0012 0V6" />
+      </svg>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M19 9l-7 7-7-7" />
+      </svg>
+    </span>
+  </button>
+</div>
+    </section>
+
+    <!-- クイズ一覧カードリスト -->
+    <main class="w-full max-w-md mx-auto px-4 flex-1 pb-28 mt-3">
+      <div class="flex flex-col gap-6">
+        <!-- クイズカード例1（未解答） -->
+        <button class="w-full text-left rounded-2xl bg-white shadow-card p-5 transition hover:scale-[1.01] active:scale-95 focus:ring-2 focus:ring-base flex flex-col gap-2 border-l-4 border-base group">
+          <div class="flex flex-wrap gap-1 mb-1">
+            <span class="px-2 py-0.5 bg-base-light text-base text-xs rounded-full font-semibold">#数学</span>
+            <span class="px-2 py-0.5 bg-base-light text-base text-xs rounded-full font-semibold">#図形</span>
+            <span class="ml-auto text-xs text-gray-400 flex items-center gap-1">
+              <svg class="w-4 h-4 inline-block" fill="none" stroke="#f5835c" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M6.6 10a6 6 0 1110.8 0"/></svg>
+              解説あり
+            </span>
+          </div>
+          <div class="text-base text-sm font-medium line-clamp-3">図形の内角の和について、以下の問いに答えなさい。五角形の内角の和は何度ですか？</div>
+          <div class="flex gap-2 mt-2">
+            <span class="px-2 py-0.5 bg-base text-white rounded-full text-xs font-bold">未解答</span>
+          </div>
+        </button>
+        <!-- クイズカード例2（解答済み） -->
+        <button class="w-full text-left rounded-2xl bg-base-light shadow-card p-5 transition hover:scale-[1.01] active:scale-95 focus:ring-2 focus:ring-base flex flex-col gap-2 border-l-4 border-base group opacity-60">
+          <div class="flex flex-wrap gap-1 mb-1">
+            <span class="px-2 py-0.5 bg-base-light text-base text-xs rounded-full font-semibold">#歴史</span>
+            <span class="ml-auto text-xs text-gray-400 flex items-center gap-1">
+              <svg class="w-4 h-4 inline-block" fill="none" stroke="#f5835c" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M6.6 10a6 6 0 1110.8 0"/></svg>
+              解説なし
+            </span>
+          </div>
+          <div class="text-base text-sm font-medium line-clamp-3">鎌倉幕府が成立した年を答えなさい。</div>
+          <div class="flex gap-2 mt-2">
+            <span class="px-2 py-0.5 bg-white text-base border border-base rounded-full text-xs font-bold">解答済み</span>
+          </div>
+        </button>
+        <!-- クイズカード例3（間違い：復習ラベル） -->
+        <button class="w-full text-left rounded-2xl bg-white shadow-card p-5 transition hover:scale-[1.01] active:scale-95 focus:ring-2 focus:ring-base flex flex-col gap-2 border-l-4 border-wrong group">
+          <div class="flex flex-wrap gap-1 mb-1">
+            <span class="px-2 py-0.5 bg-base-light text-base text-xs rounded-full font-semibold">#理科</span>
+            <span class="ml-auto text-xs text-gray-400 flex items-center gap-1">
+              <svg class="w-4 h-4 inline-block" fill="none" stroke="#f5835c" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M6.6 10a6 6 0 1110.8 0"/></svg>
+              解説あり
+            </span>
+          </div>
+          <div class="text-base text-sm font-medium line-clamp-3">水の三態変化について説明しなさい。</div>
+          <div class="flex gap-2 mt-2">
+            <span class="px-2 py-0.5 bg-wrong text-wrong border border-wrong rounded-full text-xs font-bold">復習が必要</span>
+          </div>
+        </button>
+        <!-- クイズカード例4（未解答・オフライン） -->
+        <button class="w-full text-left rounded-2xl bg-white shadow-card p-5 transition hover:scale-[1.01] active:scale-95 focus:ring-2 focus:ring-base flex flex-col gap-2 border-l-4 border-base group">
+          <div class="flex flex-wrap gap-1 mb-1">
+            <span class="px-2 py-0.5 bg-base-light text-base text-xs rounded-full font-semibold">#英語</span>
+            <span class="ml-auto text-xs text-gray-400 flex items-center gap-1">
+              <svg class="w-4 h-4 inline-block" fill="none" stroke="#f5835c" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M6.6 10a6 6 0 1110.8 0"/></svg>
+              解説あり
+            </span>
+          </div>
+          <div class="text-base text-sm font-medium line-clamp-3">This is a pen. の意味を日本語で答えなさい。</div>
+          <div class="flex gap-2 mt-2">
+            <span class="px-2 py-0.5 bg-base text-white rounded-full text-xs font-bold">未解答</span>
+            <span class="px-2 py-0.5 bg-gray-200 text-gray-400 rounded-full text-xs font-bold flex items-center"><svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 17v-3a5 5 0 00-10 0v3" /><path d="M12 5v.01" /></svg>オフライン</span>
+          </div>
+        </button>
+      </div>
+      <!-- オフライン表示例 -->
+      <div class="mt-8 flex items-center justify-center text-xs text-gray-500 gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="#f5835c" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        オフライン中です。ダウンロード済みクイズのみ表示しています。
+      </div>
+    </main>
+    <!-- ボトムナビゲーション -->
+    <nav class="fixed bottom-0 left-0 w-full bg-white border-t border-base flex justify-around items-center h-16 z-20" style="max-width: 100vw; min-width: 0;">
+      <button class="flex flex-col items-center justify-center text-base focus:outline-none">
+        <svg class="w-6 h-6 mb-0.5" fill="none" stroke="#f5835c" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+        <span class="text-xs font-semibold">作る</span>
+      </button>
+      <button class="flex flex-col items-center justify-center text-base focus:outline-none">
+        <svg class="w-6 h-6 mb-0.5" fill="none" stroke="#f5835c" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3" /></svg>
+        <span class="text-xs font-semibold">解く</span>
+      </button>
+      <button class="flex flex-col items-center justify-center text-base focus:outline-none">
+        <svg class="w-6 h-6 mb-0.5" fill="none" stroke="#f5835c" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+        <span class="text-xs font-semibold">マイページ</span>
+      </button>
+    </nav>
+    <!-- Footer -->
+    <footer class="text-center text-xs text-base py-3 opacity-30 mt-8">&copy; 2025 QuizPocket</footer>
+  </body>
+</html>
