@@ -1,9 +1,9 @@
 {
-	"ignores": ["**/node_modules/**", "**/tmp/**"],
-	"config": {
-		"default": true,
-		"MD013": false,
-		"MD024": false,
-		"MD033": false
-	}
+  "ignores": ["**/node_modules/**", "**/tmp/**"],
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD024": false,
+    "MD033": false
+  }
 }
