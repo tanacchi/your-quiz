@@ -1,13 +1,14 @@
 {
   "devDependencies": {
     "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
     "markdownlint": "^0.38.0",
     "markdownlint-cli2": "^0.18.1",
     "npm-run-all2": "^8.0.4"
   },
   "scripts": {
-    "lint:md": "markdownlint-cli2",
-    "format:md": "markdownlint-cli2 --fix",
+    "lint:md": "sh ./scripts/lint-md.sh",
+    "format:md": "markdownlint-cli2 '**/*.md' --fix",
     "lint": "run-p lint:*",
     "format": "run-p format:*",
     "prepare": "husky"

@@ -254,6 +254,7 @@ ADRディレクトリのREADME.mdには、全ADRの一覧とステータスを�
 4. **最終承認**: 指示者による承認、ステータス「Accepted」への変更
 
 **承認フロー**:
+
 - 新規ADR → Proposed → レビュー依頼 → 指示者レビュー → Accepted
 - 作成者は「Proposed」状態でのみ提出、「Accepted」への変更権限なし
 

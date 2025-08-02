@@ -31,6 +31,7 @@
 - 詳細なエラーコード体系（例：「VALIDATION_ERROR」「TOKEN_EXPIRED」等）
 
 **特に注意が必要なファイル**:
+
 - `communication-patterns.md`: 通信方式の方針のみ記述し、具体的なエンドポイント一覧表は含めない
 - `data-architecture.md`: データ管理の方針のみ記述し、具体的なスキーマ定義は含めない
 

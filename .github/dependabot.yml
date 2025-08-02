@@ -1,0 +1,62 @@
+version: 2
+updates:
+  # Current active package
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "vuln"
+    pull-request-branch-name:
+      separator: "-"
+    target-branch: "fix-vuln"
+    open-pull-requests-limit: 10
+
+  # Future packages - Uncomment when implementing directory structure
+  # Uncomment when ui/ package is created (Next.js frontend)
+  # - package-ecosystem: "npm"
+  #   directory: "/ui"
+  #   schedule:
+  #     interval: "monthly"
+  #   commit-message:
+  #     prefix: "vuln"
+  #   pull-request-branch-name:
+  #     separator: "-"
+  #   target-branch: "fix-vuln"
+  #   open-pull-requests-limit: 10
+
+  # Uncomment when api/ package is created (Hono backend)
+  # - package-ecosystem: "npm"
+  #   directory: "/api"
+  #   schedule:
+  #     interval: "monthly"
+  #   commit-message:
+  #     prefix: "vuln"
+  #   pull-request-branch-name:
+  #     separator: "-"
+  #   target-branch: "fix-vuln"
+  #   open-pull-requests-limit: 10
+
+  # Uncomment when lib/ package is created (共通ライブラリ)
+  # - package-ecosystem: "npm"
+  #   directory: "/lib"
+  #   schedule:
+  #     interval: "monthly"
+  #   commit-message:
+  #     prefix: "vuln"
+  #   pull-request-branch-name:
+  #     separator: "-"
+  #   target-branch: "fix-vuln"
+  #   open-pull-requests-limit: 10
+
+  # Uncomment when e2e/ package is created (E2Eテスト)
+  # - package-ecosystem: "npm"
+  #   directory: "/e2e"
+  #   schedule:
+  #     interval: "monthly"
+  #   commit-message:
+  #     prefix: "vuln"
+  #   pull-request-branch-name:
+  #     separator: "-"
+  #   target-branch: "fix-vuln"
+  #   open-pull-requests-limit: 10
