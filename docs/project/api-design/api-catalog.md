@@ -313,46 +313,38 @@ interface CreateDeckResponse {
 
 ##### POST /api/quiz/v1/learning/decks/from-search
 
-**目的**: 検索結果から自動的にDeckを生成
-
+**目的**: 検索結果から自動的にDeckを生成  
 **対応UI**: 検索結果 → 「この結果で問題集作成」ボタン
 
-**リクエスト**:
+**リクエストボディ**:
 
-```typescript
-interface CreateDeckFromSearchRequest {
-  searchQuery: {
-    keywords?: string;
-    tags?: string[];
-    difficulty?: 'beginner' | 'intermediate' | 'advanced';
-    limit?: number;            // 最大100
-  };
-  deckName?: string;
-  shuffleOrder?: boolean;
-  creatorFingerprint: string;
-}
-```
+| パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
+|-------------|------|------|----|-----------|----|----------|
+| searchQuery | body | 必須 | object | - | - | 検索条件オブジェクト |
+| searchQuery.keywords | body | 任意 | string | - | 1-50文字 | 検索キーワード<br/>例: "JavaScript" |
+| searchQuery.tags | body | 任意 | string[] | - | 各要素1-20文字 | 検索対象タグ<br/>例: ["React", "配列"] |
+| searchQuery.difficulty | body | 任意 | enum | - | beginner/intermediate/advanced | 難易度フィルタ |
+| searchQuery.limit | body | 任意 | number | 50 | 1-100 | 最大取得数 |
+| deckName | body | 任意 | string | "検索結果集" | 1-100文字 | Deck名 |
+| shuffleOrder | body | 任意 | boolean | false | - | 問題順序ランダム化 |
+| creatorFingerprint | body | 必須 | string | - | 36文字UUID | 作成者識別子 |
 
 ##### POST /api/quiz/v1/learning/decks/wrong-questions
 
-**目的**: 間違えた問題から復習用Deckを生成
-
+**目的**: 間違えた問題から復習用Deckを生成  
 **対応UI**: 結果画面 → 間違い問題集作成、MyPage → 間違い問題集
 
-**リクエスト**:
+**リクエストボディ**:
 
-```typescript
-interface CreateWrongQuestionsDeckRequest {
-  sourceSessionIds?: string[];  // 特定セッションから
-  dateRange?: {
-    from: string;
-    to: string;
-  };
-  tags?: string[];             // 特定タグの間違い問題のみ
-  maxQuizzes?: number;
-  creatorFingerprint: string;
-}
-```
+| パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
+|-------------|------|------|----|-----------|----|----------|
+| sourceSessionIds | body | 任意 | string[] | - | 各要素36文字UUID | 特定セッションの間違い問題のみ<br/>例: ["session-123", "session-456"] |
+| dateRange | body | 任意 | object | - | - | 期間フィルタ |
+| dateRange.from | body | 任意 | string | - | ISO8601形式 | 開始日時<br/>例: "2025-01-01T00:00:00Z" |
+| dateRange.to | body | 任意 | string | - | ISO8601形式 | 終了日時<br/>例: "2025-01-31T23:59:59Z" |
+| tags | body | 任意 | string[] | - | 各要素1-20文字 | 特定タグの間違い問題のみ<br/>例: ["React", "配列"] |
+| maxQuizzes | body | 任意 | number | 50 | 1-200 | 最大問題数 |
+| creatorFingerprint | body | 必須 | string | - | 36文字UUID | 作成者識別子 |
 
 #### 2.2 学習セッション管理
 
@@ -369,139 +361,125 @@ POST   /api/quiz/v1/learning/sessions/:id/resume
 
 ##### POST /api/quiz/v1/learning/sessions
 
-**目的**: 新しい学習セッションを開始
-
+**目的**: 新しい学習セッションを開始  
 **対応UI**: Deck選択 → 「学習開始」ボタン
 
-**リクエスト**:
+**リクエストボディ**:
 
-```typescript
-interface StartSessionRequest {
-  deckId: string;
-  settings: {
-    showExplanation: boolean;   // 即座に解説表示
-    allowSkip: boolean;         // スキップ操作許可
-    timeLimit?: number;         // 問題あたり制限時間（秒）
-    randomOrder?: boolean;      // 問題順序ランダム化
-  };
-  creatorFingerprint: string;
-}
-```
+| パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
+|-------------|------|------|----|-----------|----|----------|
+| deckId | body | 必須 | string | - | 36文字UUID | 学習対象Deck ID |
+| settings | body | 必須 | object | - | - | 学習設定 |
+| settings.showExplanation | body | 必須 | boolean | true | - | 即座に解説表示 |
+| settings.allowSkip | body | 必須 | boolean | false | - | スキップ操作許可 |
+| settings.timeLimit | body | 任意 | number | - | 30-600秒 | 問題あたり制限時間(秒)<br/>例: 120 |
+| settings.randomOrder | body | 任意 | boolean | false | - | 問題順序ランダム化 |
+| creatorFingerprint | body | 必須 | string | - | 36文字UUID | 作成者識別子 |
 
 **レスポンス**:
 
-```typescript
-interface StartSessionResponse {
-  session: {
-    id: string;
-    deckId: string;
-    currentQuizIndex: number;   // 0から開始
-    totalQuizzes: number;
-    state: 'active';
-    startedAt: string;
-    settings: SessionSettings;
-  };
-  currentQuiz: {
-    id: string;
-    question: string;
-    // correctAnswer, explanationは含まない（回答後に提供）
-  };
-}
-```
+| フィールド名 | 型 | 説明・例 |
+|------------|----|-----------|
+| session | object | セッション情報 |
+| session.id | string | セッションID |
+| session.deckId | string | 関連Deck ID |
+| session.currentQuizIndex | number | 現在の問題インデックス(0から開始) |
+| session.totalQuizzes | number | 総問題数 |
+| session.state | string | 'active' |
+| session.startedAt | string | 開始日時 |
+| session.settings | object | 設定 |
+| currentQuiz | object | 現在の問題 |
+| currentQuiz.id | string | 問題ID |
+| currentQuiz.question | string | 問題文 |
 
-##### GET /api/v1/quiz-learning/sessions/:id
+##### GET /api/quiz/v1/learning/sessions/:id
 
-**目的**: セッション現在状態取得（進捗確認・復帰）
-
+**目的**: セッション現在状態取得（進捗確認・復帰）  
 **対応UI**: 回答画面読み込み、セッション復帰
 
+**パスパラメータ**:
+
+| パラメータ名 | 種別 | 必須 | 型 | 制約 | 説明・例 |
+|-------------|------|------|----|----|----------|
+| id | path | 必須 | string | 36文字UUID | セッションID |
+
 **レスポンス**:
 
-```typescript
-interface GetSessionResponse {
-  session: {
-    id: string;
-    deckId: string;
-    currentQuizIndex: number;
-    totalQuizzes: number;
-    state: 'active' | 'paused' | 'completed';
-    progress: {
-      answeredCount: number;
-      correctCount: number;
-      skippedCount: number;
-    };
-    startedAt: string;
-    lastActivityAt: string;
-  };
-  currentQuiz?: {              // state=activeの場合のみ
-    id: string;
-    question: string;
-    hasImage: boolean;
-  };
-  previousAnswer?: {           // 前問の結果（解説表示用）
-    quizId: string;
-    userAnswer: boolean;
-    correctAnswer: boolean;
-    isCorrect: boolean;
-    explanation?: string;
-  };
-}
-```
+| フィールド名 | 型 | 説明・例 |
+|------------|----|-----------|
+| session | object | セッション情報 |
+| session.id | string | セッションID |
+| session.deckId | string | 関連Deck ID |
+| session.currentQuizIndex | number | 現在の問題インデックス |
+| session.totalQuizzes | number | 総問題数 |
+| session.state | enum | active/paused/completed |
+| session.progress | object | 進捗情報 |
+| session.progress.answeredCount | number | 回答済み問題数 |
+| session.progress.correctCount | number | 正解問題数 |
+| session.progress.skippedCount | number | スキップ問題数 |
+| session.startedAt | string | 開始日時(ISO8601) |
+| session.lastActivityAt | string | 最終活動日時(ISO8601) |
+| currentQuiz | object | 現在の問題(state=activeのみ) |
+| currentQuiz.id | string | 問題ID |
+| currentQuiz.question | string | 問題文 |
+| currentQuiz.hasImage | boolean | 画像有無 |
+| previousAnswer | object | 前問結果(解説表示用) |
+| previousAnswer.quizId | string | 問題ID |
+| previousAnswer.userAnswer | boolean | ユーザー回答 |
+| previousAnswer.correctAnswer | boolean | 正解 |
+| previousAnswer.isCorrect | boolean | 正解フラグ |
+| previousAnswer.explanation | string | 解説文 |
 
 #### 2.3 回答処理
 
 ```http
-POST   /api/v1/quiz-learning/answers
-GET    /api/v1/quiz-learning/answers/:id
-PUT    /api/v1/quiz-learning/answers/:id/offline-sync
+POST   /api/quiz/v1/learning/sessions/:id/answers
+GET    /api/quiz/v1/learning/answers/:id
+PUT    /api/quiz/v1/learning/answers/:id/offline-sync
 ```
 
-##### POST /api/v1/quiz-learning/answers
+##### POST /api/quiz/v1/learning/sessions/:id/answers
 
-**目的**: ユーザー回答の提出・正誤判定
-
+**目的**: ユーザー回答の提出・正誤判定  
 **対応UI**: 回答画面 → スワイプ操作
 
-**リクエスト**:
+**パスパラメータ**:
 
-```typescript
-interface SubmitAnswerRequest {
-  sessionId: string;
-  quizId: string;
-  userAnswer: boolean;         // true=◯, false=×
-  responseTimeMs: number;      // 回答時間（ミリ秒）
-  answerMethod: 'swipe_right' | 'swipe_left' | 'tap_correct' | 'tap_incorrect';
-  confidence?: 1 | 2 | 3 | 4 | 5; // 確信度（1=全くわからない、5=完全に確信）
-  creatorFingerprint: string;
-}
-```
+| パラメータ名 | 種別 | 必須 | 型 | 制約 | 説明・例 |
+|-------------|------|------|----|----|----------|
+| id | path | 必須 | string | 36文字UUID | セッションID |
+
+**リクエストボディ**:
+
+| パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
+|-------------|------|------|----|-----------|----|----------|
+| quizId | body | 必須 | string | - | 36文字UUID | 回答対象問題ID |
+| userAnswer | body | 必須 | boolean | - | true/false | ユーザー回答(true=◯, false=×) |
+| responseTimeMs | body | 必須 | number | - | 1-600000 | 回答時間(ミリ秒)<br/>例: 3500 |
+| answerMethod | body | 必須 | enum | - | swipe_right/swipe_left/tap_correct/tap_incorrect | 回答手段 |
+| confidence | body | 任意 | number | - | 1-5 | 確信度(1=全くわからない, 5=完全に確信) |
+| creatorFingerprint | body | 必須 | string | - | 36文字UUID | 作成者識別子 |
 
 **レスポンス**:
 
-```typescript
-interface SubmitAnswerResponse {
-  answer: {
-    id: string;
-    isCorrect: boolean;
-    correctAnswer: boolean;
-    explanation?: string;
-    responseTimeMs: number;
-  };
-  session: {
-    currentQuizIndex: number;
-    progress: {
-      answeredCount: number;
-      correctCount: number;
-      correctRate: number;
-    };
-  };
-  nextQuiz?: {                 // セッション継続の場合
-    id: string;
-    question: string;
-  };
-  sessionComplete?: boolean;   // 最終問題の場合
-}
-```
+| フィールド名 | 型 | 説明・例 |
+|------------|----|-----------|
+| answer | object | 回答結果 |
+| answer.id | string | 回答ID |
+| answer.isCorrect | boolean | 正解フラグ |
+| answer.correctAnswer | boolean | 正解 |
+| answer.explanation | string | 解説文 |
+| answer.responseTimeMs | number | 回答時間(ミリ秒) |
+| session | object | セッション更新情報 |
+| session.currentQuizIndex | number | 現在の問題インデックス |
+| session.progress | object | 進捗情報 |
+| session.progress.answeredCount | number | 回答済み問題数 |
+| session.progress.correctCount | number | 正解問題数 |
+| session.progress.correctRate | number | 正答率(0.0-1.0) |
+| nextQuiz | object | 次の問題(セッション継続時) |
+| nextQuiz.id | string | 問題ID |
+| nextQuiz.question | string | 問題文 |
+| sessionComplete | boolean | セッション完了フラグ |
 
 #### 2.4 履歴・統計管理
 
@@ -514,28 +492,23 @@ GET    /api/v1/quiz-learning/wrong-questions
 POST   /api/v1/quiz-learning/retry-session
 ```
 
-##### GET /api/v1/quiz-learning/history
+##### GET /api/quiz/v1/learning/history
 
-**目的**: 学習履歴一覧取得
-
+**目的**: 学習履歴一覧取得  
 **対応UI**: MyPage → 回答履歴
 
 **クエリパラメータ**:
 
-```typescript
-interface GetHistoryQuery {
-  limit?: number;              // デフォルト20
-  offset?: number;
-  dateRange?: {
-    from: string;              // ISO 8601
-    to: string;
-  };
-  tags?: string[];             // タグフィルター
-  minCorrectRate?: number;     // 正答率下限フィルター
-  orderBy?: 'date' | 'correct_rate' | 'total_questions';
-  orderDirection?: 'asc' | 'desc';
-}
-```
+| パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
+|-------------|------|------|----|-----------|----|----------|
+| limit | query | 任意 | number | 20 | 1-100 | 最大取得数 |
+| offset | query | 任意 | number | 0 | 0以上 | スキップ数 |
+| from | query | 任意 | string | - | ISO8601形式 | 開始日時<br/>例: "2025-01-01T00:00:00Z" |
+| to | query | 任意 | string | - | ISO8601形式 | 終了日時<br/>例: "2025-01-31T23:59:59Z" |
+| tags | query | 任意 | string[] | - | カンマ区切り | タグフィルタ<br/>例: "React,Vue" |
+| minCorrectRate | query | 任意 | number | - | 0.0-1.0 | 正答率下限<br/>例: 0.7 |
+| orderBy | query | 任意 | enum | "date" | date/correct_rate/total_questions | ソート基準 |
+| orderDirection | query | 任意 | enum | "desc" | asc/desc | ソート方向 |
 
 **レスポンス**:
 
@@ -895,19 +868,16 @@ DELETE /api/sync/v1/cache/:resourceId
 
 ##### GET /api/sync/v1/cache-manifest
 
-**目的**: オフライン利用可能データの一覧取得
-
+**目的**: オフライン利用可能データの一覧取得  
 **対応UI**: ホーム → オフライン対応Deck表示、設定 → オフラインデータ管理
 
 **クエリパラメータ**:
 
-```typescript
-interface GetCacheManifestQuery {
-  resourceTypes?: ('quizzes' | 'decks' | 'sessions' | 'drafts')[];
-  lastSync?: string;           // 増分更新用
-  deviceStorageLimit?: number; // KB単位
-}
-```
+| パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
+|-------------|------|------|----|-----------|----|----------|
+| resourceTypes | query | 任意 | string[] | ["全て"] | カンマ区切り | リソースタイプ<br/>例: "quizzes,decks" |
+| lastSync | query | 任意 | string | - | ISO8601形式 | 増分更新用最終同期日時<br/>例: "2025-01-01T12:00:00Z" |
+| deviceStorageLimit | query | 任意 | number | - | 1-1000000 | デバイスストレージ制限(KB)<br/>例: 50000 |
 
 **レスポンス**:
 
@@ -941,26 +911,21 @@ interface GetCacheManifestResponse {
 
 ##### POST /api/sync/v1/download
 
-**目的**: 指定リソースのオフライン用ダウンロード
-
+**目的**: 指定リソースのオフライン用ダウンロード  
 **対応UI**: 設定 → オフラインデータダウンロード、Deck詳細 → オフライン保存
 
-**リクエスト**:
+**リクエストボディ**:
 
-```typescript
-interface DownloadResourcesRequest {
-  resources: Array<{
-    type: 'quiz' | 'deck' | 'session';
-    id: string;
-    priority: 'high' | 'medium' | 'low';
-  }>;
-  downloadOptions: {
-    includeImages: boolean;
-    includeExplanations: boolean;
-    compressionLevel: 'high' | 'medium' | 'low';
-  };
-}
-```
+| パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
+|-------------|------|------|----|-----------|----|----------|
+| resources | body | 必須 | array | - | 1-50件 | ダウンロード対象リソース一覧 |
+| resources.type | body | 必須 | enum | - | quiz/deck/session | リソースタイプ |
+| resources.id | body | 必須 | string | - | 36文字UUID | リソースID |
+| resources.priority | body | 必須 | enum | - | high/medium/low | ダウンロード優先度 |
+| downloadOptions | body | 必須 | object | - | - | ダウンロードオプション |
+| downloadOptions.includeImages | body | 必須 | boolean | true | - | 画像ファイルを含む |
+| downloadOptions.includeExplanations | body | 必須 | boolean | true | - | 解説テキストを含む |
+| downloadOptions.compressionLevel | body | 必須 | enum | "medium" | high/medium/low | 圧縮レベル |
 
 **レスポンス**:
 
@@ -994,90 +959,73 @@ GET    /api/sync/v1/conflicts
 
 ##### POST /api/sync/v1/upload
 
-**目的**: オフライン中に作成・変更されたデータのアップロード
-
+**目的**: オフライン中に作成・変更されたデータのアップロード  
 **対応UI**: オンライン復帰時の自動同期
 
-**リクエスト**:
+**リクエストボディ**:
 
-```typescript
-interface UploadSyncDataRequest {
-  syncBatch: {
-    batchId: string;
-    createdAt: string;
-    deviceFingerprint: string;
-    items: Array<{
-      type: 'answer' | 'draft' | 'session' | 'preference';
-      action: 'create' | 'update' | 'delete';
-      id: string;
-      data: any;
-      timestamp: string;       // オフライン作成時刻
-      checksum: string;
-    }>;
-  };
-  conflictResolution: 'client_wins' | 'server_wins' | 'manual';
-}
-```
+| パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
+|-------------|------|------|----|-----------|----|----------|
+| syncBatch | body | 必須 | object | - | - | 同期バッチ情報 |
+| syncBatch.batchId | body | 必須 | string | - | 36文字UUID | バッチID |
+| syncBatch.createdAt | body | 必須 | string | - | ISO8601形式 | バッチ作成日時 |
+| syncBatch.deviceFingerprint | body | 必須 | string | - | 36文字UUID | デバイス識別子 |
+| syncBatch.items | body | 必須 | array | - | 1-1000件 | 同期アイテム一覧 |
+| syncBatch.items.type | body | 必須 | enum | - | answer/draft/session/preference | アイテムタイプ |
+| syncBatch.items.action | body | 必須 | enum | - | create/update/delete | 操作種別 |
+| syncBatch.items.id | body | 必須 | string | - | 36文字UUID | アイテムID |
+| syncBatch.items.data | body | 必須 | object | - | - | 実際のデータ |
+| syncBatch.items.timestamp | body | 必須 | string | - | ISO8601形式 | オフライン作成時刻 |
+| syncBatch.items.checksum | body | 必須 | string | - | MD5ハッシュ | データ整合性チェック |
+| conflictResolution | body | 必須 | enum | "manual" | client_wins/server_wins/manual | 競合解決方向 |
 
 **レスポンス**:
 
-```typescript
-interface UploadSyncDataResponse {
-  processed: Array<{
-    id: string;
-    status: 'success' | 'conflict' | 'error';
-    newId?: string;            // サーバー側で新しいIDが割り当てられた場合
-    error?: string;
-  }>;
-  conflicts: Array<{
-    id: string;
-    type: string;
-    clientData: any;
-    serverData: any;
-    conflictReason: string;
-  }>;
-  summary: {
-    processed: number;
-    conflicts: number;
-    errors: number;
-  };
-}
-```
+| フィールド名 | 型 | 説明・例 |
+|------------|----|-----------|
+| processed | array | 処理結果一覧 |
+| processed.id | string | アイテムID |
+| processed.status | enum | success/conflict/error |
+| processed.newId | string | サーバー側新ID(必要時) |
+| processed.error | string | エラーメッセージ(エラー時) |
+| conflicts | array | 競合一覧 |
+| conflicts.id | string | 競合アイテムID |
+| conflicts.type | string | アイテムタイプ |
+| conflicts.clientData | object | クライアント側データ |
+| conflicts.serverData | object | サーバー側データ |
+| conflicts.conflictReason | string | 競合原因 |
+| summary | object | 処理結果サマリ |
+| summary.processed | number | 処理数 |
+| summary.conflicts | number | 競合数 |
+| summary.errors | number | エラー数 |
 
 ##### GET /api/sync/v1/status
 
-**目的**: 同期状態・進捗の取得
-
+**目的**: 同期状態・進捗の取得  
 **対応UI**: 設定 → 同期状態表示、同期進捗インジケーター
 
 **レスポンス**:
 
-```typescript
-interface GetSyncStatusResponse {
-  status: 'idle' | 'syncing' | 'conflict' | 'error';
-  progress?: {
-    current: number;
-    total: number;
-    currentOperation: string;
-  };
-  lastSync: {
-    completedAt: string;
-    itemsSynced: number;
-    conflictsResolved: number;
-    errors: number;
-  };
-  pendingSync: {
-    items: number;
-    estimatedTimeSeconds: number;
-    conflictsRequiringAttention: number;
-  };
-  connectivity: {
-    online: boolean;
-    connectionQuality: 'excellent' | 'good' | 'poor' | 'offline';
-    estimatedBandwidth?: number; // Mbps
-  };
-}
-```
+| フィールド名 | 型 | 説明・例 |
+|------------|----|-----------|
+| status | enum | idle/syncing/conflict/error |
+| progress | object | 同期進捗(同期中のみ) |
+| progress.current | number | 現在処理数 |
+| progress.total | number | 総処理数 |
+| progress.currentOperation | string | 現在の操作 |
+| lastSync | object | 最終同期情報 |
+| lastSync.completedAt | string | 完了日時(ISO8601) |
+| lastSync.itemsSynced | number | 同期アイテム数 |
+| lastSync.conflictsResolved | number | 解決済み競合数 |
+| lastSync.errors | number | エラー数 |
+| pendingSync | object | 保留中同期 |
+| pendingSync.items | number | 保留アイテム数 |
+| pendingSync.estimatedTimeSeconds | number | 予想所要時間(秒) |
+| pendingSync.conflictsRequiringAttention | number | 手動解決必要競合数 |
+| connectivity | object | 接続状態 |
+| connectivity.online | boolean | オンライン状態 |
+| connectivity.connectionQuality | enum | excellent/good/poor/offline |
+| connectivity.estimatedBandwidth | number | 予想帯域(Mbps) |
 
 #### 4.3 競合解決
 
