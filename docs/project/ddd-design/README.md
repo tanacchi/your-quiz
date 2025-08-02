@@ -15,7 +15,7 @@
 | セクション | 成果物 | 概要 | 状態 |
 |-----------|--------|------|------|
 | **2.00** | [ドメインモデル概要](docs/project/ddd-design/2.00_domain-model-overview.md) | 全体アーキテクチャ・設計決定 | ✅ |
-| **2.02** | [ドメイン理解](docs/project/ddd-design/2.02_domain-understanding/domain-knowledge-base.md) | ビジネスルール・制約整理 | ✅ |
+| **2.02** | [ドメイン理解](docs/project/ddd-design/2.01_domain-understanding/domain-knowledge-base.md) | ビジネスルール・制約整理 | ✅ |
 | **2.03** | [ユビキタス言語辞書](docs/project/ddd-design/2.03_ubiquitous-language/ubiquitous-language-dictionary.md) | 統一用語・BDD連携 | ✅ |
 | **2.04** | [Event Storming結果](docs/project/ddd-design/2.04_event-storming/event-storming-results.md) | イベント発見・境界特定 | ✅ |
 | **2.09** | [境界づけられたコンテキスト](docs/project/ddd-design/2.09_bounded-context-definition/README.md) | 4コンテキスト定義・関係性 | ✅ |
@@ -25,7 +25,7 @@
 
 | セクション | 成果物 | 概要 | 状態 |
 |-----------|--------|------|------|
-| **2.02.5** | [ユーザーフロー分析](docs/project/ddd-design/2.02.5_user-flow-analysis/user-flow-analysis.md) | 5つの主要ユーザーストーリー | ✅ |
+| **2.02** | [ユーザーフロー分析](docs/project/ddd-design/2.02_user-flow-analysis/user-flow-analysis.md) | 5つの主要ユーザーストーリー | ✅ |
 | **2.05** | [ドメインオブジェクト抽出](docs/project/ddd-design/2.05_domain-object-extraction/domain-object-analysis.md) | エンティティ・値オブジェクト分類 | ✅ |
 | **2.06** | [エンティティ関係分析](docs/project/ddd-design/2.06_entity-relationship-analysis/entity-relationship-analysis.md) | 関係性・多重度・制約 | ✅ |
 | **2.07** | [ドメインサービス抽出](docs/project/ddd-design/2.07_domain-service-extraction/domain-service-analysis.md) | 5つの主要ドメインサービス | ✅ |
@@ -41,19 +41,19 @@ graph TB
     subgraph "Quiz Management Context"
         QM[Quiz Management<br/>承認フロー・品質統制]
     end
-    
+
     subgraph "Quiz Learning Context"
         QL[Quiz Learning<br/>学習体験・回答処理]
     end
-    
+
     subgraph "User Session Context"
         US[User Session<br/>匿名ユーザー管理]
     end
-    
+
     subgraph "Offline Sync Context"
         OS[Offline Sync<br/>データ同期・競合解決]
     end
-    
+
     QM -->|Published Language| QL
     US -->|Customer/Supplier| QL
     QL -->|Customer/Supplier| OS

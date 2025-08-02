@@ -2,7 +2,7 @@
 
 ## 目的
 
-[ユビキタス言語辞書](docs/project/ddd-design/2.03_ubiquitous-language/ubiquitous-language-dictionary.md)と[ドメイン知識ベース](docs/project/ddd-design/2.02_domain-understanding/domain-knowledge-base.md)を基盤として、クイズアプリケーションドメインの概念体系を階層構造・意味関係で整理し、知識の一貫性と共有可能性を確保する。
+[ユビキタス言語辞書](docs/project/ddd-design/2.03_ubiquitous-language/ubiquitous-language-dictionary.md)と[ドメイン知識ベース](docs/project/ddd-design/2.01_domain-understanding/domain-knowledge-base.md)を基盤として、クイズアプリケーションドメインの概念体系を階層構造・意味関係で整理し、知識の一貫性と共有可能性を確保する。
 
 ## 概要
 
@@ -15,24 +15,24 @@
 ```mermaid
 graph TB
     ROOT[Quiz Application Domain]
-    
+
     ROOT --> CONTENT[Content Management]
     ROOT --> LEARNING[Learning Experience]
     ROOT --> USER[User Management]
     ROOT --> SYSTEM[System Operations]
-    
+
     CONTENT --> C1[Quiz Creation]
     CONTENT --> C2[Quality Assurance]
     CONTENT --> C3[Content Lifecycle]
-    
+
     LEARNING --> L1[Learning Session]
     LEARNING --> L2[Knowledge Assessment]
     LEARNING --> L3[Progress Tracking]
-    
+
     USER --> U1[Anonymous Identity]
     USER --> U2[Creator Rights]
     USER --> U3[Session Management]
-    
+
     SYSTEM --> S1[Data Persistence]
     SYSTEM --> S2[Offline Capability]
     SYSTEM --> S3[Integration Patterns]
@@ -88,7 +88,7 @@ graph TB
     QS --> PA[Pending Approval<br/>承認待ち]
     QS --> AP[Approved<br/>承認済み]
     QS --> RJ[Rejected<br/>拒否]
-    
+
     PA --> PA_DESC["投稿直後の初期状態<br/>管理者審査待ち"]
     AP --> AP_DESC["管理者承認済み<br/>学習者利用可能"]
     RJ --> RJ_DESC["管理者拒否済み<br/>品質基準未達"]
@@ -103,7 +103,7 @@ graph TB
     LP --> RT[Response Time<br/>回答時間]
     LP --> LS[Learning Streak<br/>学習継続日数]
     LP --> CA[Category Achievement<br/>カテゴリ別習熟度]
-    
+
     CR --> CR_DESC["正解数/総回答数<br/>学習効果の基本指標"]
     RT --> RT_DESC["平均回答時間<br/>理解速度の指標"]
     LS --> LS_DESC["連続学習日数<br/>継続性の指標"]
@@ -185,20 +185,20 @@ graph LR
         Quiz --> Tag
         Quiz --> QuizStatus
     end
-    
+
     subgraph "Learning Cluster"
         LearningSession --> Answer
         Answer --> Quiz
         LearningSession --> LearningProgress
         LearningProgress --> Answer
     end
-    
+
     subgraph "User Cluster"
         UserSession --> CreatorId
         CreatorId --> Quiz
         UserSession --> LearningSession
     end
-    
+
     subgraph "System Cluster"
         OfflineMode --> DataSync
         DataSync --> Answer
@@ -244,7 +244,7 @@ graph LR
 ## 関連ドキュメント
 
 - [ユビキタス言語辞書](docs/project/ddd-design/2.03_ubiquitous-language/ubiquitous-language-dictionary.md)
-- [ドメイン知識ベース](docs/project/ddd-design/2.02_domain-understanding/domain-knowledge-base.md)
+- [ドメイン知識ベース](docs/project/ddd-design/2.01_domain-understanding/domain-knowledge-base.md)
 - [ドメインモデル概要](docs/project/ddd-design/2.00_domain-model-overview.md)
 - [要件定義](docs/project/specifications/requirements/requirements-quiz.md)
 
