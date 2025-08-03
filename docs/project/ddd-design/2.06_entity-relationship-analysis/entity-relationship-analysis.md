@@ -15,13 +15,44 @@ erDiagram
     Quiz {
         QuizId id PK
         string question
-        boolean correctAnswer
+        AnswerType answerType
+        AnswerId answerId FK
         string explanation
         string[] tags
         QuizStatus status
         CreatorId creatorId
         Timestamp createdAt
         Timestamp approvedAt
+    }
+
+    BooleanAnswer {
+        AnswerId id PK
+        boolean value
+    }
+
+    FreeTextAnswer {
+        AnswerId id PK
+        string correctAnswer
+        MatchingStrategy strategy
+        boolean caseSensitive
+    }
+
+    SingleChoiceAnswer {
+        AnswerId id PK
+        ChoiceId correctChoiceId FK
+    }
+
+    MultipleChoiceAnswer {
+        AnswerId id PK
+        ChoiceId[] correctChoiceIds
+        number minCorrectAnswers
+    }
+
+    Choice {
+        ChoiceId id PK
+        AnswerId answerId FK
+        string text
+        number order
     }
 
     Deck {
@@ -53,6 +84,12 @@ erDiagram
         Timestamp answeredAt
     }
 
+    Quiz ||--|| BooleanAnswer : "has (answerType=boolean)"
+    Quiz ||--|| FreeTextAnswer : "has (answerType=free_text)"
+    Quiz ||--|| SingleChoiceAnswer : "has (answerType=single_choice)"
+    Quiz ||--|| MultipleChoiceAnswer : "has (answerType=multiple_choice)"
+    SingleChoiceAnswer ||--o{ Choice : "contains choices"
+    MultipleChoiceAnswer ||--o{ Choice : "contains choices"
     Quiz ||--o{ Answer : "answered by"
     Deck ||--|| QuizSession : "1:1 relationship"
     Deck }o--o{ Quiz : "contains"
@@ -65,6 +102,12 @@ erDiagram
 | エンティティA | エンティティB | 関連性 | 多重度 | 所有/参照 | 判定理由 | 制約事項 |
 |---------------|---------------|--------|--------|-----------|----------|----------|
 | **Quiz** | **Answer** | クイズ-回答 | 1:N | 参照関係 | Answerが外部キーでQuizを参照 | 承認済みクイズのみ回答可能 |
+| **Quiz** | **BooleanAnswer** | クイズ-真偽回答 | 1:1 | 所有関係 | Quizがpolymorphic参照でBooleanAnswerを所有 | answerType='boolean'時のみ関連 |
+| **Quiz** | **FreeTextAnswer** | クイズ-自由記述回答 | 1:1 | 所有関係 | Quizがpolymorphic参照でFreeTextAnswerを所有 | answerType='free_text'時のみ関連 |
+| **Quiz** | **SingleChoiceAnswer** | クイズ-単一選択回答 | 1:1 | 所有関係 | Quizがpolymorphic参照でSingleChoiceAnswerを所有 | answerType='single_choice'時のみ関連 |
+| **Quiz** | **MultipleChoiceAnswer** | クイズ-複数選択回答 | 1:1 | 所有関係 | Quizがpolymorphic参照でMultipleChoiceAnswerを所有 | answerType='multiple_choice'時のみ関連 |
+| **SingleChoiceAnswer** | **Choice** | 単一選択-選択肢 | 1:N | 所有関係 | SingleChoiceAnswerが複数Choiceを所有 | 選択肢作成時に自動関連付け |
+| **MultipleChoiceAnswer** | **Choice** | 複数選択-選択肢 | 1:N | 所有関係 | MultipleChoiceAnswerが複数Choiceを所有 | 選択肢作成時に自動関連付け |
 | **Deck** | **Quiz** | 問題集-クイズ | N:M | 参照関係 | Deckが複数QuizのIDを保持 | 承認済みクイズのみ問題集に追加可能 |
 | **Deck** | **QuizSession** | 問題集-セッション | 1:1 | 所有関係 | 1つの問題集に対して1つのセッション | Deck削除時にQuizSessionも削除 |
 | **QuizSession** | **Answer** | セッション-回答 | 1:N | 所有関係 | セッション内で複数回答を管理 | セッション削除時回答も削除 |
@@ -72,9 +115,34 @@ erDiagram
 
 ## 詳細関連性分析
 
-### 1. Quiz ←→ Answer 関係
+### 1. Quiz ←→ AnswerTypes 関係（Polymorphic Design）
 
-#### 関連性の特徴
+#### 関連性の特徴（Quiz-AnswerTypes）
+
+- **パターン**: Discriminator + Answer テーブル分離型ポリモーフィズム
+- **種別**: 所有関係（1:1、answerType別）
+- **方向性**: Quiz → Specific Answer Type（単方向所有）
+- **識別子**: answerType（discriminator）+ answerId（外部キー）
+
+#### ポリモーフィック設計の利点
+
+1. **拡張性**: 新しい回答タイプ追加時、既存コードへの影響最小化
+2. **型安全性**: TypeScript discriminated unionによるコンパイル時型チェック
+3. **パフォーマンス**: 回答タイプ別の最適化されたテーブル設計
+4. **保守性**: 各回答タイプの独立したバリデーション・ビジネスロジック
+
+#### 回答タイプ別制約
+
+| 回答タイプ | 制約事項 | バリデーション | 使用ケース |
+|-----------|----------|---------------|------------|
+| **boolean** | true/false のみ | 2値チェック | ◯×問題、正誤判定 |
+| **free_text** | 文字列マッチング | 正解パターン登録必須 | 記述問題、計算問題 |
+| **single_choice** | 選択肢2-6個、正解1個 | 選択肢数・正解数チェック | 4択問題、語彙問題 |
+| **multiple_choice** | 選択肢2-10個、正解1個以上 | 最小正解数チェック | 複数正解問題、分類問題 |
+
+### 2. Quiz ←→ Answer 関係（回答履歴）
+
+#### 関連性の特徴（Quiz-Answer）
 
 - **種別**: 参照関係（1:N）
 - **方向性**: Answer → Quiz（単方向参照）
@@ -89,21 +157,120 @@ erDiagram
 #### 実装上の考慮事項
 
 ```typescript
+// Polymorphic Quiz Design
+interface Quiz {
+  readonly id: QuizId;
+  readonly question: Question;
+  readonly answerType: AnswerType; // Discriminator
+  readonly answerId: AnswerId;     // Foreign key to specific answer table
+  readonly explanation?: Explanation;
+  readonly tags: Tag[];
+  status: QuizStatus;
+  readonly creatorId: CreatorId;
+  readonly createdAt: Timestamp;
+  approvedAt?: Timestamp;
+}
+
+// Answer type discriminator
+type AnswerType = 'boolean' | 'free_text' | 'single_choice' | 'multiple_choice';
+
+// Specific answer types
+interface BooleanAnswer {
+  readonly id: AnswerId;
+  readonly value: boolean; // true = ◯, false = ×
+}
+
+interface FreeTextAnswer {
+  readonly id: AnswerId;
+  readonly correctAnswer: string;
+  readonly matchingStrategy: 'exact' | 'contains' | 'regex';
+  readonly caseSensitive: boolean;
+}
+
+interface SingleChoiceAnswer {
+  readonly id: AnswerId;
+  readonly correctChoiceId: ChoiceId;
+}
+
+interface MultipleChoiceAnswer {
+  readonly id: AnswerId;
+  readonly correctChoiceIds: ChoiceId[];
+  readonly minCorrectAnswers: number;
+}
+
+interface Choice {
+  readonly id: ChoiceId;
+  readonly text: string;
+  readonly order: number;
+}
+
+// Type-safe quiz with answer union
+type QuizWithAnswer = 
+  | QuizWithBooleanAnswer
+  | QuizWithFreeTextAnswer  
+  | QuizWithSingleChoiceAnswer
+  | QuizWithMultipleChoiceAnswer;
+
+interface QuizWithBooleanAnswer extends Quiz {
+  answerType: 'boolean';
+  answer: BooleanAnswer;
+}
+
+interface QuizWithFreeTextAnswer extends Quiz {
+  answerType: 'free_text';
+  answer: FreeTextAnswer;
+}
+
+interface QuizWithSingleChoiceAnswer extends Quiz {
+  answerType: 'single_choice';
+  answer: SingleChoiceAnswer;
+  choices: Choice[];
+}
+
+interface QuizWithMultipleChoiceAnswer extends Quiz {
+  answerType: 'multiple_choice';
+  answer: MultipleChoiceAnswer;
+  choices: Choice[];
+}
+
+// Answer submission validation
 interface Answer {
   readonly quizId: QuizId; // 外部キー参照
+  readonly userAnswer: UserAnswer; // Polymorphic user answer
   // Quiz承認状態の事前チェックが必要
 }
 
+type UserAnswer = boolean | string | ChoiceId | ChoiceId[];
+
 // 回答時のバリデーション
-const validateAnswerCreation = (quiz: Quiz, answer: Answer): Result<void, Error> => {
+const validateAnswerCreation = (quiz: QuizWithAnswer, userAnswer: UserAnswer): Result<void, Error> => {
   if (quiz.status !== QuizStatus.Approved) {
     return err(new Error('承認済みクイズのみ回答可能'));
   }
-  return ok(undefined);
+  
+  // Type-specific validation
+  switch (quiz.answerType) {
+    case 'boolean':
+      return typeof userAnswer === 'boolean' 
+        ? ok(undefined) 
+        : err(new Error('真偽値での回答が必要'));
+    case 'free_text':
+      return typeof userAnswer === 'string' 
+        ? ok(undefined) 
+        : err(new Error('文字列での回答が必要'));
+    case 'single_choice':
+      return typeof userAnswer === 'string' && quiz.choices.some(c => c.id === userAnswer)
+        ? ok(undefined) 
+        : err(new Error('有効な選択肢IDが必要'));
+    case 'multiple_choice':
+      return Array.isArray(userAnswer) && userAnswer.every(id => quiz.choices.some(c => c.id === id))
+        ? ok(undefined) 
+        : err(new Error('有効な選択肢IDの配列が必要'));
+  }
 };
 ```
 
-### 2. QuizSession ←→ Answer 関係
+### 3. QuizSession ←→ Answer 関係
 
 #### 関連性の特徴（QuizSession-Answer）
 
@@ -132,7 +299,7 @@ interface QuizSession {
 }
 ```
 
-### 3. Deck ←→ Quiz 関係
+### 4. Deck ←→ Quiz 関係
 
 #### 関連性の特徴（Deck-Quiz）
 
@@ -167,7 +334,7 @@ interface Deck {
 }
 ```
 
-### 4. Deck ←→ QuizSession 関係
+### 5. Deck ←→ QuizSession 関係
 
 #### 関連性の特徴（Deck-QuizSession）
 
@@ -209,7 +376,7 @@ interface Deck {
 }
 ```
 
-### 5. QuizSession ←→ Quiz 関係
+### 6. QuizSession ←→ Quiz 関係
 
 #### 関連性の特徴（QuizSession-Quiz）
 
