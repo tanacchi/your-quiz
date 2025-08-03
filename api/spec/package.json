@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
+  "scripts": {
+    "gen-openapi-schema": "tsp compile ."
+  },
   "dependencies": {
     "@typespec/compiler": "1.2.1",
     "@typespec/http": "1.2.1",
