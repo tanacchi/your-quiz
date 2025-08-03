@@ -38,7 +38,7 @@ Your QuizアプリケーションにおけるPub/Subシステムの設計を定�
 - [ドメインイベントカタログ](../ddd-design/2.10_domain-events-catalog/domain-events-catalog.md) - イベント定義・分類
 - [境界づけられたコンテキスト](../ddd-design/2.09_bounded-context-definition/README.md) - コンテキスト境界
 - [API機能カタログ](api-catalog.md) - API エンドポイント仕様
-- [API設計ガイドライン](../../guidelines/api-design-principles.md) - 設計原則・命名規約
+- [API設計ガイドライン](../../instructions/shared/workflow/04.02_api-design.md) - 設計原則・命名規約
 
 ## システム設計概要
 
@@ -225,7 +225,7 @@ graph TB
 
 - [API設計概要](README.md) - 全体アーキテクチャ・方針
 - [API機能カタログ](api-catalog.md) - 詳細なエンドポイント仕様
-- [API設計原則](../../guidelines/api-design-principles.md) - 設計ガイドライン・命名規約
+- [API設計原則](../../instructions/shared/workflow/04.02_api-design.md) - 設計ガイドライン・命名規約
 - [ドメインイベントカタログ](../ddd-design/2.10_domain-events-catalog/domain-events-catalog.md) - イベント定義
 
 ---

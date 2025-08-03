@@ -487,7 +487,7 @@ interface DisasterRecoveryStrategy {
 - [API設計概要](README.md) - 全体アーキテクチャ・方針
 - [API機能カタログ](api-catalog.md) - エンドポイント仕様・パフォーマンス要件
 - [イベント駆動API統合](event-integration.md) - 非同期処理・リアルタイム要件
-- [API設計ガイドライン](../../guidelines/api-design-principles.md) - 設計原則・実装パターン
+- [API設計ガイドライン](../../instructions/shared/workflow/04.02_api-design.md) - 設計原則・実装パターン
 
 ---
 **作成工程**: API設計
