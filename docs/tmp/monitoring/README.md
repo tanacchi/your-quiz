@@ -23,22 +23,6 @@ graph LR
     KGI --> KPI4[🎯 ユーザー価値密度<br/>¥/ユーザー/月]
 ```
 
-### 🎯 [slo-sli-specification.md](./slo-sli-specification.md)
-**SLO/SLI仕様定義**
-
-- **3階層SLO**: Critical（事業影響大）→ Important（品質重要）→ Monitoring（運用品質）
-- **具体的基準**: 可用性99.5%、広告表示成功率99.0%、応答時間<100ms等
-- **実装詳細**: TypeScript計算式・測定方法・アラート設定
-- **違反対応**: 自動復旧・エスカレーション・根本原因分析
-
-### 🔢 [kpi-calculation-formulas.md](./kpi-calculation-formulas.md)
-**KPI計算式・測定方法**
-
-- **実装可能な計算式**: TypeScript/SQL形式の具体的コード
-- **データ収集要件**: 必要なテーブル・インデックス設計
-- **計算効率最適化**: キャッシュ戦略・バッチ処理スケジュール
-- **品質保証**: 異常値検出・欠損データ対応
-
 ### ✅ [metrics-logical-validation.md](./metrics-logical-validation.md)
 **メトリクス論理整合性検証**
 
@@ -83,12 +67,12 @@ interface DashboardLayout {
     kgi: '広告収益（日/週/月）',
     mainKPIs: ['ユーザー数', '広告露出時間', '単価効率', '価値密度']
   };
-  
+
   operational: {
     slos: ['可用性', '広告表示成功率', '応答時間'],
     alerts: '違反中SLO・エラーバジェット消費状況'
   };
-  
+
   analytical: {
     detailedKPIs: 'Sub-KPI レベルの詳細分析',
     correlations: 'KPI間相関・トレンド分析'
@@ -135,7 +119,7 @@ interface DashboardLayout {
 
 ---
 
-**作成日**: 2025-01-31  
-**最終更新**: 2025-01-31  
-**保守担当**: Development Team  
+**作成日**: 2025-01-31
+**最終更新**: 2025-01-31
+**保守担当**: Development Team
 **レビュー周期**: 月次
