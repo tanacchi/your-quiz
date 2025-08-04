@@ -11,17 +11,8 @@
 
 ## API Spec 生成
 
-- 現在、API設計およびDB設計のフェーズです。これまで実施された作業からわかるこのプロジェクトの構成・方針と、これからの作業ルールを理解してください。
-- entity-relationship-analysis.md について修正して欲しいです。修正点は以下。
-  - Deck は問題集です。複数のQuizセッションで解かれることもあるので Deck:QuizSession = 1:N です。
-  - クイズセッション中は、各問題についてユーザが解答済みかを確認するすべが必要です。ヒストリーから取る形になる？解答履歴はある１つのQuizSessionに紐づくはずですので。
-  - タグも管理対象です。タグテーブルを作成して。タグは公式タグ、ユーザ登録タグの２種類があります。また、タグには`食べ物/ラーメン`, `都道府県/地名` のようなタグ間の関連も持たせられたらと思います。
-  - 基本的に全ての NOT NULL でいきたいです。
-  - 一旦匿名ユーザのみで実装予定ですが、一応ユーザテーブルは作った方が良い？匿名ユーザの場合、何かしら ANONYMOUS ユーザを作っとくのが良い？
-  - 「ユーザが答えた解答」はクイズ自体の正解（Answer）（プロジェクト内ではCorrectAnswer として扱われている）を区別するため Attempt という単語を使いたいです。ユビキタス言語辞書をはじめとする全てのドキュメント内を点検し「ユーザが答えた解答」という意味で使われている Answer は全て Attempt に変えてください。
-  - QuizSession, Quiz, Attempt それぞれの関係について深く考察してください。QuizSession、Attempt は両方ユーザIDを持つのはOKだろうか？
-- これにてentity-relationship-analysis.md は完成です。このファイルを元に、齟齬が発生しない等に細心の注意を払いながら１つの DBML ファイルに変換・点検してください。出力先は api/spec/database.dbml です。
 - database.dbml を修正してください。指摘は以下のとおりです。
+  - entity-relationship-analysis.md に記載された説明を可能な限り DBML ファイルに組み込んでくだしあ。
 - database.dbml を入念に読み込み、
 - api-design 配下のドキュメント、database.dbml、TypeSpec の公式ドキュメントおよび type_spec_tsp_cheatsheet.mdを参考に TypeSpec ファイルを作成してほしいです。 api/spec/main.tsp にサンプルを記載済みです。適度にファイルを分けてもOKです。
 - api-design に問題がないか、API設計書として不足がないかレビューしてください。

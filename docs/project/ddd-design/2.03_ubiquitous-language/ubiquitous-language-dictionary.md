@@ -14,11 +14,11 @@
 |--------|------------------------------|------|-----------|
 | **クイズ** | Quiz | ◯×形式の問題と正解・解説で構成される学習単位 | Given Quiz is approved |
 | **問題文** | Question | ユーザーが判断を行う対象となるテキスト（500文字以内） | Given Question is displayed |
-| **正解** | CorrectAnswer | ◯または×の二択による問題の答え | When User provides CorrectAnswer |
+| **正解** | Solution | ◯または×の二択による問題の答え | When User provides Solution |
 | **解説** | Explanation | クイズの答えに関する詳細な説明（1000文字以内・任意） | Then Explanation is shown |
 | **タグ** | Tag | クイズの分類・検索を目的としたラベル（複数設定可能） | When User selects Tag |
-| **回答** | Answer | ユーザーがクイズに対して行った◯または×の選択 | When User submits Answer |
-| **回答履歴** | AnswerHistory | ユーザーの過去の回答記録（ブラウザ保存） | Then AnswerHistory is updated |
+| **回答試行** | Attempt | ユーザーがクイズに対して行った◯または×の選択 | When User submits Attempt |
+| **回答履歴** | AttemptHistory | ユーザーの過去の回答記録（ブラウザ保存） | Then AttemptHistory is updated |
 | **匿名ユーザー** | AnonymousUser | ログイン不要でアプリを利用するユーザー | Given AnonymousUser accesses app |
 | **作成者** | Creator | クイズを投稿したユーザー（salt付きハッシュで識別） | When Creator submits Quiz |
 | **管理者** | Administrator | クイズの承認・管理権限を持つユーザー | When Administrator approves Quiz |
@@ -47,7 +47,7 @@
 * **日本語**: クイズ
 * **英語/変数名**: Quiz
 * **定義**: ◯×形式の問題と正解・解説で構成される学習単位
-* **関連概念**: Creator, Question, CorrectAnswer, Explanation, Tag, Answer
+* **関連概念**: Creator, Question, Solution, Explanation, Tag, Attempt
 
 ### Creator
 
@@ -56,26 +56,26 @@
 * **定義**: クイズを投稿したユーザー（salt付きハッシュで識別）
 * **関連概念**: Quiz, CreatorIdentification, AnonymousUser
 
-### Answer
+### Attempt
 
-* **日本語**: 回答
-* **英語/変数名**: Answer
+* **日本語**: 回答試行
+* **英語/変数名**: Attempt
 * **定義**: ユーザーがクイズに対して行った◯または×の選択
-* **関連概念**: Quiz, AnonymousUser, AnswerHistory, CorrectJudgment
+* **関連概念**: Quiz, User, AttemptHistory, CorrectJudgment
 
-### AnswerHistory
+### AttemptHistory
 
 * **日本語**: 回答履歴
-* **英語/変数名**: AnswerHistory
+* **英語/変数名**: AttemptHistory
 * **定義**: ユーザーの過去の回答記録（ブラウザ保存）
-* **関連概念**: Answer, AnonymousUser, Synchronization
+* **関連概念**: Attempt, User, Synchronization
 
 ### AnonymousUser
 
 * **日本語**: 匿名ユーザー
 * **英語/変数名**: AnonymousUser
 * **定義**: ログイン不要でアプリを利用するユーザー
-* **関連概念**: Creator, Answer, CreatorIdentification
+* **関連概念**: Creator, Attempt, CreatorIdentification
 
 ### Administrator
 
@@ -91,12 +91,26 @@
 * **定義**: 検索結果や選択されたクイズの集合で構成される学習単位
 * **関連概念**: Quiz, QuizSession, SaveSearchResults, CreateDeck
 
+### UserAccount
+
+* **日本語**: ユーザーアカウント
+* **英語/変数名**: UserAccount
+* **定義**: 削除可能な詳細情報（氏名、メール等）
+* **関連概念**: UserIdentity
+
+### UserIdentity
+
+* **日本語**: ユーザー識別子
+* **英語/変数名**: UserIdentity
+* **定義**: 永続的な匿名識別子（コンテンツ所有権管理用）
+* **関連概念**: UserAccount, Quiz, Deck, QuizSession, Attempt, Tag
+
 ### QuizSession
 
 * **日本語**: セッション
 * **英語/変数名**: QuizSession
-* **定義**: 問題集（Deck）に対する学習セッション（1対1関係）
-* **関連概念**: Deck, Answer, AnswerHistory
+* **定義**: 問題集（Deck）に対する学習セッション（1:N関係）
+* **関連概念**: Deck, Attempt, User
 
 ## 値オブジェクト（Value Object）
 
@@ -107,12 +121,12 @@
 * **定義**: ユーザーが判断を行う対象となるテキスト（500文字以内）
 * **関連概念**: Quiz, CharacterLimit, Sanitize
 
-### CorrectAnswer
+### Solution
 
 * **日本語**: 正解
-* **英語/変数名**: CorrectAnswer
+* **英語/変数名**: Solution
 * **定義**: ◯または×の二択による問題の答え
-* **関連概念**: Quiz, Answer, CorrectJudgment
+* **関連概念**: Quiz, Attempt, CorrectJudgment
 
 ### Explanation
 
@@ -125,8 +139,43 @@
 
 * **日本語**: タグ
 * **英語/変数名**: Tag
-* **定義**: クイズの分類・検索を目的としたラベル（複数設定可能）
-* **関連概念**: Quiz, Filter
+* **定義**: クイズの分類・検索を目的としたラベル（公式・ユーザー登録の2種類）
+* **関連概念**: Quiz, Filter, TagRelation, User
+
+### TagRelation
+
+* **日本語**: タグ関係
+* **英語/変数名**: TagRelation
+* **定義**: タグ間の階層・分類関係（食べ物/ラーメン等）
+* **関連概念**: Tag, RelationType
+
+### BooleanAnswer
+
+* **日本語**: 真偽回答
+* **英語/変数名**: BooleanAnswer
+* **定義**: ◯×形式の回答データ（true/false）
+* **関連概念**: Attempt, BooleanSolution
+
+### FreeTextAnswer
+
+* **日本語**: 自由記述回答
+* **英語/変数名**: FreeTextAnswer
+* **定義**: ユーザーが入力した文字列回答
+* **関連概念**: Attempt, FreeTextSolution
+
+### SingleChoiceAnswer
+
+* **日本語**: 単一選択回答
+* **英語/変数名**: SingleChoiceAnswer
+* **定義**: 選択肢から1つを選んだ回答
+* **関連概念**: Attempt, SingleChoiceSolution, Choice
+
+### MultipleChoiceAnswer
+
+* **日本語**: 複数選択回答
+* **英語/変数名**: MultipleChoiceAnswer
+* **定義**: 選択肢から複数を選んだ回答
+* **関連概念**: Attempt, MultipleChoiceSolution, Choice
 
 ### CreatorIdentification
 
@@ -170,7 +219,7 @@
 * **日本語**: スワイプ操作
 * **英語/変数名**: SwipeGesture
 * **定義**: Tinder UI形式の左右スワイプによる回答入力
-* **関連概念**: Answer, AnonymousUser, CorrectJudgment
+* **関連概念**: Attempt, AnonymousUser, CorrectJudgment
 
 ### Filter
 
@@ -184,21 +233,21 @@
 * **日本語**: オフラインモード
 * **英語/変数名**: OfflineMode
 * **定義**: ネットワーク断線時に事前ダウンロード済みデータで動作するモード
-* **関連概念**: Synchronization, AnswerHistory
+* **関連概念**: Synchronization, AttemptHistory
 
 ### Synchronization
 
 * **日本語**: 同期処理
 * **英語/変数名**: Synchronization
 * **定義**: オンライン復旧時にブラウザ保存データをサーバーと同期する処理
-* **関連概念**: OfflineMode, AnswerHistory, Answer
+* **関連概念**: OfflineMode, AttemptHistory, Attempt
 
 ### CorrectJudgment
 
 * **日本語**: 正誤判定
 * **英語/変数名**: CorrectJudgment
-* **定義**: 回答と正解の比較結果の表示
-* **関連概念**: Answer, CorrectAnswer, SwipeGesture
+* **定義**: 回答試行と正解の比較結果の表示
+* **関連概念**: Attempt, Solution, SwipeGesture
 
 ### Sanitize
 
@@ -253,17 +302,17 @@
 
 * 結果の状態: `Then Quiz status becomes Rejected`
 * 表示・更新: `Then CorrectJudgment is displayed`
-* データ変更: `Then AnswerHistory is updated`
+* データ変更: `Then AttemptHistory is updated`
 
 ## 使用上の注意
 
 1. **一貫性の原則**: すべての文書・コード・テストで同一英語用語を使用する
 2. **日英対応**:
-   * TypeScriptコード: UpperCamelCase英語名（Quiz, AnswerHistory）
+   * TypeScriptコード: UpperCamelCase英語名（Quiz, AttemptHistory）
    * BDDテスト: 英語名使用（Given Quiz is approved）
    * ドキュメント・会話: 日本語使用（クイズが承認済み）
 3. **略語禁止**: Quiz を Q などと略さない
-4. **複合語の統一**: AnswerHistory（回答履歴）など表記を統一
+4. **複合語の統一**: AttemptHistory（回答履歴）など表記を統一
 5. **DDD分類の活用**: Entity/ValueObject/State/Action の分類を意識した設計
 
 ## 更新履歴
