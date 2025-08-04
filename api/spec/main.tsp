@@ -1,44 +1,18 @@
 import "@typespec/http";
+import "@typespec/openapi3";
+import "./common/types.tsp";
+import "./common/errors.tsp";
+import "./models/user.tsp";
+import "./models/quiz.tsp";
+import "./models/attempt.tsp";
+import "./models/deck.tsp";
+import "./models/tag.tsp";
+import "./operations/quiz-management.tsp";
+import "./operations/quiz-learning.tsp";
+import "./operations/user-session.tsp";
+import "./operations/search.tsp";
 
 using Http;
-@service(#{ title: "Widget Service" })
-namespace DemoService;
 
-model Widget {
-  id: string;
-  weight: int32;
-  color: "red" | "blue";
-}
-
-model WidgetList {
-  items: Widget[];
-}
-
-@error
-model Error {
-  code: int32;
-  message: string;
-}
-
-model AnalyzeResult {
-  id: string;
-  analysis: string;
-}
-
-@route("/widgets")
-@tag("Widgets")
-interface Widgets {
-  /** List widgets */
-  @get list(): WidgetList | Error;
-  /** Read widgets */
-  @get read(@path id: string): Widget | Error;
-  /** Create a widget */
-  @post create(@body body: Widget): Widget | Error;
-  /** Update a widget */
-  @patch update(@path id: string, @body body: MergePatchUpdate<Widget>): Widget | Error;
-  /** Delete a widget */
-  @delete delete(@path id: string): void | Error;
-
-  /** Analyze a widget */
-  @route("{id}/analyze") @post analyze(@path id: string): AnalyzeResult | Error;
-}
+@service()
+namespace YourQuizAPI;
