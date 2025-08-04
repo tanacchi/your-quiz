@@ -32,17 +32,71 @@ POST   /api/quiz/v1/manage/quizzes/:id/publish
 
 **リクエストボディ**:
 
-| フィールド名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
-|-------------|------|------|----|-----------|----|---------|
-| question | body | ✓ | string | - | 10-500文字、HTMLタグ禁止 | 問題文<br/>例: "JavaScriptで配列を作成する方法は？" |
-| correctAnswer | body | ✓ | boolean | - | - | 正解フラグ（true=◯, false=×）<br/>例: true |
-| tags | body | ✓ | string[] | - | 1-10個、各1-50文字、英数字・ハイフン・アンダースコアのみ | タグ一覧<br/>例: ["javascript", "array", "programming"] |
-| difficulty | body | ✓ | enum | - | beginner/intermediate/advanced | 難易度<br/>例: "beginner" |
-| explanation | body | 任意 | string | - | 最大1000文字、HTMLタグ禁止 | 解説文<br/>例: "[]を使用して空の配列を作成できます。" |
-| creatorFingerprint | body | ✓ | string | - | - | デバイス識別子<br/>例: "df_a1b2c3d4e5f6789abcdef" |
-| source | body | 任意 | string | - | 最大200文字 | 出典・参考元<br/>例: "MDN Web Docs" |
-| imageUrl | body | 任意 | string | - | HTTPS必須、jpg/png/gif形式、最大2MB | 画像URL<br/>例: "<https://example.com/quiz-image.png>" |
-| estimatedTime | body | 任意 | number | - | 5-300秒 | 予想回答時間（秒）<br/>例: 30 |
+```typescript
+interface CreateQuizRequest {
+  question: string;           // 10-500文字、HTMLタグ禁止
+  answerType: 'boolean' | 'free_text' | 'single_choice' | 'multiple_choice';
+  solution: BooleanSolution | FreeTextSolution | SingleChoiceSolution | MultipleChoiceSolution;
+  tags: string[];            // 1-10個、各1-50文字、英数字・ハイフン・アンダースコアのみ
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  explanation?: string;       // 最大1000文字、HTMLタグ禁止
+  creatorFingerprint: string; // デバイス識別子
+  source?: string;           // 最大200文字、出典・参考元
+  imageUrl?: string;         // HTTPS必須、jpg/png/gif形式、最大2MB
+  estimatedTime?: number;    // 5-300秒、予想回答時間
+}
+```
+
+**リクエスト例**:
+
+```typescript
+// Boolean型クイズ作成例
+{
+  "question": "TypeScriptは静的型付け言語である",
+  "answerType": "boolean",
+  "solution": {
+    "type": "boolean",
+    "value": true
+  },
+  "tags": ["typescript", "programming"],
+  "difficulty": "beginner",
+  "explanation": "TypeScriptはコンパイル時に型チェックを行う静的型付け言語です",
+  "creatorFingerprint": "df_a1b2c3d4e5f6789abcdef"
+}
+
+// Free Text型クイズ作成例
+{
+  "question": "JavaScriptでHTTPリクエストを送信するAPIは？",
+  "answerType": "free_text", 
+  "solution": {
+    "type": "free_text",
+    "correctAnswer": "fetch",
+    "matchingStrategy": "partial",
+    "caseSensitive": false
+  },
+  "tags": ["javascript", "web-api"],
+  "difficulty": "intermediate",
+  "creatorFingerprint": "df_a1b2c3d4e5f6789abcdef"
+}
+
+// Single Choice型クイズ作成例
+{
+  "question": "次のうち、JavaScriptのプリミティブ型はどれ？",
+  "answerType": "single_choice",
+  "solution": {
+    "type": "single_choice", 
+    "correctChoiceId": "choice-2",
+    "choices": [
+      {"id": "choice-1", "text": "Object", "orderIndex": 0},
+      {"id": "choice-2", "text": "string", "orderIndex": 1},
+      {"id": "choice-3", "text": "Array", "orderIndex": 2}
+    ]
+  },
+  "tags": ["javascript", "types"],
+  "difficulty": "beginner",
+  "creatorFingerprint": "df_a1b2c3d4e5f6789abcdef"
+}
+```
 
 **レスポンス**:
 
@@ -74,7 +128,8 @@ interface CreateQuizResponse {
 interface QuizDetailResponse {
   id: string;
   question: string;
-  correctAnswer: boolean;
+  answerType: 'boolean' | 'free_text' | 'single_choice' | 'multiple_choice';
+  solution: BooleanSolution | FreeTextSolution | SingleChoiceSolution | MultipleChoiceSolution;
   explanation?: string;
   tags: string[];
   difficulty: 'beginner' | 'intermediate' | 'advanced';
@@ -90,6 +145,91 @@ interface QuizDetailResponse {
     canEdit: boolean;
     canDelete: boolean;
   };
+}
+
+// Solution型定義（Discriminated Union）
+type BooleanSolution = {
+  type: "boolean";
+  value: boolean;
+};
+
+type FreeTextSolution = {
+  type: "free_text";
+  correctAnswer: string;
+  matchingStrategy: "exact" | "partial" | "regex";
+  caseSensitive: boolean;
+};
+
+type SingleChoiceSolution = {
+  type: "single_choice";
+  correctChoiceId: string;
+  choices: Choice[];
+};
+
+type MultipleChoiceSolution = {
+  type: "multiple_choice";
+  correctChoiceIds: string[];
+  choices: Choice[];
+  minCorrectAnswers: number;
+};
+
+type Choice = {
+  id: string;
+  text: string;
+  orderIndex: number;
+};
+```
+
+**レスポンス例**:
+
+```typescript
+// Boolean型クイズの例
+{
+  "id": "quiz-123",
+  "question": "TypeScriptは静的型付け言語である",
+  "answerType": "boolean",
+  "solution": {
+    "type": "boolean", 
+    "value": true
+  },
+  "explanation": "TypeScriptはコンパイル時に型チェックを行う静的型付け言語です",
+  "tags": ["typescript", "programming"],
+  "difficulty": "beginner",
+  "status": "published",
+  "createdAt": "2025-08-04T10:00:00Z"
+}
+
+// Free Text型クイズの例
+{
+  "id": "quiz-456",
+  "question": "JavaScriptでHTTPリクエストを送信するためのAPIは？",
+  "answerType": "free_text",
+  "solution": {
+    "type": "free_text",
+    "correctAnswer": "fetch",
+    "matchingStrategy": "partial",
+    "caseSensitive": false
+  },
+  "explanation": "fetch APIは標準的なHTTPリクエスト送信方法です",
+  "tags": ["javascript", "web-api"],
+  "difficulty": "intermediate"
+}
+
+// Single Choice型クイズの例
+{
+  "id": "quiz-789", 
+  "question": "次のうち、JavaScriptのプリミティブ型はどれ？",
+  "answerType": "single_choice",
+  "solution": {
+    "type": "single_choice",
+    "correctChoiceId": "choice-2",
+    "choices": [
+      {"id": "choice-1", "text": "Object", "orderIndex": 0},
+      {"id": "choice-2", "text": "string", "orderIndex": 1}, 
+      {"id": "choice-3", "text": "Array", "orderIndex": 2}
+    ]
+  },
+  "difficulty": "beginner"
 }
 ```
 
