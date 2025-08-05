@@ -5,10 +5,12 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "gen-schema": "pnpm --filter quiz-api-spec gen-openapi-schema"
+    "gen-schema": "pnpm --filter quiz-api-spec build"
   },
   "dependencies": {
-    "hono": "^4.8.10"
+    "hono": "^4.8.10",
+    "openapi-ts-router": "^0.3.3",
+    "zod": "^4.0.14"
   },
   "devDependencies": {
     "wrangler": "^4.27.0"

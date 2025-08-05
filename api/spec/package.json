@@ -4,8 +4,12 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "build": "run-p build:*",
+    "build:db": "pnpm gen-database-schema",
+    "build:api": "run-s gen-openapi-schema gen-types",
+    "gen-database-schema": "dbml2sql database.dbml --dialect sqlite -o schema.raw.sql && printf 'PRAGMA foreign_keys = ON;\n\n' > schema.sql && cat schema.raw.sql >> schema.sql && rm schema.raw.sql",
     "gen-openapi-schema": "tsp compile .",
-    "gen-database-schema": "dbml2sql database.dbml --dialect sqlite -o schema.raw.sql && printf 'PRAGMA foreign_keys = ON;\n\n' > schema.sql && cat schema.raw.sql >> schema.sql && rm schema.raw.sql"
+    "gen-types": "openapi-typescript ./tsp-output/schema/openapi.yaml --output ../src/types/generated/api.d.ts"
   },
   "dependencies": {
     "@typespec/compiler": "1.2.1",
@@ -15,6 +19,8 @@
     "@typespec/rest": "0.72.1"
   },
   "devDependencies": {
-    "@dbml/cli": "^3.13.9"
+    "@dbml/cli": "^3.13.9",
+    "npm-run-all2": "^8.0.4",
+    "openapi-typescript": "^7.8.0"
   }
 }
