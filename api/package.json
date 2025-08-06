@@ -5,14 +5,17 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "gen-schema": "pnpm --filter quiz-api-spec build"
+    "gen-schema": "pnpm --filter quiz-api-spec build",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.7.2",
     "hono": "^4.8.10",
     "openapi-ts-router": "^0.3.3",
     "zod": "^4.0.14"
   },
   "devDependencies": {
+    "typescript": "^5.9.2",
     "wrangler": "^4.27.0"
   }
 }
