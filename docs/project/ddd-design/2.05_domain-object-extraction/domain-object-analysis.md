@@ -12,11 +12,16 @@
 
 | 概念名 | 分類 | 判定理由 | 主要属性 | データベース表現 |
 |--------|------|----------|----------|------------------|
-| **Quiz（クイズ）** | エンティティ | ID（QuizId）で識別、状態変化あり（承認待ち→承認済み等） | id, question, correctAnswer, explanation, tags, status, creatorId, createdAt, approvedAt | テーブル化（quizzes） |
+| **Quiz（クイズ）** | エンティティ | ID（QuizId）で識別、状態変化あり（承認待ち→承認済み等） | id, question, answerType, answerId, explanation, tags, status, creatorId, createdAt, approvedAt | テーブル化（quizzes） |
 | **Answer（回答）** | エンティティ | ID（AnswerId）で識別、回答時刻等の状態変化あり | id, quizId, userAnswer, isCorrect, answeredAt, sessionId | テーブル化（answers） |
 | **QuizSession（クイズセッション）** | エンティティ | ID（SessionId）で識別、セッション状態の変化あり | id, startedAt, lastAccessAt, deviceFingerprint | テーブル化（sessions） |
 | **Question（問題文）** | 値オブジェクト | 値そのものが識別子、不変（500文字制限含む） | text, length | Quiz内のフィールド |
-| **CorrectAnswer（正解）** | 値オブジェクト | ◯または×の2値、不変 | value（boolean） | Quiz内のフィールド |
+| **BooleanAnswer（真偽回答）** | 値オブジェクト | ◯または×の2値、不変 | value（boolean） | boolean_answers テーブル |
+| **FreeTextAnswer（自由記述回答）** | 値オブジェクト | 文字列マッチング設定、不変 | correctAnswer, matchingStrategy, caseSensitive | free_text_answers テーブル |
+| **SingleChoiceAnswer（単一選択回答）** | 値オブジェクト | 正解選択肢ID、不変 | correctChoiceId | single_choice_answers テーブル |
+| **MultipleChoiceAnswer（複数選択回答）** | 値オブジェクト | 正解選択肢ID群、不変 | correctChoiceIds, minCorrectAnswers | multiple_choice_answers テーブル |
+| **Choice（選択肢）** | 値オブジェクト | 選択肢テキストと順序、不変 | id, text, order | choices テーブル |
+| **AnswerType（回答タイプ）** | 値オブジェクト | 回答種別の値、不変 | value（enum: boolean, free_text, single_choice, multiple_choice） | Quiz内のフィールド |
 | **Explanation（解説）** | 値オブジェクト | 値そのものが識別子、不変（1000文字制限含む） | text, length | Quiz内のフィールド |
 | **Tag（タグ）** | 値オブジェクト | 値そのものが識別子、不変 | name, normalizedName | Quiz内のJSON配列 |
 | **QuizStatus（クイズ状態）** | 値オブジェクト | 承認ステータスの値、不変 | value（enum: pending, approved, rejected） | Quiz内のフィールド |
@@ -58,12 +63,42 @@
 - **制約内包**: 500文字制限のバリデーション含む
 - **単純さ**: 複雑な振る舞いを持たない
 
-#### CorrectAnswer（正解）
+#### 回答タイプ別値オブジェクト（Polymorphic Answer Design）
+
+##### BooleanAnswer（真偽回答）
 
 - **値による識別**: ◯または×の2値のみ
 - **不変性**: 作成後の変更なし
 - **単純性**: boolean値での表現が適切
 - **制約内包**: 2択のみの制約を型で表現
+
+##### FreeTextAnswer（自由記述回答）
+
+- **値による識別**: 正解文字列とマッチング戦略の組み合わせ
+- **不変性**: 作成後の変更なし
+- **柔軟性**: exact/contains/regex マッチング対応
+- **制約内包**: 大文字小文字区別設定を含む
+
+##### SingleChoiceAnswer（単一選択回答）
+
+- **値による識別**: 正解選択肢IDで識別
+- **不変性**: 作成後の変更なし
+- **関連性**: Choice エンティティとの関連を保持
+- **制約内包**: 1つの正解選択肢のみ許可
+
+##### MultipleChoiceAnswer（複数選択回答）
+
+- **値による識別**: 正解選択肢ID群と最小正解数の組み合わせ
+- **不変性**: 作成後の変更なし
+- **複雑性**: 複数正解と部分点対応
+- **制約内包**: 最小正解数による柔軟な採点設定
+
+##### Choice（選択肢）
+
+- **値による識別**: 選択肢テキストと表示順序
+- **不変性**: 作成後の変更なし
+- **順序性**: 表示順序の保持
+- **制約内包**: テキスト長制限と順序制約
 
 #### Tag（タグ）
 
@@ -77,12 +112,21 @@
 ```mermaid
 graph TB
     Quiz -->|contains| Question
-    Quiz -->|contains| CorrectAnswer
+    Quiz -->|has discriminator| AnswerType
+    Quiz -->|polymorphic reference| AnswerUnion
     Quiz -->|contains| Explanation
     Quiz -->|contains| Tag
     Quiz -->|has| QuizStatus
     Quiz -->|belongs to| CreatorId
     Quiz -->|created at| Timestamp
+    
+    AnswerUnion -->|boolean type| BooleanAnswer
+    AnswerUnion -->|free_text type| FreeTextAnswer
+    AnswerUnion -->|single_choice type| SingleChoiceAnswer
+    AnswerUnion -->|multiple_choice type| MultipleChoiceAnswer
+    
+    SingleChoiceAnswer -->|contains| Choice
+    MultipleChoiceAnswer -->|contains| Choice
     
     Answer -->|refers to| Quiz
     Answer -->|contains| AnswerResult
@@ -98,11 +142,12 @@ graph TB
 ### TypeScript型設計
 
 ```typescript
-// エンティティ
+// エンティティ（Polymorphic Design）
 interface Quiz {
   readonly id: QuizId;
   readonly question: Question;
-  readonly correctAnswer: CorrectAnswer;
+  readonly answerType: AnswerType;  // Discriminator
+  readonly answerId: AnswerId;      // Foreign key to specific answer table
   readonly explanation?: Explanation;
   readonly tags: Tag[];
   status: QuizStatus;
@@ -117,8 +162,66 @@ interface Question {
   readonly length: number;
 }
 
-interface CorrectAnswer {
+// Answer type discriminator
+type AnswerType = 'boolean' | 'free_text' | 'single_choice' | 'multiple_choice';
+
+// Polymorphic answer value objects
+interface BooleanAnswer {
+  readonly id: AnswerId;
   readonly value: boolean; // true = ◯, false = ×
+}
+
+interface FreeTextAnswer {
+  readonly id: AnswerId;
+  readonly correctAnswer: string;
+  readonly matchingStrategy: 'exact' | 'contains' | 'regex';
+  readonly caseSensitive: boolean;
+}
+
+interface SingleChoiceAnswer {
+  readonly id: AnswerId;
+  readonly correctChoiceId: ChoiceId;
+}
+
+interface MultipleChoiceAnswer {
+  readonly id: AnswerId;
+  readonly correctChoiceIds: ChoiceId[];
+  readonly minCorrectAnswers: number;
+}
+
+interface Choice {
+  readonly id: ChoiceId;
+  readonly text: string;
+  readonly order: number;
+}
+
+// Type-safe discriminated union
+type QuizWithAnswer = 
+  | QuizWithBooleanAnswer
+  | QuizWithFreeTextAnswer  
+  | QuizWithSingleChoiceAnswer
+  | QuizWithMultipleChoiceAnswer;
+
+interface QuizWithBooleanAnswer extends Quiz {
+  answerType: 'boolean';
+  answer: BooleanAnswer;
+}
+
+interface QuizWithFreeTextAnswer extends Quiz {
+  answerType: 'free_text';
+  answer: FreeTextAnswer;
+}
+
+interface QuizWithSingleChoiceAnswer extends Quiz {
+  answerType: 'single_choice';
+  answer: SingleChoiceAnswer;
+  choices: Choice[];
+}
+
+interface QuizWithMultipleChoiceAnswer extends Quiz {
+  answerType: 'multiple_choice';
+  answer: MultipleChoiceAnswer;
+  choices: Choice[];
 }
 ```
 
@@ -136,7 +239,7 @@ interface CorrectAnswer {
 
 ### 拡張性への配慮
 
-1. **QuizType**: 将来的な多択問題対応時はCorrectAnswerを拡張
+1. **QuizType**: ポリモーフィック設計により、boolean/free_text/single_choice/multiple_choice 対応済み、将来的な新タイプ追加も容易
 2. **UserEntity**: 将来的なログイン機能追加時はCreatorIdからUserへ移行
 3. **Category**: タグ機能拡張時はTagからCategoryエンティティへ昇格可能
 
@@ -154,7 +257,7 @@ interface CorrectAnswer {
 
 ## まとめ
 
-クイズアプリケーションドメインにおける26の概念を、エンティティ（3つ）と値オブジェクト（23つ）に体系的に分類しました。この分類により、**データの識別性・永続性・不変性**が適切に表現され、ビジネスルールの型レベル実装が可能になります。
+クイズアプリケーションドメインにおける31の概念を、エンティティ（3つ）と値オブジェクト（28つ）に体系的に分類しました。ポリモーフィック回答タイプ設計により、boolean/自由記述/単一選択/複数選択の4種類の問題形式に対応し、将来的な拡張性も確保しています。この分類により、**データの識別性・永続性・不変性**が適切に表現され、ビジネスルールの型レベル実装が可能になります。
 
 特に、Quiz・Answer・QuizSessionの3つのエンティティが、それぞれ明確なライフサイクルと責務を持つことで、複雑なビジネスロジックの実装基盤が確立されました。
 

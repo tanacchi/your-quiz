@@ -4,8 +4,8 @@
 
 ## 基本指示
 
-- 全ての作業において必ず docs/instructions/shared/workflow/common.md の指示に従なければならない。
-- 全ての作業において必ず docs/instructions/shared/workflow/workflow.md の どの工程に該当するか判断した上でその指示に従うこと. どの工程に該当するか判断できない場合はユーザに問い合わせること。
+- 全ての作業において必ず docs/instructions/shared/workflow/00.01_common.md の指示に従なければならない。
+- 全ての作業において必ず docs/instructions/shared/workflow/00.02_workflow.md の どの工程に該当するか判断した上でその指示に従うこと. どの工程に該当するか判断できない場合はユーザに問い合わせること。
 - 全ての作業において必ず どのファイルをどう変更するか、どんなコマンドを実行するかなど実行計画を詳細に提示すること
 
 ## カテゴリ別指示
