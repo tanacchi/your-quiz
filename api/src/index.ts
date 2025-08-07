@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import { Hono } from "hono";
+import { err, ok, type Result } from "neverthrow";
 import { z } from "zod";
 import type { components } from "./types/generated/api";
 
@@ -42,6 +43,27 @@ const _errorResponseSchema = z.object({
   message: z.string(),
   code: z.string(),
 }) satisfies z.ZodType<components["schemas"]["ErrorResponse"]>;
+
+// Helper functions for neverthrow error handling
+
+const parseJsonSafe = async (request: {
+  json(): Promise<unknown>;
+}): Promise<Result<unknown, string>> => {
+  try {
+    const json = await request.json();
+    return ok(json);
+  } catch {
+    return err("INVALID_JSON");
+  }
+};
+
+const validateWithZod = <T>(
+  schema: z.ZodSchema<T>,
+  data: unknown,
+): Result<T, string> => {
+  const result = schema.safeParse(data);
+  return result.success ? ok(result.data) : err("VALIDATION_ERROR");
+};
 
 // API handlers - Pure Hono implementation with TypeSpec schema validation
 
@@ -101,34 +123,37 @@ const getQuizHandler = async (c: AppContext) => {
 
 // Create quiz handler
 const createQuizHandler = async (c: AppContext) => {
-  let requestBody: unknown;
+  const jsonResult = await parseJsonSafe(c.req);
 
-  try {
-    requestBody = await c.req.json();
-  } catch {
+  if (jsonResult.isErr()) {
+    const errorCode = jsonResult.error;
+    const errorMessage =
+      errorCode === "INVALID_JSON"
+        ? "Invalid JSON in request body"
+        : "Failed to parse request";
+
     return c.json(
       {
-        message: "Invalid JSON in request body",
-        code: "INVALID_JSON",
+        message: errorMessage,
+        code: errorCode,
       } as components["schemas"]["ErrorResponse"],
       400,
     );
   }
 
-  // Validate request body with Zod
-  const result = createQuizSchema.safeParse(requestBody);
+  const validationResult = validateWithZod(createQuizSchema, jsonResult.value);
 
-  if (!result.success) {
+  if (validationResult.isErr()) {
     return c.json(
       {
         message: "Invalid request body format",
-        code: "VALIDATION_ERROR",
+        code: validationResult.error,
       } as components["schemas"]["ErrorResponse"],
       400,
     );
   }
 
-  const body = result.data;
+  const body = validationResult.value;
 
   // Mock creation for development
   const quiz: components["schemas"]["Quiz"] = {
