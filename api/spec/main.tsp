@@ -8,9 +8,9 @@ import "./models/attempt.tsp";
 import "./models/deck.tsp";
 import "./models/tag.tsp";
 import "./operations/quiz-management.tsp";
-import "./operations/quiz-learning.tsp";
-import "./operations/user-session.tsp";
-import "./operations/search.tsp";
+// import "./operations/quiz-learning.tsp";
+// import "./operations/user-session.tsp";
+// import "./operations/search.tsp";
 
 using Http;
 
