@@ -2,7 +2,7 @@
 
 ## ステータス
 
-**暫定的変更** - openapi-ts-routerの成熟度不足により、TypeSpec + Chanfanaを暫定採用。将来的にopenapi-ts-routerが成熟した段階で再移行を検討。
+**承認済み** - Chanfana不採用。型の厳格性とTypeSpecスキーマファースト原則を優先し、純粋なHono + TypeSpec生成型の組み合わせを採用。
 
 ## 文脈
 
@@ -13,14 +13,16 @@ Quiz APIの開発において、TypeSpecによるスキーマファースト開�
 - **スキーマ定義**: TypeSpec (.tsp)
 - **型生成**: openapi-typescript
 - **Webフレームワーク**: Hono (Cloudflare Workers)
-- **ルーティング**: ~~openapi-ts-router~~ → **Chanfana** (暫定)
-- **バリデーション**: Zod
+- **ルーティング**: ~~openapi-ts-router~~ ~~Chanfana~~ → **純粋なHono**
+- **バリデーション**: Zod + TypeSpec生成型
 
 ## 検討対象
 
 ### Option A: 継続 (TypeSpec + openapi-ts-router) - 断念
 
-### Option B: 暫定移行 (TypeSpec + Chanfana) - 採用
+### Option B: 暫定移行 (TypeSpec + Chanfana) - 検討後不採用
+
+### Option C: 純粋なHono + TypeSpec生成型 - **最終採用**
 
 ## 実装上の問題発覚
 
@@ -55,131 +57,129 @@ Quiz APIの開発において、TypeSpecによるスキーマファースト開�
    - 実用事例の欠如
    - バグ修正の遅延
 
-## 暫定決定: Chanfana採用
+## Chanfana検討・不採用理由
+
+### 不採用理由
+
+1. **型の厳格性における妥協**
+   - TypeSpec生成型との完全な整合性が困難
+   - スキーマ定義の二重管理が必要
+   - 型安全性の一部が犠牲になる可能性
+
+2. **スキーマファースト原則への制約**
+   - Chanfana独自のスキーマ記述が必要
+   - TypeSpecの型定義と乖離するリスク
+   - 単一の信頼できる情報源(SSOT)の原則に反する
+
+3. **学習コストとロックイン**
+   - Chanfana特有のクラスベースAPI実装パターン
+   - 将来的な技術選択の制約
+   - 純粋なHonoパターンからの乖離
+
+## 最終採用: 純粋なHono + TypeSpec生成型
 
 ### 採用理由
 
-1. **技術的安定性の確保**
-   - Cloudflare公式サポート
-   - 大規模プロダクション利用実績
-   - 包括的なドキュメント
+1. **完全な型安全性の実現**
+   - TypeSpec生成型の直接利用
+   - コンパイル時の型チェック完全性
+   - ランタイム型検証との整合性保証
 
-2. **スキーマファースト原則の維持**
+2. **スキーマファースト原則の完全な維持**
+   - TypeSpecが単一の信頼できる情報源(SSOT)
+   - 型定義の二重管理が不要
+   - スキーマ変更の自動反映
+
+3. **実装パターンの明確性**
 
    ```typescript
-   // TypeSpecで定義されたスキーマを活用
    import type { components } from "./types/generated/api";
+   import { zValidator } from "@hono/zod-validator";
    
-   const QuizSchema = z.object({
+   // TypeSpec生成型を直接活用
+   type CreateQuizRequest = components["schemas"]["CreateQuizRequest"];
+   
+   const createQuizSchema = z.object({
      question: z.string(),
      answerType: z.enum(["boolean", "free_text", "single_choice", "multiple_choice"]),
-   }) satisfies z.ZodType<components["schemas"]["CreateQuizRequest"]>;
+   }) satisfies z.ZodType<CreateQuizRequest>;
+   
+   app.post("/quiz", zValidator("json", createQuizSchema), async (c) => {
+     const data = c.req.valid("json"); // 完全な型推論
+     return c.json(data);
+   });
    ```
-
-3. **開発効率の向上**
-
-   ```typescript
-   export class CreateQuiz extends OpenAPIRoute {
-     schema = {
-       request: {
-         body: {
-           content: {
-             "application/json": {
-               schema: QuizSchema,
-             },
-           },
-         },
-       },
-     }
-     
-     async handle(c: Context) {
-       const data = await this.getValidatedData<typeof this.schema>()
-       // 完全な型安全性
-       return c.json(data.body)
-     }
-   }
-   ```
-
-### スキーマファースト原則の維持方法
-
-1. **TypeSpec定義の継続使用**
-   - 単一の信頼できる情報源としてのTypeSpec
-   - 自動型生成パイプラインの継続
-
-2. **型定義の活用**
-
-   ```typescript
-   // 二重定義を回避し、TypeSpec由来の型を活用
-   const createQuizSchema = z.object({
-     // ...
-   }) satisfies z.ZodType<components["schemas"]["CreateQuizRequest"]>;
-   ```
-
-3. **スキーマ検証の自動化**
-   - 生成された型とZodスキーマの整合性チェック
-   - コンパイル時の型検証
 
 ## 長期戦略
 
-### openapi-ts-router成熟度の監視
+### TypeSpecエコシステムの継続的改善
 
-1. **定期的な評価スケジュール**
-   - 四半期ごとの成熟度チェック
-   - 型安全性問題の解決状況確認
-   - エコシステムの発展状況監視
+1. **型生成パイプラインの最適化**
+   - openapi-typescriptの定期的アップデート
+   - 生成コードの品質向上
+   - ビルドパフォーマンスの改善
 
-2. **再移行の条件**
-   - 型互換性問題の完全解決
-   - バリデーション統合の改善
-   - 十分なコミュニティサポート
+2. **バリデーション統合の強化**
+   - TypeSpec→Zodスキーマ自動生成の検討
+   - コンパイル時バリデーション整合性チェック
+   - ランタイムエラー品質の向上
 
-3. **移行準備**
-   - TypeSpecスキーマの継続維持
-   - アーキテクチャの可搬性確保
-   - 移行時のテスト戦略
+3. **将来の技術選択肢の評価**
+   - openapi-ts-router成熟度の定期チェック
+   - 新たなTypeSpec統合ライブラリの評価
+   - エコシステム全体の発展状況監視
 
-### 技術的負債管理
+### アーキテクチャ品質の継続的改善
 
-1. **Chanfana特有の実装パターン**
-   - クラスベース実装の標準化
-   - 再利用可能なコンポーネント設計
+1. **型安全性の強化**
+   - TypeSpec生成型の活用範囲拡大
+   - エンドツーエンドの型整合性確保
+   - 型エラーの早期検出機構
 
-2. **将来の移行コスト最小化**
-   - ビジネスロジックの分離
-   - ルーティング層の抽象化
-   - テストカバレッジの維持
+2. **コード品質の維持**
+   - 関数型ルーティングパターンの標準化
+   - 再利用可能なバリデーション関数設計
+   - ビジネスロジックとルーティング層の分離
 
 ## 実装方針
 
-### 段階的移行アプローチ
+### 段階的実装アプローチ
 
-1. **Phase 1: 環境整備**
-   - 依存関係の更新 (chanfana追加、openapi-ts-router削除)
-   - 基本セットアップの実装
+1. **Phase 1: 基盤整備**
+   - TypeSpec生成型の統合設定
+   - Zodバリデーション統合の確立
+   - 基本ルーティングパターンの標準化
 
 2. **Phase 2: API実装**
-   - 既存エンドポイントのChanfana化
-   - 型安全性の確保
-   - バリデーション統合
+   - 既存エンドポイントの純粋なHono実装
+   - TypeSpec生成型の完全活用
+   - バリデーション統合の実装
 
 3. **Phase 3: 品質確保**
-   - テスト実装
-   - ドキュメント自動生成
-   - CI/CD統合
+   - 型安全性テストの実装
+   - エンドツーエンド型整合性の確保
+   - CI/CDパイプライン統合
 
 ### 技術的制約の管理
 
-1. **スキーマ二重定義の回避**
+1. **完全な型整合性の確保**
 
    ```typescript
-   // TypeSpec由来の型を基準とした実装
-   const schema = createZodSchema<components["schemas"]["Quiz"]>();
+   // TypeSpec生成型を直接利用し、二重定義を完全に回避
+   import type { components } from "./types/generated/api";
+   
+   type QuizRequest = components["schemas"]["CreateQuizRequest"];
+   
+   const quizSchema = z.object({
+     question: z.string(),
+     answerType: z.enum(["boolean", "free_text"]),
+   }) satisfies z.ZodType<QuizRequest>;
    ```
 
-2. **型安全性の確保**
-   - コンパイル時型チェック
-   - ランタイムバリデーション
-   - エンドポイント間の一貫性
+2. **スキーマファースト原則の徹底**
+   - TypeSpecが単一の情報源(SSOT)
+   - 手動スキーマ定義の完全排除
+   - 自動生成型の直接活用
 
 ## 評価基準
 
@@ -200,11 +200,11 @@ Quiz APIの開発において、TypeSpecによるスキーマファースト開�
    - 技術的負債の削減
    - チーム学習コストの最小化
 
-### 再評価スケジュール
+### 継続的評価スケジュール
 
-- **3ヶ月後**: 初期評価（技術的安定性、開発効率）
-- **6ヶ月後**: 中間評価（保守性、エコシステム発展）  
-- **12ヶ月後**: 総合評価（openapi-ts-router再検討）
+- **3ヶ月後**: 初期評価（型安全性実現度、開発効率）
+- **6ヶ月後**: 中間評価（コード品質、保守性）  
+- **12ヶ月後**: 総合評価（TypeSpecエコシステム発展、代替技術検討）
 
 ## 参考資料
 
