@@ -8,6 +8,7 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "gen-schema": "pnpm --filter quiz-api-spec build",
     "typecheck": "tsc --noEmit",
+    "cucumber": "cucumber-js",
     "test:bdd": "cucumber-js",
     "test:bdd:watch": "cucumber-js --watch"
   },
