@@ -1,47 +1,18 @@
 import "@typespec/http";
 import "@typespec/openapi3";
+import "./common/types.tsp";
+import "./common/errors.tsp";
+import "./models/user.tsp";
+import "./models/quiz.tsp";
+import "./models/attempt.tsp";
+import "./models/deck.tsp";
+import "./models/tag.tsp";
+import "./operations/quiz-management.tsp";
+// import "./operations/quiz-learning.tsp";
+// import "./operations/user-session.tsp";
+// import "./operations/search.tsp";
 
-using TypeSpec.Http;
+using Http;
 
-@service(#{
-  title: "Your Quiz API",
-})
+@service()
 namespace YourQuizAPI;
-
-// Common types
-model ErrorResponse {
-  message: string;
-  code: string;
-}
-
-// Quiz models
-model Quiz {
-  id: string;
-  question: string;
-  answerType: "boolean" | "free_text" | "single_choice" | "multiple_choice";
-  createdAt: utcDateTime;
-  updatedAt: utcDateTime;
-}
-
-model QuizListResponse {
-  quizzes: Quiz[];
-  total: int32;
-}
-
-model CreateQuizRequest {
-  question: string;
-  answerType: "boolean" | "free_text" | "single_choice" | "multiple_choice";
-}
-
-// Quiz Management API
-@route("/api/quiz/v1/manage/quizzes")
-interface QuizManagement {
-  @get
-  list(): QuizListResponse | ErrorResponse;
-  
-  @get
-  get(@path id: string): Quiz | ErrorResponse;
-  
-  @post
-  create(@body quiz: CreateQuizRequest): Quiz | ErrorResponse;
-}
