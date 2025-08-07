@@ -12,16 +12,83 @@
 
 ```mermaid
 erDiagram
+    UserAccount {
+        UserAccountId id PK
+        string name
+        string email
+        Timestamp createdAt
+    }
+
+    UserIdentity {
+        UserId id PK
+        string anonymousId
+        UserAccountId userAccountId FK
+        Timestamp createdAt
+    }
+
     Quiz {
         QuizId id PK
         string question
-        boolean correctAnswer
+        AnswerType answerType
+        SolutionId solutionId FK
         string explanation
-        string[] tags
         QuizStatus status
-        CreatorId creatorId
+        UserId creatorId FK
         Timestamp createdAt
         Timestamp approvedAt
+    }
+
+    BooleanSolution {
+        SolutionId id PK
+        boolean value
+    }
+
+    FreeTextSolution {
+        SolutionId id PK
+        string correctAnswer
+        MatchingStrategy strategy
+        boolean caseSensitive
+    }
+
+    SingleChoiceSolution {
+        SolutionId id PK
+        ChoiceId correctChoiceId FK
+    }
+
+    MultipleChoiceSolution {
+        SolutionId id PK
+        ChoiceId[] correctChoiceIds
+        number minCorrectAnswers
+    }
+
+    Choice {
+        ChoiceId id PK
+        SolutionId solutionId FK
+        string text
+        number order
+    }
+
+    Tag {
+        TagId id PK
+        string name
+        TagType type
+        UserId createdBy FK
+        Timestamp createdAt
+    }
+
+    TagRelation {
+        TagRelationId id PK
+        TagId parentTagId FK
+        TagId childTagId FK
+        RelationType relationType
+        Timestamp createdAt
+    }
+
+    QuizTag {
+        QuizTagId id PK
+        QuizId quizId FK
+        TagId tagId FK
+        Timestamp assignedAt
     }
 
     Deck {
@@ -29,7 +96,7 @@ erDiagram
         string name
         string description
         QuizId[] quizIds
-        CreatorId creatorId
+        UserId creatorId FK
         Timestamp createdAt
         Timestamp lastModifiedAt
     }
@@ -37,102 +104,273 @@ erDiagram
     QuizSession {
         SessionId id PK
         DeckId deckId FK
-        CreatorId creatorId
+        UserId creatorId FK
         string deviceFingerprint
         Timestamp startedAt
         Timestamp completedAt
         boolean isCompleted
     }
 
-    Answer {
+    BooleanAnswer {
         AnswerId id PK
+        boolean value
+    }
+
+    FreeTextAnswer {
+        AnswerId id PK
+        string text
+    }
+
+    SingleChoiceAnswer {
+        AnswerId id PK
+        ChoiceId selectedChoiceId FK
+    }
+
+    MultipleChoiceAnswer {
+        AnswerId id PK
+        ChoiceId[] selectedChoiceIds
+    }
+
+    Attempt {
+        AttemptId id PK
         QuizId quizId FK
         SessionId sessionId FK
-        boolean userAnswer
+        UserId userId FK
+        AnswerType answerType
+        AnswerId answerId FK
         boolean isCorrect
         Timestamp answeredAt
     }
 
-    Quiz ||--o{ Answer : "answered by"
-    Deck ||--|| QuizSession : "1:1 relationship"
+    UserAccount ||--o| UserIdentity : "has"
+    UserIdentity ||--o{ Quiz : "creates"
+    UserIdentity ||--o{ Tag : "creates"
+    UserIdentity ||--o{ Deck : "creates"
+    UserIdentity ||--o{ QuizSession : "starts"
+    UserIdentity ||--o{ Attempt : "submits"
+    Quiz ||--|| BooleanSolution : "has (answerType=boolean)"
+    Quiz ||--|| FreeTextSolution : "has (answerType=free_text)"
+    Quiz ||--|| SingleChoiceSolution : "has (answerType=single_choice)"
+    Quiz ||--|| MultipleChoiceSolution : "has (answerType=multiple_choice)"
+    SingleChoiceSolution ||--o{ Choice : "contains choices"
+    MultipleChoiceSolution ||--o{ Choice : "contains choices"
+    Quiz ||--o{ QuizTag : "tagged with"
+    Tag ||--o{ QuizTag : "categorizes"
+    Tag ||--o{ TagRelation : "parent of"
+    Tag ||--o{ TagRelation : "child of"
+    Quiz ||--o{ Attempt : "answered by"
+    Deck ||--o{ QuizSession : "1:N relationship"
+    Attempt ||--|| BooleanAnswer : "has (answerType=boolean)"
+    Attempt ||--|| FreeTextAnswer : "has (answerType=free_text)"
+    Attempt ||--|| SingleChoiceAnswer : "has (answerType=single_choice)"
+    Attempt ||--|| MultipleChoiceAnswer : "has (answerType=multiple_choice)"
+    SingleChoiceAnswer ||--|| Choice : "references choice"
+    MultipleChoiceAnswer }o--o{ Choice : "references choices"
     Deck }o--o{ Quiz : "contains"
-    QuizSession ||--o{ Answer : "contains"
-    QuizSession }o--|| Quiz : "created by"
+    QuizSession ||--o{ Attempt : "contains"
 ```
 
 ## 関連性パターン分析表
 
 | エンティティA | エンティティB | 関連性 | 多重度 | 所有/参照 | 判定理由 | 制約事項 |
 |---------------|---------------|--------|--------|-----------|----------|----------|
-| **Quiz** | **Answer** | クイズ-回答 | 1:N | 参照関係 | Answerが外部キーでQuizを参照 | 承認済みクイズのみ回答可能 |
+| **UserAccount** | **UserIdentity** | アカウント-永続識別子 | 1:1 | 参照関係 | UserIdentityが外部キーでUserAccountを参照 | UserAccount削除時もUserIdentity保持 |
+| **UserIdentity** | **Quiz** | ユーザー-作成クイズ | 1:N | 参照関係 | QuizがUserIdentity.UserIdを参照 | 匿名ユーザーによるクイズ作成 |
+| **UserIdentity** | **Tag** | ユーザー-作成タグ | 1:N | 参照関係 | TagがUserIdentity.UserIdを参照 | ユーザー登録タグのみ |
+| **UserIdentity** | **Deck** | ユーザー-作成問題集 | 1:N | 参照関係 | DeckがUserIdentity.UserIdを参照 | 匿名ユーザーによる問題集作成 |
+| **UserIdentity** | **QuizSession** | ユーザー-学習セッション | 1:N | 参照関係 | QuizSessionがUserIdentity.UserIdを参照 | セッション作成者識別 |
+| **UserIdentity** | **Attempt** | ユーザー-回答試行 | 1:N | 参照関係 | AttemptがUserIdentity.UserIdを参照 | 回答者識別 |
+| **Quiz** | **Attempt** | クイズ-回答試行 | 1:N | 参照関係 | Attemptが外部キーでQuizを参照 | 承認済みクイズのみ回答可能 |
+| **Quiz** | **BooleanSolution** | クイズ-真偽正解 | 1:1 | 所有関係 | Quizがpolymorphic参照でBooleanSolutionを所有 | answerType='boolean'時のみ関連 |
+| **Quiz** | **FreeTextSolution** | クイズ-自由記述正解 | 1:1 | 所有関係 | Quizがpolymorphic参照でFreeTextSolutionを所有 | answerType='free_text'時のみ関連 |
+| **Quiz** | **SingleChoiceSolution** | クイズ-単一選択正解 | 1:1 | 所有関係 | Quizがpolymorphic参照でSingleChoiceSolutionを所有 | answerType='single_choice'時のみ関連 |
+| **Quiz** | **MultipleChoiceSolution** | クイズ-複数選択正解 | 1:1 | 所有関係 | Quizがpolymorphic参照でMultipleChoiceSolutionを所有 | answerType='multiple_choice'時のみ関連 |
+| **SingleChoiceSolution** | **Choice** | 単一選択-選択肢 | 1:N | 所有関係 | SingleChoiceSolutionが複数Choiceを所有 | 選択肢作成時に自動関連付け |
+| **MultipleChoiceSolution** | **Choice** | 複数選択-選択肢 | 1:N | 所有関係 | MultipleChoiceSolutionが複数Choiceを所有 | 選択肢作成時に自動関連付け |
+| **Quiz** | **Tag** | クイズ-タグ | N:M | 参照関係 | QuizTag中間テーブルによる関連 | タグによる分類・検索 |
+| **Tag** | **Tag** | タグ-タグ階層 | N:M | 参照関係 | TagRelation中間テーブルによる関連 | 階層構造（食べ物/ラーメン等） |
 | **Deck** | **Quiz** | 問題集-クイズ | N:M | 参照関係 | Deckが複数QuizのIDを保持 | 承認済みクイズのみ問題集に追加可能 |
-| **Deck** | **QuizSession** | 問題集-セッション | 1:1 | 所有関係 | 1つの問題集に対して1つのセッション | Deck削除時にQuizSessionも削除 |
-| **QuizSession** | **Answer** | セッション-回答 | 1:N | 所有関係 | セッション内で複数回答を管理 | セッション削除時回答も削除 |
-| **QuizSession** | **Quiz** | セッション-作成クイズ | 1:N | 参照関係 | 作成者識別による関連付け | CreatorIdによる間接参照 |
+| **Deck** | **QuizSession** | 問題集-セッション | 1:N | 参照関係 | 複数セッションで同じ問題集を解答可能 | 同一問題集の繰り返し学習対応 |
+| **Attempt** | **BooleanAnswer** | 回答試行-真偽回答 | 1:1 | 所有関係 | Attemptがpolymorphic参照でBooleanAnswerを所有 | answerType='boolean'時のみ関連 |
+| **Attempt** | **FreeTextAnswer** | 回答試行-自由記述回答 | 1:1 | 所有関係 | Attemptがpolymorphic参照でFreeTextAnswerを所有 | answerType='free_text'時のみ関連 |
+| **Attempt** | **SingleChoiceAnswer** | 回答試行-単一選択回答 | 1:1 | 所有関係 | Attemptがpolymorphic参照でSingleChoiceAnswerを所有 | answerType='single_choice'時のみ関連 |
+| **Attempt** | **MultipleChoiceAnswer** | 回答試行-複数選択回答 | 1:1 | 所有関係 | Attemptがpolymorphic参照でMultipleChoiceAnswerを所有 | answerType='multiple_choice'時のみ関連 |
+| **SingleChoiceAnswer** | **Choice** | 単一選択回答-選択肢 | 1:1 | 参照関係 | SingleChoiceAnswerが選択された1つのChoiceを参照 | 正解選択肢との整合性確認 |
+| **MultipleChoiceAnswer** | **Choice** | 複数選択回答-選択肢 | 1:N | 参照関係 | MultipleChoiceAnswerが選択された複数Choiceを参照 | 正解選択肢との整合性確認 |
+| **QuizSession** | **Attempt** | セッション-回答試行 | 1:N | 所有関係 | セッション内で複数回答を管理 | セッション削除時回答も削除 |
 
 ## 詳細関連性分析
 
-### 1. Quiz ←→ Answer 関係
+### 1. Quiz ←→ SolutionTypes 関係（Polymorphic Design）
 
-#### 関連性の特徴
+#### 関連性の特徴（Quiz-SolutionTypes）
+
+- **パターン**: Discriminator + Solution テーブル分離型ポリモーフィズム
+- **種別**: 所有関係（1:1、answerType別）
+- **方向性**: Quiz → Specific Solution Type（単方向所有）
+- **識別子**: answerType（discriminator）+ solutionId（外部キー）
+
+#### ポリモーフィック設計の利点
+
+1. **拡張性**: 新しい回答タイプ追加時、既存コードへの影響最小化
+2. **型安全性**: TypeScript discriminated unionによるコンパイル時型チェック
+3. **パフォーマンス**: 回答タイプ別の最適化されたテーブル設計
+4. **保守性**: 各回答タイプの独立したバリデーション・ビジネスロジック
+
+#### 回答タイプ別制約
+
+| 回答タイプ | 制約事項 | バリデーション | 使用ケース |
+|-----------|----------|---------------|------------|
+| **boolean** | true/false のみ | 2値チェック | ◯×問題、正誤判定 |
+| **free_text** | 文字列マッチング | 正解パターン登録必須 | 記述問題、計算問題 |
+| **single_choice** | 選択肢2-6個、正解1個 | 選択肢数・正解数チェック | 4択問題、語彙問題 |
+| **multiple_choice** | 選択肢2-10個、正解1個以上 | 最小正解数チェック | 複数正解問題、分類問題 |
+
+### 2. User 関係（分離型匿名ユーザー管理）
+
+#### 関連性の特徴（UserAccount-UserIdentity分離設計）
+
+- **UserAccount**: 削除可能な詳細情報（name, email等）
+- **UserIdentity**: 永続的な匿名識別子（Quiz/Deck等が参照）
+- **種別**: UserAccount ←→ UserIdentity (1:1), UserIdentity → エンティティ（1:N）
+- **方向性**: UserIdentity → エンティティ（単方向参照）
+
+#### ビジネスルール（分離型User管理）
+
+1. **データ保持**: UserAccount削除時もUserIdentity経由でQuiz/Deck等のコンテンツ保持
+2. **匿名性保証**: UserIdentity.anonymousIdによる匿名ユーザー識別
+3. **作成権限**: UserIdentity.UserIdによるコンテンツ所有権管理
+4. **アカウント連携**: UserIdentity.userAccountIdでアカウント情報と紐付け（nullable）
+
+#### QuizSession、Attempt のUserID重複に関する考察
+
+**設計妥当性分析**：
+
+- **QuizSession.userId**: セッション開始者を識別（学習履歴管理）
+- **Attempt.userId**: 各回答の実行者を識別（回答統計管理）
+- **重複の必要性**: セッション共有シナリオで異なるユーザーが回答する可能性
+- **整合性制約**: 通常はQuizSession.userId = Attempt.userId だが、将来の拡張性を考慮
+- **UserIdentity参照**: 両方ともUserIdentity.UserIdを参照し、UserAccount削除時も履歴保持
+
+### 3. Attempt ←→ AnswerTypes 関係（Polymorphic Answer Design）
+
+#### 関連性の特徴（Attempt-AnswerTypes）
+
+- **パターン**: Discriminator + Answer テーブル分離型ポリモーフィズム
+- **種別**: 所有関係（1:1、answerType別）
+- **方向性**: Attempt → Specific Answer Type（単方向所有）
+- **識別子**: answerType（discriminator）+ answerId（外部キー）
+
+#### ポリモーフィック回答設計の利点
+
+1. **型安全性**: Solution と Answer の型対応保証（BooleanSolution ↔ BooleanAnswer）
+2. **拡張性**: 新しい回答タイプ追加時、既存コードへの影響最小化
+3. **データ整合性**: 回答タイプ別の最適化されたバリデーション
+4. **保守性**: 各回答タイプの独立したビジネスロジック
+
+#### 回答タイプ別制約
+
+| 回答タイプ | Answer構造 | バリデーション | Solution対応 |
+|-----------|-----------|---------------|-------------|
+| **boolean** | BooleanAnswer { value: boolean } | true/false チェック | BooleanSolution |
+| **free_text** | FreeTextAnswer { text: string } | 文字列長・形式チェック | FreeTextSolution |
+| **single_choice** | SingleChoiceAnswer { selectedChoiceId } | 選択肢存在チェック | SingleChoiceSolution |
+| **multiple_choice** | MultipleChoiceAnswer { selectedChoiceIds[] } | 選択肢存在・重複チェック | MultipleChoiceSolution |
+
+#### 整合性制約
+
+1. **型対応**: Quiz.answerType = Attempt.answerType の一致制約
+2. **Choice参照**: Single/MultipleChoiceAnswerの選択肢は対応するSolutionのChoiceから選択
+3. **正解判定**: Answer と Solution の値比較によるisCorrect算出
+
+### 4. Quiz ←→ Attempt 関係（回答履歴）
+
+#### 関連性の特徴（Quiz-Attempt）
 
 - **種別**: 参照関係（1:N）
-- **方向性**: Answer → Quiz（単方向参照）
-- **カスケード**: なし（Quizが削除されてもAnswerは履歴として保持）
+- **方向性**: Attempt → Quiz（単方向参照）
+- **カスケード**: なし（Quizが削除されてもAttemptは履歴として保持）
 
 #### ビジネスルール
 
 1. **回答可能性制約**: 承認済み（Approved）状態のQuizのみ回答可能
 2. **回答重複許可**: 同一Quizに対する複数回答は許可
-3. **履歴保持**: Quiz削除後もAnswer履歴は保持（匿名化）
+3. **履歴保持**: Quiz削除後もAttempt履歴は保持（匿名化）
 
-#### 実装上の考慮事項
+#### セッション内解答確認機能
+
+**実装方針**：
+
+- AttemptテーブルからsessionId, quizIdで解答済み状況を確認
+- QuizSessionに対する進捗管理をAttempt履歴から動的に算出
+- 解答済みフラグ: `EXISTS(SELECT 1 FROM Attempt WHERE sessionId = ? AND quizId = ?)`
+
+### 5. Tag管理システム（階層構造・分類）
+
+#### Tag-Tag関係（TagRelation中間テーブル）
+
+- **パターン**: N:M自己参照 + 関係性タイプ
+- **中間テーブル**: TagRelation
+- **関係性タイプ**: 階層（parent-child）、分類（category-item）、関連（related）
+
+#### Tag分類
+
+| TagType | 説明 | 作成者 | 例 |
+|---------|------|--------|---|
+| **official** | 公式タグ | システム管理者 | JavaScript, プログラミング, 基礎 |
+| **user** | ユーザー登録タグ | 一般ユーザー | 自作問題, 復習用, 難問 |
+
+#### TagRelation設計
 
 ```typescript
-interface Answer {
-  readonly quizId: QuizId; // 外部キー参照
-  // Quiz承認状態の事前チェックが必要
-}
+RelationType: 'hierarchy' | 'category' | 'synonym' | 'related'
 
-// 回答時のバリデーション
-const validateAnswerCreation = (quiz: Quiz, answer: Answer): Result<void, Error> => {
-  if (quiz.status !== QuizStatus.Approved) {
-    return err(new Error('承認済みクイズのみ回答可能'));
-  }
-  return ok(undefined);
-};
+階層例: 食べ物/ラーメン/豚骨ラーメン
+- 食べ物(parent) -[hierarchy]-> ラーメン(child)
+- ラーメン(parent) -[hierarchy]-> 豚骨ラーメン(child)
 ```
 
-### 2. QuizSession ←→ Answer 関係
+#### Quiz-Tag関係（QuizTag中間テーブル）
 
-#### 関連性の特徴（QuizSession-Answer）
+- **多対多関係**: Quiz : Tag = N:M
+- **中間テーブル**: QuizTag
+- **タグ付け履歴**: assignedAt で管理
+
+### 6. Deck ←→ QuizSession 関係（1:N設計）
+
+#### 関連性の特徴（Deck-QuizSession）
+
+- **種別**: 参照関係（1:N）
+- **方向性**: QuizSession → Deck（単方向参照）
+- **カスケード**: Deck削除時にQuizSessionは orphan 状態
+
+#### ビジネスルール（Deck-QuizSession）
+
+1. **繰り返し学習**: 同一Deckで複数回学習セッション実行可能
+2. **セッション独立性**: 各セッションは独立した進捗・結果を持つ
+3. **学習履歴**: 同じ問題集での学習改善を追跡可能
+
+### 7. QuizSession ←→ Attempt 関係
+
+#### 関連性の特徴（QuizSession-Attempt）
 
 - **種別**: 所有関係（1:N）
-- **方向性**: QuizSession ← Answer（双方向）
-- **カスケード**: Session削除時にAnswerも削除
+- **方向性**: QuizSession ← Attempt（双方向）
+- **カスケード**: Session削除時にAttemptも削除
 
-#### ビジネスルール（QuizSession-Answer）
+#### ビジネスルール（QuizSession-Attempt）
 
-1. **セッション包含**: すべてのAnswerは特定のQuizSessionに属する
+1. **セッション包含**: すべてのAttemptは特定のQuizSessionに属する
 2. **匿名性保証**: SessionIdによる匿名回答管理
 3. **オフライン対応**: セッション単位でのオフライン同期
 
-#### 実装上の考慮事項（QuizSession-Answer）
+#### セッション内解答確認機能
 
-```typescript
-interface QuizSession {
-  readonly id: SessionId;
-  answers: Answer[]; // 所有関係
+- AttemptテーブルからsessionId, quizIdで解答済み状況を確認
+- QuizSessionに対する進捗管理をAttempt履歴から動的に算出
+- 解答済みフラグ: `EXISTS(SELECT 1 FROM Attempt WHERE sessionId = ? AND quizId = ?)`
 
-  addAnswer(answer: Answer): Result<void, Error> {
-    // 整合性チェック
-    this.answers.push(answer);
-    return ok(undefined);
-  }
-}
-```
-
-### 3. Deck ←→ Quiz 関係
+### 8. Deck ←→ Quiz 関係
 
 #### 関連性の特徴（Deck-Quiz）
 
@@ -149,104 +387,9 @@ interface QuizSession {
 
 #### 実装上の考慮事項（Deck-Quiz）
 
-```typescript
-interface Deck {
-  readonly quizIds: QuizId[]; // 順序付きクイズ参照
-
-  addQuiz(quiz: Quiz): Result<void, Error> {
-    if (quiz.status !== QuizStatus.Approved) {
-      return err(new Error('承認済みクイズのみ問題集に追加可能'));
-    }
-    this.quizIds.push(quiz.id);
-    return ok(undefined);
-  }
-
-  removeQuiz(quizId: QuizId): void {
-    this.quizIds = this.quizIds.filter(id => !id.equals(quizId));
-  }
-}
-```
-
-### 4. Deck ←→ QuizSession 関係
-
-#### 関連性の特徴（Deck-QuizSession）
-
-- **種別**: 所有関係（1:1）
-- **方向性**: Deck ← QuizSession（双方向）
-- **カスケード**: Deck削除時にQuizSessionも削除
-
-#### ビジネスルール（Deck-QuizSession）
-
-1. **1対1制約**: 1つの問題集（Deck）に対して必ず1つのセッション（QuizSession）
-2. **ライフサイクル連動**: 問題集作成時にセッションも自動作成
-3. **進捗管理**: セッションを通じて問題集の解答進捗を管理
-4. **完了判定**: 問題集内のすべてのクイズに回答した時点でセッション完了
-
-#### 実装上の考慮事項（Deck-QuizSession）
-
-```typescript
-interface Deck {
-  readonly id: DeckId;
-  private _session?: QuizSession;
-
-  createSession(creatorId: CreatorId): QuizSession {
-    if (this._session) {
-      throw new Error('セッションは既に存在します');
-    }
-    
-    this._session = QuizSession.create({
-      deckId: this.id,
-      creatorId,
-      quizCount: this.quizIds.length
-    });
-    
-    return this._session;
-  }
-
-  get session(): QuizSession | undefined {
-    return this._session;
-  }
-}
-```
-
-### 5. QuizSession ←→ Quiz 関係
-
-#### 関連性の特徴（QuizSession-Quiz）
-
-- **種別**: 参照関係（1:N）
-- **方向性**: QuizSession → Quiz（CreatorId経由）
-- **カスケード**: なし（間接参照のため）
-
-#### ビジネスルール（QuizSession-Quiz）
-
-1. **作成者識別**: CreatorIdによる間接的な所有関係
-2. **匿名性保証**: 直接的なユーザー情報は保存しない
-3. **作成権限**: セッション作成者のみが自分のクイズを確認可能
-
-#### 実装上の考慮事項（QuizSession-Quiz）
-
-```typescript
-interface QuizSession {
-  readonly creatorId: CreatorId;
-  readonly deckId: DeckId;
-
-  // 作成者のクイズを取得（リポジトリ経由）
-  getCreatedQuizzes(quizRepository: QuizRepository): Promise<Quiz[]> {
-    return quizRepository.findByCreatorId(this.creatorId);
-  }
-
-  // 問題集のクイズを取得（Deck経由）
-  async getDeckQuizzes(
-    deckRepository: DeckRepository,
-    quizRepository: QuizRepository
-  ): Promise<Quiz[]> {
-    const deck = await deckRepository.findById(this.deckId);
-    if (!deck) return [];
-    
-    return quizRepository.findByIds(deck.quizIds);
-  }
-}
-```
+- 承認済みクイズのみ問題集に追加可能
+- 順序付きクイズ参照による出題順序管理
+- Quiz削除時の問題集からの自動除外処理
 
 ## 集約境界の候補
 

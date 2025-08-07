@@ -20,7 +20,7 @@ graph LR
     KGI[📊 KGI<br/>広告収益最大化<br/>¥/月] --> KPI1[👥 KPI-1<br/>ユーザー数<br/>人/月]
     KGI --> KPI2[⏱️ KPI-2<br/>広告露出時間<br/>分/ユーザー/月]
     KGI --> KPI3[💰 KPI-3<br/>広告単価効率<br/>¥/1000imp]
-    KGI --> KPI4[🎯 KPI-4<br/>ユーザー価値密度<br/>¥/ユーザー/月]
+    
     
     KPI1 --> KPI11[📈 KPI-1.1<br/>新規ユーザー獲得数<br/>人/月]
     KPI1 --> KPI12[🔄 KPI-1.2<br/>継続利用ユーザー数<br/>人/月]

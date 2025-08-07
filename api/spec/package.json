@@ -1,0 +1,26 @@
+{
+  "name": "quiz-api-spec",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "run-p build:*",
+    "build:db": "pnpm gen-database-schema",
+    "build:api": "run-s gen-openapi-schema gen-types",
+    "gen-database-schema": "dbml2sql database.dbml --dialect sqlite -o generated/db.raw.sql && printf 'PRAGMA foreign_keys = ON;\n\n' > generated/db.sql && cat generated/db.raw.sql >> generated/db.sql && rm generated/db.raw.sql",
+    "gen-openapi-schema": "tsp compile .",
+    "gen-types": "openapi-typescript ./generated/api.yaml --output ../src/types/generated/api.d.ts"
+  },
+  "dependencies": {
+    "@typespec/compiler": "1.2.1",
+    "@typespec/http": "1.2.1",
+    "@typespec/openapi": "1.2.1",
+    "@typespec/openapi3": "1.2.1",
+    "@typespec/rest": "0.72.1"
+  },
+  "devDependencies": {
+    "@dbml/cli": "^3.13.9",
+    "npm-run-all2": "^8.0.4",
+    "openapi-typescript": "^7.8.0"
+  }
+}

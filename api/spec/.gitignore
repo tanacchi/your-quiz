@@ -1,0 +1,9 @@
+# MacOS
+.DS_Store
+
+# Generated build artifacts
+generated/
+dist/
+
+# Dependency directories
+node_modules/

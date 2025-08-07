@@ -1,0 +1,230 @@
+// Quiz Application Database Schema
+// Generated from entity-relationship-analysis.md
+// Domain-Driven Design with polymorphic Solution/Answer patterns
+
+Table UserAccount {
+  id UserAccountId [pk]
+  name varchar(255) [not null, note: 'User display name']
+  email varchar(255) [null, note: 'Optional email for future features']
+  created_at timestamp [not null, default: `now()`]
+
+  Note: 'Deletable user account details. Can be removed while preserving content via UserIdentity.'
+}
+
+Table UserIdentity {
+  id UserId [pk]
+  anonymous_id varchar(255) [not null, unique, note: 'Browser-based anonymous identifier']
+  user_account_id UserAccountId [null, ref: > UserAccount.id, note: 'Optional link to account details']
+  created_at timestamp [not null, default: `now()`]
+
+  Note: 'Persistent anonymous user identity. Referenced by Quiz/Deck/Session for content ownership. Survives UserAccount deletion.'
+}
+
+Table Quiz {
+  id QuizId [pk]
+  question text [not null, note: 'Max 500 characters']
+  answer_type AnswerType [not null, note: 'Discriminator: boolean|free_text|single_choice|multiple_choice']
+  solution_id SolutionId [not null, note: 'Polymorphic reference to solution tables']
+  explanation text [null, note: 'Max 1000 characters, optional']
+  status QuizStatus [not null, default: 'pending_approval', note: 'pending_approval|approved|rejected']
+  creator_id UserId [not null, ref: > UserIdentity.id]
+  created_at timestamp [not null, default: `now()`]
+  approved_at timestamp [null, note: 'Set when status becomes approved']
+
+  Note: 'Quiz entity with polymorphic solution design. Only approved quizzes can be answered.'
+}
+
+Table BooleanSolution {
+  id SolutionId [pk]
+  value boolean [not null, note: 'True or false answer']
+
+  Note: 'Solution for boolean (○×) type quizzes'
+}
+
+Table FreeTextSolution {
+  id SolutionId [pk]
+  correct_answer text [not null, note: 'Expected text answer']
+  matching_strategy MatchingStrategy [not null, default: 'exact', note: 'exact|partial|regex']
+  case_sensitive boolean [not null, default: false]
+
+  Note: 'Solution for free text input quizzes'
+}
+
+Table SingleChoiceSolution {
+  id SolutionId [pk]
+  correct_choice_id ChoiceId [not null, ref: > Choice.id]
+
+  Note: 'Solution for single choice quizzes (4-choice questions etc.)'
+}
+
+Table MultipleChoiceSolution {
+  id SolutionId [pk]
+  correct_choice_ids ChoiceId[] [not null, note: 'Array of correct choice IDs']
+  min_correct_answers int [not null, default: 1, note: 'Minimum correct answers required']
+
+  Note: 'Solution for multiple choice quizzes'
+}
+
+Table Choice {
+  id ChoiceId [pk]
+  solution_id SolutionId [not null, note: 'References SingleChoice or MultipleChoice solution']
+  text varchar(500) [not null, note: 'Choice option text']
+  order_index int [not null, note: 'Display order within solution']
+
+  Note: 'Choice options for single/multiple choice solutions'
+}
+
+Table Tag {
+  id TagId [pk]
+  name varchar(100) [not null, unique]
+  type TagType [not null, note: 'official|user']
+  created_by UserId [null, ref: > UserIdentity.id, note: 'NULL for official tags']
+  created_at timestamp [not null, default: `now()`]
+
+  Note: 'Tags for quiz categorization. Official tags created by system, user tags by users.'
+}
+
+Table TagRelation {
+  id TagRelationId [pk]
+  parent_tag_id TagId [not null, ref: > Tag.id]
+  child_tag_id TagId [not null, ref: > Tag.id]
+  relation_type RelationType [not null, note: 'hierarchy|category|synonym|related']
+  created_at timestamp [not null, default: `now()`]
+
+  Note: 'N:M self-referencing tag relationships for hierarchies (food/ramen/tonkotsu-ramen)'
+}
+
+Table QuizTag {
+  id QuizTagId [pk]
+  quiz_id QuizId [not null, ref: > Quiz.id]
+  tag_id TagId [not null, ref: > Tag.id]
+  assigned_at timestamp [not null, default: `now()`]
+
+  Note: 'N:M relationship between Quiz and Tag'
+}
+
+Table Deck {
+  id DeckId [pk]
+  name varchar(200) [not null, note: 'Deck display name']
+  description text [null, note: 'Optional deck description']
+  quiz_ids QuizId[] [not null, note: 'Array of quiz IDs in order']
+  creator_id UserId [not null, ref: > UserIdentity.id]
+  created_at timestamp [not null, default: `now()`]
+  last_modified_at timestamp [not null, default: `now()`]
+
+  Note: 'Quiz collections created from search results or manual selection. Only approved quizzes allowed.'
+}
+
+Table QuizSession {
+  id SessionId [pk]
+  deck_id DeckId [not null, ref: > Deck.id, note: '1:N relationship - multiple sessions per deck']
+  creator_id UserId [not null, ref: > UserIdentity.id, note: 'Session owner for learning history']
+  device_fingerprint varchar(255) [not null, note: 'Browser-based device identification']
+  started_at timestamp [not null, default: `now()`]
+  completed_at timestamp [null, note: 'Set when session is completed']
+  is_completed boolean [not null, default: false]
+
+  Note: 'Learning session for a deck. Multiple sessions can use same deck for repeated learning.'
+}
+
+Table BooleanAnswer {
+  id AnswerId [pk]
+  value boolean [not null, note: 'User selected true/false']
+
+  Note: 'User answer for boolean (○×) type questions'
+}
+
+Table FreeTextAnswer {
+  id AnswerId [pk]
+  text text [not null, note: 'User input text']
+
+  Note: 'User answer for free text input questions'
+}
+
+Table SingleChoiceAnswer {
+  id AnswerId [pk]
+  selected_choice_id ChoiceId [not null, ref: > Choice.id, note: 'User selected choice']
+
+  Note: 'User answer for single choice questions'
+}
+
+Table MultipleChoiceAnswer {
+  id AnswerId [pk]
+  selected_choice_ids ChoiceId[] [not null, note: 'Array of user selected choice IDs']
+
+  Note: 'User answer for multiple choice questions'
+}
+
+Table Attempt {
+  id AttemptId [pk]
+  quiz_id QuizId [not null, ref: > Quiz.id]
+  session_id SessionId [not null, ref: > QuizSession.id]
+  user_id UserId [not null, ref: > UserIdentity.id, note: 'Answer submitter (may differ from session creator)']
+  answer_type AnswerType [not null, note: 'Discriminator matching Quiz.answer_type']
+  answer_id AnswerId [not null, note: 'Polymorphic reference to answer tables']
+  is_correct boolean [not null, note: 'Calculated by comparing Answer with Solution']
+  answered_at timestamp [not null, default: `now()`]
+
+  Note: 'User attempt with polymorphic answer design. Answer type must match Quiz answer type.'
+}
+
+// Enums
+Enum AnswerType {
+  boolean
+  free_text
+  single_choice
+  multiple_choice
+}
+
+Enum QuizStatus {
+  pending_approval
+  approved
+  rejected
+}
+
+Enum TagType {
+  official
+  user
+}
+
+Enum RelationType {
+  hierarchy
+  category
+  synonym
+  related
+}
+
+Enum MatchingStrategy {
+  exact
+  partial
+  regex
+}
+
+// Constraints and Indexes
+// Note: '''
+// Key Design Constraints:
+
+// 1. User Management Separation:
+//    - UserAccount can be deleted while preserving content via UserIdentity
+//    - All content references UserIdentity.id for ownership persistence
+
+// 2. Polymorphic Solution Design:
+//    - Quiz.answer_type + solution_id references appropriate solution table
+//    - Each solution type has optimized structure for validation
+
+// 3. Polymorphic Answer Design:
+//    - Attempt.answer_type + answer_id references appropriate answer table
+//    - Answer type must match corresponding Quiz.answer_type
+//    - Enables type-safe answer handling for all question types
+
+// 4. Data Integrity:
+//    - Only approved quizzes can be added to decks
+//    - Only approved quizzes can be answered
+//    - Quiz deletion preserves attempt history (orphaned attempts allowed)
+//    - UserAccount deletion preserves all user content
+
+// 5. Performance Considerations:
+//    - Index on Quiz.status + created_at for approved quiz listings
+//    - Index on Attempt.session_id + quiz_id for answer checking
+//    - Index on UserIdentity.anonymous_id for browser identification
+// '''
