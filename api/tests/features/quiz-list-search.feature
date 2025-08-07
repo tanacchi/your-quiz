@@ -1,54 +1,54 @@
-Feature: Quiz一覧検索
-  AnonymousUserとして
-  Quizコレクションを検索・Filterしたい
-  その結果、学習に役立つQuizを発見できるようにしたい
+Feature: Quiz List Search
+  As an AnonymousUser
+  I want to search and Filter Quiz collection
+  So that I can discover relevant Quiz for learning
 
-  シナリオアウトライン: ページネーション付きQuiz一覧取得
-    前提 APIサーバーに「<total_count>」件のサンプルQuizが存在する
-    もし AnonymousUser が「<pagination_params>」でQuiz一覧をリクエストした場合
-    ならば レスポンスにQuizListResponseが含まれること
-    かつ Items配列にQuizWithSolutionオブジェクトが含まれること
-    かつ ページネーションメタデータが「<expected_metadata>」を示すこと
+  Scenario Outline: Successful Quiz list retrieval with pagination
+    Given API server has "<total_count>" sample Quiz items
+    When AnonymousUser requests Quiz list with "<pagination_params>"
+    Then Response should contain QuizListResponse
+    And Items array should include QuizWithSolution objects
+    And Pagination metadata should show "<expected_metadata>"
 
-    例:
+    Examples:
       | total_count | pagination_params | expected_metadata           |
       | 5           | default           | totalCount:5, hasMore:false |
       | 25          | limit:10          | totalCount:25, hasMore:true |
       | 0           | default           | totalCount:0, hasMore:false |
 
-  シナリオアウトライン: Filter条件付きQuiz検索
-    前提 APIサーバーに様々なTag付きQuizコレクションが存在する
-    もし AnonymousUser が「<filter_criteria>」でFilterを適用した場合
-    ならば Filter後の結果が「<expected_results>」と一致すること
-    かつ レスポンス構造が一貫していること
+  Scenario Outline: Quiz search with Filter criteria
+    Given API server has Quiz collection with various Tags
+    When AnonymousUser applies Filter with "<filter_criteria>"
+    Then Filtered results should match "<expected_results>"
+    And Response structure should remain consistent
 
-    例:
+    Examples:
       | filter_criteria        | expected_results     |
       | tag:programming       | programming_related  |
       | status:approved       | only_approved_quiz   |
       | creator:specific_user | creator_filtered     |
 
-  シナリオアウトライン: 空検索結果シナリオ
-    前提 APIサーバーが起動している
-    もし AnonymousUser が「<search_filter>」でFilter検索した場合
-    ならば レスポンスは空のQuizListResponseを返すこと
-    かつ totalCountが「<expected_count>」であること
-    かつ hasMoreが「<has_more_flag>」であること
+  Scenario Outline: Empty search results scenarios
+    Given API server is running
+    When AnonymousUser searches with Filter "<search_filter>"
+    Then Response should return empty QuizListResponse
+    And totalCount should be "<expected_count>"
+    And hasMore should be "<has_more_flag>"
 
-    例:
+    Examples:
       | search_filter      | expected_count | has_more_flag |
       | nonexistent_tag    | 0              | false         |
       | invalid_creator    | 0              | false         |
       | rejected_status    | 0              | false         |
 
-  シナリオアウトライン: Quiz一覧スキーマ検証
-    前提 APIサーバーにサンプルQuizデータが存在する
-    もし AnonymousUser がQuiz一覧をリクエストした場合
-    ならば 各Quiz項目がQuizWithSolutionスキーマと一致すること
-    かつ Solutionオブジェクトが「<solution_fields>」を正しく持つこと
-    かつ 必須フィールドがすべて存在すること
+  Scenario Outline: Quiz list schema validation
+    Given API server has sample Quiz data
+    When AnonymousUser requests Quiz list
+    Then Each Quiz item should match QuizWithSolution schema
+    And Solution objects should have correct "<solution_fields>"
+    And All required fields should be present
 
-    例:
+    Examples:
       | solution_fields           |
       | boolean_solution_fields   |
       | text_solution_fields      |
