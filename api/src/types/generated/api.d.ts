@@ -4,6 +4,40 @@
  */
 
 export interface paths {
+  "/api/quiz/v1/manage/quality/flag": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Flag quiz for quality review */
+    post: operations["QuizManagement_flagQuiz"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/quiz/v1/manage/quality/report": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Get quality report */
+    get: operations["QuizManagement_getQualityReport"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/quiz/v1/manage/quizzes": {
     parameters: {
       query?: never;
@@ -11,9 +45,11 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get: operations["QuizManagement_list"];
+    /** @description List quizzes (with filters) */
+    get: operations["QuizManagement_listQuizzes"];
     put?: never;
-    post: operations["QuizManagement_create"];
+    /** @description Create a new quiz (pending approval) */
+    post: operations["QuizManagement_createQuiz"];
     delete?: never;
     options?: never;
     head?: never;
@@ -27,7 +63,95 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get: operations["QuizManagement_get"];
+    /** @description Get quiz details */
+    get: operations["QuizManagement_getQuiz"];
+    /** @description Update quiz (creator only, before approval) */
+    put: operations["QuizManagement_updateQuiz"];
+    post?: never;
+    /** @description Delete quiz (creator only) */
+    delete: operations["QuizManagement_deleteQuiz"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/quiz/v1/manage/quizzes/{id}/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Approve quiz (admin only) */
+    post: operations["QuizManagement_approveQuiz"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/quiz/v1/manage/quizzes/{id}/publish": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Publish approved quiz (admin only) */
+    post: operations["QuizManagement_publishQuiz"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/quiz/v1/manage/quizzes/{id}/reject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Reject quiz (admin only) */
+    post: operations["QuizManagement_rejectQuiz"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/quiz/v1/manage/quizzes/{id}/submit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Submit quiz for approval */
+    post: operations["QuizManagement_submitForApproval"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/quiz/v1/manage/statistics/creator/{creatorId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Get creator statistics */
+    get: operations["QuizManagement_getCreatorStatistics"];
     put?: never;
     post?: never;
     delete?: never;
@@ -40,30 +164,560 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    Answer:
+      | components["schemas"]["BooleanAnswer"]
+      | components["schemas"]["FreeTextAnswer"]
+      | components["schemas"]["SingleChoiceAnswer"]
+      | components["schemas"]["MultipleChoiceAnswer"];
+    AnswerId: string;
+    /** @enum {string} */
+    AnswerType: "boolean" | "free_text" | "single_choice" | "multiple_choice";
+    ApprovalRequest: {
+      /** @enum {string} */
+      decision: "approved" | "rejected";
+      reviewerNotes?: string;
+      /** @default true */
+      publishImmediately: boolean;
+    };
+    Attempt: {
+      id: components["schemas"]["AttemptId"];
+      quizId: components["schemas"]["QuizId"];
+      sessionId: components["schemas"]["SessionId"];
+      userId: components["schemas"]["UserId"];
+      answerType: components["schemas"]["AnswerType"];
+      answerId: components["schemas"]["AnswerId"];
+      isCorrect: boolean;
+      answeredAt: components["schemas"]["UtcDateTime"];
+    };
+    AttemptHistoryResponse: {
+      items: components["schemas"]["AttemptWithAnswer"][];
+      /** Format: int32 */
+      totalCount: number;
+      hasMore: boolean;
+      continuationToken?: string;
+    };
+    AttemptId: string;
+    AttemptStatistics: {
+      /** Format: int32 */
+      totalAttempts: number;
+      /** Format: int32 */
+      correctAttempts: number;
+      /** Format: int32 */
+      incorrectAttempts: number;
+      /** Format: float */
+      averageCorrectRate: number;
+      byAnswerType: Record<string, never>;
+      /** Format: int32 */
+      recentStreak: number;
+    };
+    AttemptWithAnswer: {
+      id: components["schemas"]["AttemptId"];
+      quizId: components["schemas"]["QuizId"];
+      sessionId: components["schemas"]["SessionId"];
+      userId: components["schemas"]["UserId"];
+      answerType: components["schemas"]["AnswerType"];
+      answerId: components["schemas"]["AnswerId"];
+      isCorrect: boolean;
+      answeredAt: components["schemas"]["UtcDateTime"];
+      answer: components["schemas"]["Answer"];
+    };
+    BooleanAnswer: {
+      /** @enum {string} */
+      type: "boolean";
+      id: components["schemas"]["AnswerId"];
+      value: boolean;
+    };
+    BooleanSolution: {
+      /** @enum {string} */
+      type: "boolean";
+      id: components["schemas"]["SolutionId"];
+      value: boolean;
+    };
+    Choice: {
+      id: components["schemas"]["ChoiceId"];
+      solutionId: components["schemas"]["SolutionId"];
+      text: string;
+      /** Format: int32 */
+      orderIndex: number;
+    };
+    ChoiceId: string;
+    ConflictError: {
+      /** @enum {number} */
+      code: 409;
+      /** @enum {string} */
+      message: "Resource conflict";
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
+    CreateDeckFromSearchRequest: {
+      searchQuery: string;
+      filters?: components["schemas"]["QuizSearchFilters"];
+      /**
+       * Format: int32
+       * @default 50
+       */
+      maxQuizzes: number;
+      name?: string;
+      description?: string;
+    };
+    CreateDeckRequest: {
+      name?: string;
+      description?: string;
+      quizIds: components["schemas"]["QuizId"][];
+      /** @enum {string} */
+      source: "manual_selection" | "search_result" | "wrong_questions";
+      sourceQuery?: string;
+      /**
+       * Format: int32
+       * @default 100
+       */
+      maxQuizzes: number;
+      /** @default false */
+      shuffleOrder: boolean;
+    };
+    CreateDeckResponse: {
+      deck: components["schemas"]["Deck"];
+      session?: components["schemas"]["QuizSession"];
+    };
     CreateQuizRequest: {
       question: string;
+      answerType: components["schemas"]["AnswerType"];
+      solution: components["schemas"]["Solution"];
+      explanation?: string;
+      tags?: string[];
+    };
+    CreateQuizResponse: {
+      quiz: components["schemas"]["Quiz"];
       /** @enum {string} */
-      answerType: "boolean" | "free_text" | "single_choice" | "multiple_choice";
+      status: "pending_approval";
+      estimatedApprovalDate?: components["schemas"]["UtcDateTime"];
+    };
+    CreateTagRelationRequest: {
+      parentTagId: components["schemas"]["TagId"];
+      childTagId: components["schemas"]["TagId"];
+      relationType: components["schemas"]["RelationType"];
+    };
+    CreateTagRequest: {
+      name: string;
+      /** @default user */
+      type: components["schemas"]["TagType"];
+      parentTagId?: components["schemas"]["TagId"];
+      /** @default hierarchy */
+      relationType: components["schemas"]["RelationType"];
+    };
+    CreateTagResponse: {
+      tag: components["schemas"]["Tag"];
+      relation?: components["schemas"]["TagRelation"];
+    };
+    CreateUserAccountRequest: {
+      name: string;
+      email?: string;
+    };
+    CreateUserAccountResponse: {
+      userAccount: components["schemas"]["UserAccount"];
+      userIdentity: components["schemas"]["UserIdentity"];
+    };
+    Deck: {
+      id: components["schemas"]["DeckId"];
+      name: string;
+      description?: string;
+      quizIds: components["schemas"]["QuizId"][];
+      creatorId: components["schemas"]["UserId"];
+      createdAt: components["schemas"]["UtcDateTime"];
+      lastModifiedAt: components["schemas"]["UtcDateTime"];
+    };
+    DeckId: string;
+    DeckListResponse: {
+      items: components["schemas"]["DeckWithQuizzes"][];
+      /** Format: int32 */
+      totalCount: number;
+      hasMore: boolean;
+      continuationToken?: string;
+    };
+    DeckWithQuizzes: {
+      id: components["schemas"]["DeckId"];
+      name: string;
+      description?: string;
+      quizIds: components["schemas"]["QuizId"][];
+      creatorId: components["schemas"]["UserId"];
+      createdAt: components["schemas"]["UtcDateTime"];
+      lastModifiedAt: components["schemas"]["UtcDateTime"];
+      quizzes: components["schemas"]["QuizWithSolution"][];
+      /** Format: int32 */
+      totalQuizzes: number;
     };
     ErrorResponse: {
+      /** Format: int32 */
+      code: number;
       message: string;
-      code: string;
+      details?: string;
+      requestId?: string;
+    };
+    ForbiddenError: {
+      /** @enum {number} */
+      code: 403;
+      /** @enum {string} */
+      message: "Forbidden operation";
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
+    FreeTextAnswer: {
+      /** @enum {string} */
+      type: "free_text";
+      id: components["schemas"]["AnswerId"];
+      text: string;
+    };
+    FreeTextSolution: {
+      /** @enum {string} */
+      type: "free_text";
+      id: components["schemas"]["SolutionId"];
+      correctAnswer: string;
+      /** @default exact */
+      matchingStrategy: components["schemas"]["MatchingStrategy"];
+      /** @default false */
+      caseSensitive: boolean;
+    };
+    InternalServerError: {
+      /** @enum {number} */
+      code: 500;
+      /** @enum {string} */
+      message: "Internal server error";
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
+    /** @enum {string} */
+    MatchingStrategy: "exact" | "partial" | "regex";
+    MultipleChoiceAnswer: {
+      /** @enum {string} */
+      type: "multiple_choice";
+      id: components["schemas"]["AnswerId"];
+      selectedChoiceIds: components["schemas"]["ChoiceId"][];
+    };
+    MultipleChoiceSolution: {
+      /** @enum {string} */
+      type: "multiple_choice";
+      id: components["schemas"]["SolutionId"];
+      correctChoiceIds: components["schemas"]["ChoiceId"][];
+      /**
+       * Format: int32
+       * @default 1
+       */
+      minCorrectAnswers: number;
+      choices: components["schemas"]["Choice"][];
+    };
+    NotFoundError: {
+      /** @enum {number} */
+      code: 404;
+      /** @enum {string} */
+      message: "Resource not found";
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
+    PaginationRequest: {
+      /**
+       * Format: int32
+       * @default 20
+       */
+      limit: number;
+      /**
+       * Format: int32
+       * @default 0
+       */
+      offset: number;
+      continuationToken?: string;
     };
     Quiz: {
-      id: string;
+      id: components["schemas"]["QuizId"];
       question: string;
-      /** @enum {string} */
-      answerType: "boolean" | "free_text" | "single_choice" | "multiple_choice";
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
+      answerType: components["schemas"]["AnswerType"];
+      solutionId: components["schemas"]["SolutionId"];
+      explanation?: string;
+      status: components["schemas"]["QuizStatus"];
+      creatorId: components["schemas"]["UserId"];
+      createdAt: components["schemas"]["UtcDateTime"];
+      approvedAt?: components["schemas"]["UtcDateTime"];
     };
+    QuizId: string;
     QuizListResponse: {
-      quizzes: components["schemas"]["Quiz"][];
+      items: components["schemas"]["QuizWithSolution"][];
       /** Format: int32 */
-      total: number;
+      totalCount: number;
+      hasMore: boolean;
+      continuationToken?: string;
     };
+    QuizSearchFilters: {
+      tags?: string[];
+      difficulty?: string;
+      answerType?: components["schemas"]["AnswerType"];
+      /** @default approved */
+      status: components["schemas"]["QuizStatus"];
+      creatorId?: components["schemas"]["UserId"];
+    };
+    QuizSession: {
+      id: components["schemas"]["SessionId"];
+      deckId: components["schemas"]["DeckId"];
+      creatorId: components["schemas"]["UserId"];
+      deviceFingerprint: string;
+      startedAt: components["schemas"]["UtcDateTime"];
+      completedAt?: components["schemas"]["UtcDateTime"];
+      /** @default false */
+      isCompleted: boolean;
+    };
+    QuizSessionWithProgress: {
+      id: components["schemas"]["SessionId"];
+      deckId: components["schemas"]["DeckId"];
+      creatorId: components["schemas"]["UserId"];
+      deviceFingerprint: string;
+      startedAt: components["schemas"]["UtcDateTime"];
+      completedAt?: components["schemas"]["UtcDateTime"];
+      /** @default false */
+      isCompleted: boolean;
+      deck: components["schemas"]["Deck"];
+      progress: components["schemas"]["SessionProgress"];
+    };
+    /** @enum {string} */
+    QuizStatus: "pending_approval" | "approved" | "rejected";
+    QuizTag: {
+      id: components["schemas"]["QuizTagId"];
+      quizId: components["schemas"]["QuizId"];
+      tagId: components["schemas"]["TagId"];
+      assignedAt: components["schemas"]["UtcDateTime"];
+    };
+    QuizTagId: string;
+    QuizWithSolution: {
+      id: components["schemas"]["QuizId"];
+      question: string;
+      answerType: components["schemas"]["AnswerType"];
+      solutionId: components["schemas"]["SolutionId"];
+      explanation?: string;
+      status: components["schemas"]["QuizStatus"];
+      creatorId: components["schemas"]["UserId"];
+      createdAt: components["schemas"]["UtcDateTime"];
+      approvedAt?: components["schemas"]["UtcDateTime"];
+      solution: components["schemas"]["Solution"];
+      tags?: string[];
+    };
+    RateLimitError: {
+      /** @enum {number} */
+      code: 429;
+      /** @enum {string} */
+      message: "Rate limit exceeded";
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
+    /** @enum {string} */
+    RelationType: "hierarchy" | "category" | "synonym" | "related";
+    SessionId: string;
+    SessionListResponse: {
+      items: components["schemas"]["QuizSessionWithProgress"][];
+      /** Format: int32 */
+      totalCount: number;
+      hasMore: boolean;
+      continuationToken?: string;
+    };
+    SessionProgress: {
+      /** Format: int32 */
+      totalQuizzes: number;
+      /** Format: int32 */
+      answeredQuizzes: number;
+      /** Format: int32 */
+      correctAnswers: number;
+      /** Format: int32 */
+      incorrectAnswers: number;
+      /** Format: float */
+      progressPercentage: number;
+      /** Format: int32 */
+      currentQuizIndex?: number;
+      nextQuizId?: components["schemas"]["QuizId"];
+    };
+    SingleChoiceAnswer: {
+      /** @enum {string} */
+      type: "single_choice";
+      id: components["schemas"]["AnswerId"];
+      selectedChoiceId: components["schemas"]["ChoiceId"];
+    };
+    SingleChoiceSolution: {
+      /** @enum {string} */
+      type: "single_choice";
+      id: components["schemas"]["SolutionId"];
+      correctChoiceId: components["schemas"]["ChoiceId"];
+      choices: components["schemas"]["Choice"][];
+    };
+    Solution:
+      | components["schemas"]["BooleanSolution"]
+      | components["schemas"]["FreeTextSolution"]
+      | components["schemas"]["SingleChoiceSolution"]
+      | components["schemas"]["MultipleChoiceSolution"];
+    SolutionId: string;
+    StartSessionRequest: {
+      deckId: components["schemas"]["DeckId"];
+      deviceFingerprint: string;
+      /** @default false */
+      shuffleQuizzes: boolean;
+    };
+    StartSessionResponse: {
+      session: components["schemas"]["QuizSessionWithProgress"];
+      firstQuiz?: components["schemas"]["QuizWithSolution"];
+    };
+    SubmitAnswerRequest: {
+      sessionId: components["schemas"]["SessionId"];
+      quizId: components["schemas"]["QuizId"];
+      answer: components["schemas"]["Answer"];
+    };
+    SubmitAnswerResponse: {
+      attempt: components["schemas"]["AttemptWithAnswer"];
+      isCorrect: boolean;
+      explanation?: string;
+      correctAnswer: components["schemas"]["Answer"];
+    };
+    Tag: {
+      id: components["schemas"]["TagId"];
+      name: string;
+      type: components["schemas"]["TagType"];
+      createdBy?: components["schemas"]["UserId"];
+      createdAt: components["schemas"]["UtcDateTime"];
+    };
+    TagHierarchy: {
+      tag: components["schemas"]["Tag"];
+      ancestors: components["schemas"]["Tag"][];
+      descendants: components["schemas"]["Tag"][];
+      /** Format: int32 */
+      level: number;
+    };
+    TagHierarchyResponse: {
+      items: components["schemas"]["TagHierarchy"][];
+      /** Format: int32 */
+      totalCount: number;
+      hasMore: boolean;
+      continuationToken?: string;
+    };
+    TagId: string;
+    TagListResponse: {
+      items: components["schemas"]["TagWithChildren"][];
+      /** Format: int32 */
+      totalCount: number;
+      hasMore: boolean;
+      continuationToken?: string;
+    };
+    TagRelation: {
+      id: components["schemas"]["TagRelationId"];
+      parentTagId: components["schemas"]["TagId"];
+      childTagId: components["schemas"]["TagId"];
+      relationType: components["schemas"]["RelationType"];
+      createdAt: components["schemas"]["UtcDateTime"];
+    };
+    TagRelationId: string;
+    TagSearchRequest: {
+      query?: string;
+      type?: components["schemas"]["TagType"];
+      parentTagId?: components["schemas"]["TagId"];
+      /** @default false */
+      includeHierarchy: boolean;
+    };
+    TagStatisticsResponse: {
+      items: components["schemas"]["TagUsageStatistics"][];
+      /** Format: int32 */
+      totalCount: number;
+      hasMore: boolean;
+      continuationToken?: string;
+    };
+    /** @enum {string} */
+    TagType: "official" | "user";
+    TagUsageStatistics: {
+      tag: components["schemas"]["Tag"];
+      /** Format: int32 */
+      quizCount: number;
+      /** Format: float */
+      popularityScore: number;
+      /** Format: int32 */
+      recentUsage: number;
+    };
+    TagWithChildren: {
+      id: components["schemas"]["TagId"];
+      name: string;
+      type: components["schemas"]["TagType"];
+      createdBy?: components["schemas"]["UserId"];
+      createdAt: components["schemas"]["UtcDateTime"];
+      children: components["schemas"]["Tag"][];
+      /** Format: int32 */
+      childrenCount: number;
+    };
+    TagWithParents: {
+      id: components["schemas"]["TagId"];
+      name: string;
+      type: components["schemas"]["TagType"];
+      createdBy?: components["schemas"]["UserId"];
+      createdAt: components["schemas"]["UtcDateTime"];
+      parents: components["schemas"]["Tag"][];
+      /** Format: int32 */
+      parentsCount: number;
+    };
+    UnauthorizedError: {
+      /** @enum {number} */
+      code: 401;
+      /** @enum {string} */
+      message: "Unauthorized access";
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
+    UpdateQuizRequest: {
+      question?: string;
+      explanation?: string;
+      tags?: string[];
+    };
+    UpdateSessionRequest: {
+      isCompleted?: boolean;
+    };
+    UpdateTagRequest: {
+      name?: string;
+    };
+    UpdateUserAccountRequest: {
+      name?: string;
+      email?: string;
+    };
+    UserAccount: {
+      id: components["schemas"]["UserAccountId"];
+      name: string;
+      email?: string;
+      createdAt: components["schemas"]["UtcDateTime"];
+    };
+    UserAccountId: string;
+    UserId: string;
+    UserIdentity: {
+      id: components["schemas"]["UserId"];
+      anonymousId: string;
+      userAccountId?: components["schemas"]["UserAccountId"];
+      createdAt: components["schemas"]["UtcDateTime"];
+    };
+    UserProfileResponse: {
+      userAccount?: components["schemas"]["UserAccount"];
+      userIdentity: components["schemas"]["UserIdentity"];
+      statistics: components["schemas"]["UserStatistics"];
+    };
+    UserStatistics: {
+      /** Format: int32 */
+      totalQuizzes: number;
+      /** Format: int32 */
+      totalAttempts: number;
+      /** Format: int32 */
+      correctAnswers: number;
+      /** Format: float */
+      averageCorrectRate: number;
+      /** Format: int32 */
+      streak: number;
+    };
+    UtcDateTime: string;
+    ValidationError: {
+      /** @enum {number} */
+      code: 400;
+      fieldErrors?: Record<string, never>;
+    } & WithRequired<components["schemas"]["ErrorResponse"], "code">;
   };
   responses: never;
   parameters: never;
@@ -73,14 +727,28 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  QuizManagement_list: {
+  QuizManagement_flagQuiz: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody: {
+      content: {
+        "application/json": {
+          quizId: components["schemas"]["QuizId"];
+          /** @enum {string} */
+          reason:
+            | "spam"
+            | "inappropriate"
+            | "incorrect"
+            | "duplicate"
+            | "other";
+          description?: string;
+        };
+      };
+    };
     responses: {
       /** @description The request has succeeded. */
       200: {
@@ -88,14 +756,93 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          "application/json": {
+            flagId: string;
+            /** @enum {string} */
+            status: "pending_review";
+          };
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
           "application/json":
-            | components["schemas"]["QuizListResponse"]
-            | components["schemas"]["ErrorResponse"];
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ValidationError"];
         };
       };
     };
   };
-  QuizManagement_create: {
+  QuizManagement_getQualityReport: {
+    parameters: {
+      query?: {
+        period?: "day" | "week" | "month";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PaginationRequest"];
+      };
+    };
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: {
+              quizId: components["schemas"]["QuizId"];
+              /** Format: float */
+              qualityScore: number;
+              issues: string[];
+              recommendations: string[];
+            }[];
+            /** Format: int32 */
+            totalCount: number;
+            hasMore: boolean;
+            continuationToken?: string;
+          };
+        };
+      };
+    };
+  };
+  QuizManagement_listQuizzes: {
+    parameters: {
+      query?: {
+        status?: components["schemas"]["QuizStatus"];
+        creatorId?: components["schemas"]["UserId"];
+        tags?: string[];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PaginationRequest"];
+      };
+    };
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuizListResponse"];
+        };
+      };
+    };
+  };
+  QuizManagement_createQuiz: {
     parameters: {
       query?: never;
       header?: never;
@@ -114,19 +861,28 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          "application/json": components["schemas"]["CreateQuizResponse"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
           "application/json":
-            | components["schemas"]["Quiz"]
-            | components["schemas"]["ErrorResponse"];
+            | components["schemas"]["ValidationError"]
+            | components["schemas"]["RateLimitError"];
         };
       };
     };
   };
-  QuizManagement_get: {
+  QuizManagement_getQuiz: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        id: string;
+        id: components["schemas"]["QuizId"];
       };
       cookie?: never;
     };
@@ -138,11 +894,283 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          "application/json": components["schemas"]["QuizWithSolution"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFoundError"];
+        };
+      };
+    };
+  };
+  QuizManagement_updateQuiz: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateQuizRequest"];
+      };
+    };
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuizWithSolution"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
           "application/json":
-            | components["schemas"]["Quiz"]
-            | components["schemas"]["ErrorResponse"];
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"]
+            | components["schemas"]["ValidationError"];
+        };
+      };
+    };
+  };
+  QuizManagement_deleteQuiz: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description There is no content to send for this request, but the headers may be useful.  */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"];
+        };
+      };
+    };
+  };
+  QuizManagement_approveQuiz: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApprovalRequest"];
+      };
+    };
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Quiz"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"];
+        };
+      };
+    };
+  };
+  QuizManagement_publishQuiz: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Quiz"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"]
+            | components["schemas"]["ConflictError"];
+        };
+      };
+    };
+  };
+  QuizManagement_rejectQuiz: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApprovalRequest"];
+      };
+    };
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Quiz"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"];
+        };
+      };
+    };
+  };
+  QuizManagement_submitForApproval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            quiz: components["schemas"]["Quiz"];
+            /** @enum {string} */
+            status: "pending_approval";
+            estimatedApprovalDate?: components["schemas"]["UtcDateTime"];
+          };
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"]
+            | components["schemas"]["ConflictError"];
+        };
+      };
+    };
+  };
+  QuizManagement_getCreatorStatistics: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        creatorId: components["schemas"]["UserId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: int32 */
+            totalQuizzes: number;
+            /** Format: int32 */
+            publishedQuizzes: number;
+            /** Format: int32 */
+            totalAnswers: number;
+            /** Format: float */
+            averageCorrectRate: number;
+            /** Format: float */
+            popularityScore: number;
+            /** Format: float */
+            qualityScore: number;
+            tagDistribution: Record<string, never>;
+            difficultyDistribution: Record<string, never>;
+          };
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFoundError"];
         };
       };
     };
   };
 }
+type WithRequired<T, K extends keyof T> = T & {
+  [P in K]-?: T[P];
+};

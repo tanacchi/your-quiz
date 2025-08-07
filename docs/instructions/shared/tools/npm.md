@@ -74,6 +74,14 @@ pnpm lint          # Lint実行
 pnpm format        # フォーマット実行
 ```
 
+#### 利用可能なスクリプト一覧 📋
+
+このプロジェクトで使用可能な全てのpnpm scriptsについては、以下のドキュメントを参照してください：
+
+- [pnpm Scripts一覧](../../project/pnpm-scripts.md)
+
+**重要**: npm scriptを追加・変更・削除した場合は、上記ドキュメントを必ず更新してください。
+
 ### 情報確認
 
 ```bash

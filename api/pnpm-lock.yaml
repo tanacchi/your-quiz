@@ -8,15 +8,12 @@ importers:
 
   .:
     dependencies:
-      '@hono/zod-validator':
-        specifier: ^0.7.2
-        version: 0.7.2(hono@4.8.10)(zod@4.0.14)
       hono:
         specifier: ^4.8.10
         version: 4.8.10
-      openapi-ts-router:
-        specifier: ^0.3.3
-        version: 0.3.3
+      neverthrow:
+        specifier: ^8.2.0
+        version: 8.2.0
       zod:
         specifier: ^4.0.14
         version: 4.0.14
@@ -402,12 +399,6 @@ packages:
     resolution: {integrity: sha512-ruv7Ae4J5dUYULmeXw1gmb7rYRz57OWCPM57pHojnLq/3Z1CK2lNSLTCVjxVk1F/TZHwOZZrOWi0ur95BbLxNQ==}
     engines: {node: '>=6.9.0'}
 
-  '@blgc/types@0.0.18':
-    resolution: {integrity: sha512-H14LU9eZBEqNqWtGz7fufBPD8gDnrmDRXu7X75A6MPGmokm0uyFxlxNEqv7hNfNT/4HdWkwsbAy8Dj9uOZYIeA==}
-
-  '@blgc/utils@0.0.58':
-    resolution: {integrity: sha512-TXZhyhl9jWsFVX6G7HDumiCfDgQ7ZmXWWpnuMsD6jiHAYA1qM8Jcf7+A5iNbfbDu6Tpczu3FjFEecjOqUjevaQ==}
-
   '@cloudflare/kv-asset-handler@0.4.0':
     resolution: {integrity: sha512-+tv3z+SPp+gqTIcImN9o0hqE9xyfQjI1XD9pL6NuKjua9B1y7mNYv0S9cP+QEbA4ppVgGZEmKOvHX5G5Ei1CVA==}
     engines: {node: '>=18.0.0'}
@@ -697,12 +688,6 @@ packages:
   '@google-cloud/storage@7.16.0':
     resolution: {integrity: sha512-7/5LRgykyOfQENcm6hDKP8SX/u9XxE5YOiWOkgkwcoO+cG8xT/cyOvp9wwN3IxfdYgpHs8CE7Nq2PKX2lNaEXw==}
     engines: {node: '>=14'}
-
-  '@hono/zod-validator@0.7.2':
-    resolution: {integrity: sha512-ub5eL/NeZ4eLZawu78JpW/J+dugDAYhwqUIdp9KYScI6PZECij4Hx4UsrthlEUutqDDhPwRI0MscUfNkvn/mqQ==}
-    peerDependencies:
-      hono: '>=3.9.0'
-      zod: ^3.25.0 || ^4.0.0
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1014,6 +999,11 @@ packages:
   '@redocly/openapi-core@1.34.5':
     resolution: {integrity: sha512-0EbE8LRbkogtcCXU7liAyC00n9uNG9hJ+eMyHFdUsy9lB/WGqnEBgwjA9q2cyzAVcdTkQqTBBU1XePNnN3OijA==}
     engines: {node: '>=18.17.0', npm: '>=9.5.0'}
+
+  '@rollup/rollup-linux-x64-gnu@4.46.2':
+    resolution: {integrity: sha512-Jj5a9RUoe5ra+MEyERkDKLwTXVu6s3aACP51nkfnK9wJTraCC8IMe3snOfALkrjTYd2G1ViE1hICj0fZ7ALBPA==}
+    cpu: [x64]
+    os: [linux]
 
   '@sindresorhus/is@7.0.2':
     resolution: {integrity: sha512-d9xRovfKNz1SKieM0qJdO+PQonjnnIfSNWfHYnBSJ9hkjm0ZPw6HlxscDXYstp3z+7V2GOFHc+J0CYrYTjqCJw==}
@@ -2505,6 +2495,10 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
+  neverthrow@8.2.0:
+    resolution: {integrity: sha512-kOCT/1MCPAxY5iUV3wytNFUMUolzuwd/VF/1KCx7kf6CutrOsTie+84zTGTpgQycjvfLdBBdvBvFLqFD2c0wkQ==}
+    engines: {node: '>=18'}
+
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
@@ -2558,9 +2552,6 @@ packages:
   open@7.4.2:
     resolution: {integrity: sha512-MVHddDVweXZF3awtlAS+6pgKLlm/JgxZ90+/NBurBoQctVOOB/zDdVjcyPzQ+0laDGbsWgrRkflI65sQeOgT9Q==}
     engines: {node: '>=8'}
-
-  openapi-ts-router@0.3.3:
-    resolution: {integrity: sha512-hTM5NIZ5Ua3yUHuRkqzPx5MLjxGMUBuj4bOJGbhFqjbTtwz2z9MSqP1DGHiVpT6LCb9m4dmos9rst45qirKqug==}
 
   openapi-types@12.1.3:
     resolution: {integrity: sha512-N4YtSYJqghVu4iek2ZUvcN/0aqH1kRDuNqzcycDxhOUpg7GdvLa2F3DgS6yBNhInhv2r/6I0Flkn7CqL8+nIcw==}
@@ -3037,9 +3028,6 @@ packages:
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
-
-  validation-adapter@0.0.24:
-    resolution: {integrity: sha512-RnTKwFs+9kg1iw5NBkQZFkcLZ+F4Thj8Qww9xlpwM5230DzTPyW6Nf8jQUb2siBU4hQs76rO6ysQDwwm8eBMtQ==}
 
   vscode-jsonrpc@8.2.0:
     resolution: {integrity: sha512-C+r0eKJUIfiDIfwJhria30+TYWPtuHJXHtI7J0YlOmKAo7ogxP20T0zxB7HZQIFhIyvoBPwWskjxrvAtfjyZfA==}
@@ -4005,10 +3993,6 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
 
-  '@blgc/types@0.0.18': {}
-
-  '@blgc/utils@0.0.58': {}
-
   '@cloudflare/kv-asset-handler@0.4.0':
     dependencies:
       mime: 3.0.0
@@ -4290,11 +4274,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-
-  '@hono/zod-validator@0.7.2(hono@4.8.10)(zod@4.0.14)':
-    dependencies:
-      hono: 4.8.10
-      zod: 4.0.14
 
   '@humanfs/core@0.19.1': {}
 
@@ -4586,6 +4565,9 @@ snapshots:
       yaml-ast-parser: 0.0.43
     transitivePeerDependencies:
       - supports-color
+
+  '@rollup/rollup-linux-x64-gnu@4.46.2':
+    optional: true
 
   '@sindresorhus/is@7.0.2': {}
 
@@ -6265,6 +6247,10 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
+  neverthrow@8.2.0:
+    optionalDependencies:
+      '@rollup/rollup-linux-x64-gnu': 4.46.2
+
   node-domexception@1.0.0: {}
 
   node-fetch@2.7.0:
@@ -6318,11 +6304,6 @@ snapshots:
     dependencies:
       is-docker: 2.2.1
       is-wsl: 2.2.0
-
-  openapi-ts-router@0.3.3:
-    dependencies:
-      '@blgc/types': 0.0.18
-      validation-adapter: 0.0.24
 
   openapi-types@12.1.3: {}
 
@@ -6802,10 +6783,6 @@ snapshots:
   uuid@8.3.2: {}
 
   uuid@9.0.1: {}
-
-  validation-adapter@0.0.24:
-    dependencies:
-      '@blgc/utils': 0.0.58
 
   vscode-jsonrpc@8.2.0: {}
 

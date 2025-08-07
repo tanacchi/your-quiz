@@ -1,8 +1,8 @@
 # MacOS
 .DS_Store
 
-# Default TypeSpec output
-tsp-output/
+# Generated build artifacts
+generated/
 dist/
 
 # Dependency directories

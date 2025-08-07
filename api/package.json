@@ -9,9 +9,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hono/zod-validator": "^0.7.2",
     "hono": "^4.8.10",
-    "openapi-ts-router": "^0.3.3",
+    "neverthrow": "^8.2.0",
     "zod": "^4.0.14"
   },
   "devDependencies": {
