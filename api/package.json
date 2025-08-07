@@ -2,11 +2,14 @@
   "name": "api",
   "type": "module",
   "scripts": {
+    "build": "run-p gen-schema typecheck",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "gen-schema": "pnpm --filter quiz-api-spec build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:bdd": "cucumber-js",
+    "test:bdd:watch": "cucumber-js --watch"
   },
   "dependencies": {
     "hono": "^4.8.10",
@@ -14,6 +17,11 @@
     "zod": "^4.0.14"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^10.0.0",
+    "@tsconfig/strictest": "^2.0.5",
+    "@types/node": "^20.0.0",
+    "npm-run-all2": "^8.0.4",
+    "tsx": "^4.7.0",
     "typescript": "^5.9.2",
     "wrangler": "^4.27.0"
   }
