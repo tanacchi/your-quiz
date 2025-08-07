@@ -11,6 +11,7 @@ Your QuizプロジェクトにおけるAPI実装のための包括的なガイ�
 プロジェクト固有のAPI実装標準を定義しています。
 
 **主な内容**：
+
 - 必須技術スタック（Hono, neverthrow, Zod, TypeScript）
 - 実装パターン（スキーマファースト、エラーハンドリング、バリデーション）
 - 型アサーションのルール
@@ -24,6 +25,7 @@ Your QuizプロジェクトにおけるAPI実装のための包括的なガイ�
 具体的なコード例を通じて実装パターンを示しています。
 
 **主な内容**：
+
 - CRUD操作の完全なサンプル（GET, POST, PUT, DELETE）
 - 高度な実装パターン（クエリパラメータ、複合バリデーション、非同期処理）
 - エラーハンドリングのベストプラクティス
@@ -37,6 +39,7 @@ Your QuizプロジェクトにおけるAPI実装のための包括的なガイ�
 採用ライブラリの正しい使用方法と禁止パターンを説明しています。
 
 **主な内容**：
+
 - 採用ライブラリ一覧（Hono, neverthrow, Zod, TypeScript）
 - 各ライブラリのベストプラクティス
 - 禁止パターンと代替案
@@ -57,17 +60,20 @@ Your QuizプロジェクトにおけるAPI実装のための包括的なガイ�
 ## 技術スタック概要
 
 ### Core Stack
+
 - **API Framework**: Hono `^4.8.10`
-- **Error Handling**: neverthrow `^8.2.0` 
+- **Error Handling**: neverthrow `^8.2.0`
 - **Validation**: Zod `^4.0.14`
 - **Language**: TypeScript `^5.9.2`
 
 ### Infrastructure
+
 - **Runtime**: Cloudflare Workers
 - **Database**: SQLite (D1 Database)
 - **Schema Management**: TypeSpec + openapi-typescript
 
 ### Development Tools
+
 - **Testing**: Vitest
 - **Linting**: Biome
 - **Build**: Wrangler
@@ -75,15 +81,19 @@ Your QuizプロジェクトにおけるAPI実装のための包括的なガイ�
 ## プロジェクト固有の特徴
 
 ### 1. TypeSpec Schema-First開発
+
 すべてのAPIはTypeSpecでスキーマ定義してから実装します。
 
 ### 2. neverthrow必須エラーハンドリング
+
 `try-catch`は禁止で、`Result`型による関数型エラーハンドリングを採用しています。
 
 ### 3. 型安全性の最大化
+
 `as any`は禁止で、TypeScriptの型システムを最大限活用します。
 
 ### 4. Cloudflare Workers最適化
+
 エッジ実行環境に最適化された実装パターンを採用しています。
 
 ## 品質基準

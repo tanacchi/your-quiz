@@ -13,6 +13,7 @@ Your Quizプロジェクトで採用しているライブラリの正しい使�
 **採用理由**: Cloudflare Workers最適化、TypeScript First、軽量性、高パフォーマンス
 
 **基本使用法**:
+
 ```typescript
 import { Hono, type Context } from "hono";
 
@@ -30,11 +31,13 @@ type AppContext = Context<{ Bindings: CloudflareBindings }>;
 ```
 
 **ベストプラクティス**:
+
 - 型安全性のためのContext型の使用
 - ミドルウェアの適切な設定
 - エラーハンドリングの統一
 
 **禁止パターン**:
+
 ```typescript
 // ❌ 型なしの使用
 const app = new Hono();
@@ -50,6 +53,7 @@ app.use("/*", someBrokenMiddleware);
 **採用理由**: TypeScript環境での型安全なResult型、関数型エラーハンドリング
 
 **基本使用法**:
+
 ```typescript
 import { Result, ok, err } from "neverthrow";
 
@@ -72,6 +76,7 @@ console.log(result.value);
 ```
 
 **推奨パターン**:
+
 ```typescript
 // ✅ 非同期処理での使用
 const fetchData = async (): Promise<Result<Data, string>> => {
@@ -93,6 +98,7 @@ const processData = (input: string): Result<ProcessedData, string> => {
 ```
 
 **禁止パターン**:
+
 ```typescript
 // ❌ try-catchの直接使用（neverthrow使用時）
 try {
@@ -117,6 +123,7 @@ const badFunction = () => {
 **採用理由**: TypeScript統合、ランタイム型検証、豊富な検証機能
 
 **基本使用法**:
+
 ```typescript
 import { z } from "zod";
 
@@ -141,6 +148,7 @@ if (result.success) {
 ```
 
 **推奨パターン**:
+
 ```typescript
 // ✅ TypeSpecとの整合性確保
 const createQuizSchema = z.object({
@@ -168,6 +176,7 @@ const quizSchema = z.object({
 ```
 
 **禁止パターン**:
+
 ```typescript
 // ❌ TypeSpecとの不整合
 const badSchema = z.object({
@@ -185,6 +194,7 @@ const data = schema.parse(input); // throwする可能性
 **採用理由**: 型安全性、最新機能、開発体験向上
 
 **推奨設定**:
+
 ```json
 // tsconfig.json
 {
@@ -200,6 +210,7 @@ const data = schema.parse(input); // throwする可能性
 ```
 
 **ベストプラクティス**:
+
 ```typescript
 // ✅ 適切な型定義
 interface ApiHandler<T = unknown> {
@@ -225,6 +236,7 @@ const createRepository = <T>(schema: z.ZodSchema<T>) => ({
 **バージョン**: `^4.27.0`
 
 **基本コマンド**:
+
 ```bash
 # 開発サーバー起動
 pnpm dev
@@ -237,6 +249,7 @@ pnpm cf-typegen
 ```
 
 **設定ファイル例**:
+
 ```toml
 # wrangler.toml
 name = "your-quiz-api"
@@ -259,6 +272,7 @@ database_id = "xxx"
 **採用理由**: Vite統合、高速、TypeScript対応
 
 **基本使用法**:
+
 ```typescript
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Hono } from "hono";
@@ -293,6 +307,7 @@ describe("API Tests", () => {
 **採用理由**: 高速、TypeScript最適化、設定の単純化
 
 **基本設定**:
+
 ```json
 // biome.json
 {
@@ -384,6 +399,7 @@ const omit = <T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
    - 破壊的変更の確認
 
 2. **依存関係の競合チェック**
+
    ```bash
    pnpm list --depth=0
    pnpm audit
