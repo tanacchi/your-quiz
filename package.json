@@ -8,6 +8,9 @@
     "npm-run-all2": "^8.0.4"
   },
   "scripts": {
+    "build": "run-p build:*",
+    "build:api": "pnpm --filter api build",
+    "build:ui": "pnpm --filter ui build",
     "dev": "run-p dev:*",
     "dev:api": "pnpm --filter api dev",
     "dev:ui": "pnpm --filter ui dev",
