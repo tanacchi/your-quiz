@@ -11,6 +11,48 @@ type AppContext = Context<{ Bindings: CloudflareBindings }>;
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
 // TypeSpec由来の型を活用したZodスキーマ定義
+const solutionSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("boolean"),
+    id: z.string(),
+    value: z.boolean(),
+  }),
+  z.object({
+    type: z.literal("free_text"),
+    id: z.string(),
+    correctAnswer: z.string(),
+    matchingStrategy: z.enum(["exact", "partial", "regex"]).default("exact"),
+    caseSensitive: z.boolean().default(false),
+  }),
+  z.object({
+    type: z.literal("single_choice"),
+    id: z.string(),
+    correctChoiceId: z.string(),
+    choices: z.array(
+      z.object({
+        id: z.string(),
+        solutionId: z.string(),
+        text: z.string(),
+        orderIndex: z.number().int(),
+      }),
+    ),
+  }),
+  z.object({
+    type: z.literal("multiple_choice"),
+    id: z.string(),
+    correctChoiceIds: z.array(z.string()),
+    minCorrectAnswers: z.number().int().default(1),
+    choices: z.array(
+      z.object({
+        id: z.string(),
+        solutionId: z.string(),
+        text: z.string(),
+        orderIndex: z.number().int(),
+      }),
+    ),
+  }),
+]);
+
 const createQuizSchema = z.object({
   question: z.string(),
   answerType: z.enum([
@@ -19,9 +61,12 @@ const createQuizSchema = z.object({
     "single_choice",
     "multiple_choice",
   ]),
+  solution: solutionSchema,
+  explanation: z.string().optional(),
+  tags: z.array(z.string()).optional(),
 }) satisfies z.ZodType<components["schemas"]["CreateQuizRequest"]>;
 
-const quizSchema = z.object({
+const _quizSchema = z.object({
   id: z.string(),
   question: z.string(),
   answerType: z.enum([
@@ -30,18 +75,45 @@ const quizSchema = z.object({
     "single_choice",
     "multiple_choice",
   ]),
+  solutionId: z.string(),
+  explanation: z.string().optional(),
+  status: z.enum(["pending_approval", "approved", "rejected"]),
+  creatorId: z.string(),
   createdAt: z.string(),
-  updatedAt: z.string(),
+  approvedAt: z.string().optional(),
 }) satisfies z.ZodType<components["schemas"]["Quiz"]>;
 
+const quizWithSolutionSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  answerType: z.enum([
+    "boolean",
+    "free_text",
+    "single_choice",
+    "multiple_choice",
+  ]),
+  solutionId: z.string(),
+  explanation: z.string().optional(),
+  status: z.enum(["pending_approval", "approved", "rejected"]),
+  creatorId: z.string(),
+  createdAt: z.string(),
+  approvedAt: z.string().optional(),
+  solution: solutionSchema,
+  tags: z.array(z.string()).optional(),
+}) satisfies z.ZodType<components["schemas"]["QuizWithSolution"]>;
+
 const _quizListResponseSchema = z.object({
-  quizzes: z.array(quizSchema),
-  total: z.number().int(),
+  items: z.array(quizWithSolutionSchema),
+  totalCount: z.number().int(),
+  hasMore: z.boolean(),
+  continuationToken: z.string().optional(),
 }) satisfies z.ZodType<components["schemas"]["QuizListResponse"]>;
 
 const _errorResponseSchema = z.object({
+  code: z.number().int(),
   message: z.string(),
-  code: z.string(),
+  details: z.string().optional(),
+  requestId: z.string().optional(),
 }) satisfies z.ZodType<components["schemas"]["ErrorResponse"]>;
 
 // Helper functions for neverthrow error handling
@@ -70,26 +142,58 @@ const validateWithZod = <T>(
 // List all quizzes handler
 const listQuizzesHandler = async (c: AppContext) => {
   // Mock data for development
-  const quizzes: components["schemas"]["Quiz"][] = [
+  const quizzes: components["schemas"]["QuizWithSolution"][] = [
     {
       id: "1",
       question: "What is TypeScript?",
       answerType: "single_choice",
+      solutionId: "sol-1",
+      explanation: "TypeScript is a typed superset of JavaScript",
+      status: "approved",
+      creatorId: "user-1",
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      approvedAt: new Date().toISOString(),
+      solution: {
+        type: "single_choice",
+        id: "sol-1",
+        correctChoiceId: "choice-1",
+        choices: [
+          {
+            id: "choice-1",
+            solutionId: "sol-1",
+            text: "A typed superset",
+            orderIndex: 1,
+          },
+          {
+            id: "choice-2",
+            solutionId: "sol-1",
+            text: "A framework",
+            orderIndex: 2,
+          },
+        ],
+      },
     },
     {
       id: "2",
       question: "Is JavaScript strongly typed?",
       answerType: "boolean",
+      solutionId: "sol-2",
+      status: "approved",
+      creatorId: "user-2",
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      approvedAt: new Date().toISOString(),
+      solution: {
+        type: "boolean",
+        id: "sol-2",
+        value: false,
+      },
     },
   ];
 
   const response: components["schemas"]["QuizListResponse"] = {
-    quizzes,
-    total: quizzes.length,
+    items: quizzes,
+    totalCount: quizzes.length,
+    hasMore: false,
   };
 
   return c.json(response);
@@ -102,20 +206,44 @@ const getQuizHandler = async (c: AppContext) => {
   if (!id) {
     return c.json(
       {
+        code: 400,
         message: "ID is required",
-        code: "MISSING_ID",
+        details: "Path parameter 'id' is missing",
       } as components["schemas"]["ErrorResponse"],
       400,
     );
   }
 
   // Mock data for development
-  const quiz: components["schemas"]["Quiz"] = {
+  const quiz: components["schemas"]["QuizWithSolution"] = {
     id,
     question: "What is TypeScript?",
     answerType: "single_choice",
+    solutionId: "sol-1",
+    explanation: "TypeScript is a typed superset of JavaScript",
+    status: "approved",
+    creatorId: "user-1",
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    approvedAt: new Date().toISOString(),
+    solution: {
+      type: "single_choice",
+      id: "sol-1",
+      correctChoiceId: "choice-1",
+      choices: [
+        {
+          id: "choice-1",
+          solutionId: "sol-1",
+          text: "A typed superset",
+          orderIndex: 1,
+        },
+        {
+          id: "choice-2",
+          solutionId: "sol-1",
+          text: "A framework",
+          orderIndex: 2,
+        },
+      ],
+    },
   };
 
   return c.json(quiz);
@@ -134,8 +262,9 @@ const createQuizHandler = async (c: AppContext) => {
 
     return c.json(
       {
+        code: 400,
         message: errorMessage,
-        code: errorCode,
+        details: `Parse error: ${errorCode}`,
       } as components["schemas"]["ErrorResponse"],
       400,
     );
@@ -146,8 +275,9 @@ const createQuizHandler = async (c: AppContext) => {
   if (validationResult.isErr()) {
     return c.json(
       {
+        code: 400,
         message: "Invalid request body format",
-        code: validationResult.error,
+        details: `Validation error: ${validationResult.error}`,
       } as components["schemas"]["ErrorResponse"],
       400,
     );
@@ -160,8 +290,11 @@ const createQuizHandler = async (c: AppContext) => {
     id: Date.now().toString(),
     question: body.question,
     answerType: body.answerType,
+    solutionId: body.solution.id,
+    explanation: body.explanation,
+    status: "pending_approval",
+    creatorId: "mock-user-id",
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   };
 
   return c.json(quiz);
