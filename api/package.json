@@ -9,7 +9,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "chanfana": "^2.8.2",
     "hono": "^4.8.10",
     "neverthrow": "^8.2.0",
     "zod": "^4.0.14"
