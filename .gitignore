@@ -151,3 +151,6 @@ Sessionx.vim
 *~
 tags
 [._]*.un~
+
+### Serena ###
+.serena/cache/
