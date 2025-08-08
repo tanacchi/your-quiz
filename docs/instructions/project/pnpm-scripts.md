@@ -31,6 +31,8 @@
 | `cf-typegen` | - | Cloudflare Workers向けTypeScript型定義生成 |
 | `gen-schema` | - | APIスキーマ生成（api/spec/buildを実行） |
 | `typecheck` | - | TypeScriptの型チェック実行 |
+| `test:api` | - | PactumJS BDDテスト実行（OpenAPIカバレッジ付き） |
+| `test:api:watch` | - | PactumJS BDDテストのウォッチモード実行 |
 
 ### api/spec/ ディレクトリ
 
@@ -82,6 +84,16 @@ cd api && pnpm deploy
 
 # UIビルド
 cd ui && pnpm build
+```
+
+### テスト実行
+
+```bash
+# BDD/APIテスト実行
+cd api && pnpm test:api
+
+# BDDテストウォッチモード
+cd api && pnpm test:api:watch
 ```
 
 ### コード品質チェック

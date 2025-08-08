@@ -95,9 +95,11 @@
 
 ### テストフレームワーク
 
-**選定結果**: Vitest
+**選定結果**: Vitest（単体テスト）+ PactumJS（BDD/APIテスト）
 
-**選定理由**: Viteとの統合により高速なテスト実行が可能、TypeScript対応が優秀で型安全なテストが実現できる。
+**選定理由**: Vitestは高速なユニットテスト実行とTypeScript対応、PactumJSはAPIテストの型安全性とOpenAPI自動検証による開発効率向上を重視。
+
+**BDD詳細**: [ADR-0023: PactumJS移行決定](../adr/0023-bdd-framework-migration-pactum.md)
 
 ### 型定義・コード生成ツール
 
@@ -162,7 +164,8 @@
 
 **開発・テスト**:
 
-- Test Framework: Vitest
+- Unit Test Framework: Vitest
+- BDD/API Testing: PactumJS
 - E2E Testing: Playwright
 - Type Generation: openapi-typescript
 
