@@ -79,7 +79,10 @@ describe("Quiz Listing - Quizリスト取得", () => {
           // And: Created quiz should be found in list if available
           if (global.createdQuizId) {
             const foundQuiz = response.json.items.find(
-              (q: Record<string, unknown>) => q.id === global.createdQuizId,
+              (q: Record<string, unknown>) => {
+                const quiz = q as { id: unknown };
+                return quiz.id === global.createdQuizId;
+              },
             );
             expect(foundQuiz).toBeDefined();
           }

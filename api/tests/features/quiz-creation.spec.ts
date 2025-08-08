@@ -243,11 +243,13 @@ function validateErrorResponseStructure(
 
   if (structure.hasErrorCode) {
     expect(responseBody).toHaveProperty("code");
-    expect(typeof responseBody.code).toBe(structure.errorCodeType);
+    const errorBody = responseBody as { code: unknown };
+    expect(typeof errorBody.code).toBe(structure.errorCodeType);
   }
 
   if (structure.hasErrorMessage) {
     expect(responseBody).toHaveProperty("message");
-    expect(typeof responseBody.message).toBe(structure.errorMessageType);
+    const errorBody = responseBody as { message: unknown };
+    expect(typeof errorBody.message).toBe(structure.errorMessageType);
   }
 }

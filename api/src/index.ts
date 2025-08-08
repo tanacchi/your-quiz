@@ -62,61 +62,9 @@ const createQuizSchema = z.object({
     "multiple_choice",
   ]),
   solution: solutionSchema,
-  explanation: z.string().optional(),
-  tags: z.array(z.string()).optional(),
+  explanation: z.string(),
+  tags: z.array(z.string()),
 }) satisfies z.ZodType<components["schemas"]["CreateQuizRequest"]>;
-
-const _quizSchema = z.object({
-  id: z.string(),
-  question: z.string(),
-  answerType: z.enum([
-    "boolean",
-    "free_text",
-    "single_choice",
-    "multiple_choice",
-  ]),
-  solutionId: z.string(),
-  explanation: z.string().optional(),
-  status: z.enum(["pending_approval", "approved", "rejected"]),
-  creatorId: z.string(),
-  createdAt: z.string(),
-  approvedAt: z.string().optional(),
-}) satisfies z.ZodType<components["schemas"]["Quiz"]>;
-
-const quizWithSolutionSchema = z.object({
-  id: z.string(),
-  question: z.string(),
-  answerType: z.enum([
-    "boolean",
-    "free_text",
-    "single_choice",
-    "multiple_choice",
-  ]),
-  solutionId: z.string(),
-  explanation: z.string().optional(),
-  status: z.enum(["pending_approval", "approved", "rejected"]),
-  creatorId: z.string(),
-  createdAt: z.string(),
-  approvedAt: z.string().optional(),
-  solution: solutionSchema,
-  tags: z.array(z.string()).optional(),
-}) satisfies z.ZodType<components["schemas"]["QuizWithSolution"]>;
-
-const _quizListResponseSchema = z.object({
-  items: z.array(quizWithSolutionSchema),
-  totalCount: z.number().int(),
-  hasMore: z.boolean(),
-  continuationToken: z.string().optional(),
-}) satisfies z.ZodType<components["schemas"]["QuizListResponse"]>;
-
-const _errorResponseSchema = z.object({
-  code: z.number().int(),
-  message: z.string(),
-  details: z.string().optional(),
-  requestId: z.string().optional(),
-}) satisfies z.ZodType<components["schemas"]["ErrorResponse"]>;
-
-// Helper functions for neverthrow error handling
 
 const parseJsonSafe = async (request: {
   json(): Promise<unknown>;
@@ -291,7 +239,7 @@ const createQuizHandler = async (c: AppContext) => {
     question: body.question,
     answerType: body.answerType,
     solutionId: body.solution.id,
-    explanation: body.explanation,
+    ...(body.explanation !== undefined && { explanation: body.explanation }),
     status: "pending_approval",
     creatorId: "mock-user-id",
     createdAt: new Date().toISOString(),

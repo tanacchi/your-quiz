@@ -181,11 +181,6 @@ describe("Quiz Retrieval by ID - Quiz ID別取得", () => {
                 ),
               )
               .expectStatus(testCase.expectedStatus);
-          } else {
-            // When: Direct endpoint validation
-            response = await spec()
-              .get(testCase.endpoint)
-              .expectStatus(testCase.expectedStatus);
           }
 
           const body = (response as { json: Record<string, unknown> }).json;
@@ -237,12 +232,14 @@ function validateErrorResponseStructure(
 
   if (structure.hasErrorCode) {
     expect(responseBody).toHaveProperty("code");
-    expect(typeof responseBody.code).toBe(structure.errorCodeType);
+    const errorBody = responseBody as { code: unknown };
+    expect(typeof errorBody.code).toBe(structure.errorCodeType);
   }
 
   if (structure.hasErrorMessage) {
     expect(responseBody).toHaveProperty("message");
-    expect(typeof responseBody.message).toBe(structure.errorMessageType);
+    const errorBody = responseBody as { message: unknown };
+    expect(typeof errorBody.message).toBe(structure.errorMessageType);
   }
 }
 
