@@ -1,6 +1,6 @@
 {
   "extends": "@tsconfig/strictest/tsconfig.json",
-  "exclude": ["node_modules", "dist", "build", "coverage", "cucumber.js"],
+  "exclude": ["node_modules", "dist", "build", "coverage", "*.config.cjs"],
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -10,7 +10,7 @@
     "lib": ["ESNext"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "types": ["./worker-configuration.d.ts"],
+    "types": ["./worker-configuration.d.ts", "jest", "node"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true

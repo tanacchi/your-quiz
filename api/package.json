@@ -8,9 +8,8 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "gen-schema": "pnpm --filter quiz-api-spec build",
     "typecheck": "tsc --noEmit",
-    "cucumber": "cucumber-js",
-    "test:bdd": "cucumber-js",
-    "test:bdd:watch": "cucumber-js --watch"
+    "test:api": "jest --config=jest.config.cjs",
+    "test:api:watch": "jest --config=jest.config.cjs --watch"
   },
   "dependencies": {
     "hono": "^4.8.10",
@@ -18,11 +17,13 @@
     "zod": "^4.0.14"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "^10.0.0",
     "@tsconfig/strictest": "^2.0.5",
+    "@types/jest": "^29.0.0",
     "@types/node": "^20.0.0",
+    "jest": "^29.0.0",
     "npm-run-all2": "^8.0.4",
-    "tsx": "^4.7.0",
+    "pactum": "^3.7.1",
+    "ts-jest": "^29.0.0",
     "typescript": "^5.9.2",
     "wrangler": "^4.27.0"
   }
