@@ -1,5 +1,5 @@
 import { err, ok, type Result } from "neverthrow";
-import { z } from "zod";
+import type { z } from "zod";
 
 /**
  * JSONの安全なパース処理

@@ -7,7 +7,7 @@
     "build:gen-schema": "pnpm --filter quiz-api-spec build && pnpm format",
     "deploy": "wrangler deploy --minify",
     "dev": "wrangler dev",
-    "format": "biome format --write .",
+    "format": "biome check --write .",
     "lint": "biome check .",
     "test": "run-p test:*",
     "test:api": "jest --config=jest.config.cjs",
