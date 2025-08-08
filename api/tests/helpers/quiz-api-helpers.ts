@@ -12,7 +12,7 @@ export async function clearAllQuizzes(): Promise<void> {
 export async function createQuiz(quizData: unknown): Promise<unknown> {
   const response = await spec()
     .post("/api/quiz/v1/manage/quizzes")
-    .withJson(quizData)
+    .withJson(quizData as object)
     .expectStatus(201);
 
   return response.json;
