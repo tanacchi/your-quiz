@@ -2,14 +2,15 @@
   "name": "api",
   "type": "module",
   "scripts": {
-    "build": "run-p gen-schema typecheck",
-    "dev": "wrangler dev",
+    "build": "run-s build:cf-typegen build:gen-schema typecheck",
+    "build:cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "build:gen-schema": "pnpm --filter quiz-api-spec build",
     "deploy": "wrangler deploy --minify",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "gen-schema": "pnpm --filter quiz-api-spec build",
-    "typecheck": "tsc --noEmit",
+    "dev": "wrangler dev",
+    "test": "run-p test:*",
     "test:api": "jest --config=jest.config.cjs",
-    "test:api:watch": "jest --config=jest.config.cjs --watch"
+    "test:api:watch": "pnpm test:api --watch",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "hono": "^4.8.10",
