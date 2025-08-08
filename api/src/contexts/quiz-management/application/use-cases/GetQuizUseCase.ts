@@ -1,28 +1,24 @@
-import { err, ok, type Result } from "neverthrow";
+import { errAsync, okAsync, type ResultAsync } from "neverthrow";
 import type { components } from "../../../../shared/types";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
+
+type Quiz = components["schemas"]["QuizWithSolution"];
 
 export class GetQuizUseCase {
   constructor(private readonly quizRepository: IQuizRepository) {}
 
-  async execute(
-    id: string,
-  ): Promise<Result<components["schemas"]["QuizWithSolution"], string>> {
+  execute(id: string): ResultAsync<Quiz, string> {
     if (!id) {
-      return err("ID_REQUIRED");
+      return errAsync("ID_REQUIRED");
     }
 
-    const result = await this.quizRepository.findById(id);
-
-    if (result.isErr()) {
-      return err(result.error);
-    }
-
-    const quiz = result.value;
-    if (!quiz) {
-      return err("NOT_FOUND");
-    }
-
-    return ok(quiz);
+    return this.quizRepository
+      .findById(id)
+      .andThen((quiz) =>
+        quiz != null
+          ? okAsync<Quiz, string>(quiz)
+          : errAsync<Quiz, string>("NOT_FOUND"),
+      )
+      .andTee((error) => console.error("Failed to get quiz:", error));
   }
 }

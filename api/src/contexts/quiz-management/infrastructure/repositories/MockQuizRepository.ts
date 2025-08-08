@@ -1,4 +1,4 @@
-import { err, ok, type Result } from "neverthrow";
+import { ResultAsync } from "neverthrow";
 import type { components } from "../../../../shared/types";
 import type { Quiz } from "../../domain/entities/Quiz";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
@@ -56,44 +56,50 @@ export class MockQuizRepository implements IQuizRepository {
     },
   ];
 
-  async create(
+  create(
     quiz: Quiz,
     solution: components["schemas"]["Solution"],
-  ): Promise<Result<Quiz, string>> {
-    try {
-      // モックデータに追加（実際のD1では永続化）
-      const newQuizWithSolution: components["schemas"]["QuizWithSolution"] = {
-        id: quiz.id,
-        question: quiz.question,
-        answerType: quiz.answerType,
-        solutionId: quiz.solutionId,
-        ...(quiz.explanation && { explanation: quiz.explanation }),
-        status: quiz.status,
-        creatorId: quiz.creatorId,
-        createdAt: quiz.createdAt,
-        ...(quiz.approvedAt && { approvedAt: quiz.approvedAt }),
-        solution,
-      };
+  ): ResultAsync<Quiz, string> {
+    // モックデータに追加（実際のD1では永続化）
+    const newQuizWithSolution: components["schemas"]["QuizWithSolution"] = {
+      id: quiz.id,
+      question: quiz.question,
+      answerType: quiz.answerType,
+      solutionId: quiz.solutionId,
+      ...(quiz.explanation && { explanation: quiz.explanation }),
+      status: quiz.status,
+      creatorId: quiz.creatorId,
+      createdAt: quiz.createdAt,
+      ...(quiz.approvedAt && { approvedAt: quiz.approvedAt }),
+      solution,
+    };
 
-      this.mockData.push(newQuizWithSolution);
-      return ok(quiz);
-    } catch (_error) {
-      return err("CREATE_FAILED");
-    }
+    this.mockData.push(newQuizWithSolution);
+    return ResultAsync.fromPromise(
+      new Promise((resolve) => resolve(quiz)),
+      (error) => {
+        console.error("Failed to create quiz:", error);
+        return "CREATE_FAILED";
+      },
+    );
   }
 
-  async findById(
+  findById(
     id: string,
-  ): Promise<Result<components["schemas"]["QuizWithSolution"] | null, string>> {
-    try {
-      const quiz = this.mockData.find((q) => q.id === id) || null;
-      return ok(quiz);
-    } catch (_error) {
-      return err("FIND_BY_ID_FAILED");
-    }
+  ): ResultAsync<components["schemas"]["QuizWithSolution"] | null, string> {
+    return ResultAsync.fromPromise(
+      new Promise((resolve) => {
+        const quiz = this.mockData.find((q) => q.id === id) || null;
+        resolve(quiz);
+      }),
+      (error) => {
+        console.error("Failed to find quiz by ID:", error);
+        return "FIND_BY_ID_FAILED";
+      },
+    );
   }
 
-  async findMany(
+  findMany(
     options: {
       status?: components["schemas"]["QuizStatus"];
       creatorId?: string;
@@ -101,58 +107,67 @@ export class MockQuizRepository implements IQuizRepository {
       limit?: number;
       offset?: number;
     } = {},
-  ): Promise<
-    Result<
-      {
-        items: components["schemas"]["QuizWithSolution"][];
-        totalCount: number;
-        hasMore: boolean;
-      },
-      string
-    >
+  ): ResultAsync<
+    {
+      items: components["schemas"]["QuizWithSolution"][];
+      totalCount: number;
+      hasMore: boolean;
+    },
+    string
   > {
-    try {
-      let filteredData = [...this.mockData];
+    let filteredData = [...this.mockData];
 
-      // フィルタリング
-      if (options.status) {
-        filteredData = filteredData.filter(
-          (quiz) => quiz.status === options.status,
-        );
-      }
-      if (options.creatorId) {
-        filteredData = filteredData.filter(
-          (quiz) => quiz.creatorId === options.creatorId,
-        );
-      }
+    // フィルタリング
+    if (options.status) {
+      filteredData = filteredData.filter(
+        (quiz) => quiz.status === options.status,
+      );
+    }
+    if (options.creatorId) {
+      filteredData = filteredData.filter(
+        (quiz) => quiz.creatorId === options.creatorId,
+      );
+    }
 
-      const totalCount = filteredData.length;
-      const limit = options.limit || 10;
-      const offset = options.offset || 0;
+    const totalCount = filteredData.length;
+    const limit = options.limit || 10;
+    const offset = options.offset || 0;
 
-      const items = filteredData.slice(offset, offset + limit);
-      const hasMore = offset + limit < totalCount;
+    const items = filteredData.slice(offset, offset + limit);
+    const hasMore = offset + limit < totalCount;
 
-      return ok({
+    return ResultAsync.fromPromise(
+      Promise.resolve({
         items,
         totalCount,
         hasMore,
-      });
-    } catch (_error) {
-      return err("FIND_MANY_FAILED");
-    }
+      }),
+      (error) => {
+        console.error("Failed to find quizzes:", error);
+        return "FIND_MANY_FAILED";
+      },
+    );
   }
 
-  async update(
-    _id: string,
-    _quiz: Partial<Quiz>,
-  ): Promise<Result<Quiz, string>> {
+  update(_id: string, _quiz: Partial<Quiz>): ResultAsync<Quiz, string> {
     // 今回は実装せず、将来追加
-    return err("NOT_IMPLEMENTED");
+    return ResultAsync.fromPromise(
+      Promise.reject("NOT_IMPLEMENTED"),
+      (error) => {
+        console.error("Failed to update quiz:", error);
+        return "UPDATE_FAILED";
+      },
+    );
   }
 
-  async delete(_id: string): Promise<Result<void, string>> {
+  delete(_id: string): ResultAsync<void, string> {
     // 今回は実装せず、将来追加
-    return err("NOT_IMPLEMENTED");
+    return ResultAsync.fromPromise(
+      Promise.reject("NOT_IMPLEMENTED"),
+      (error) => {
+        console.error("Failed to delete quiz:", error);
+        return "DELETE_FAILED";
+      },
+    );
   }
 }

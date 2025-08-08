@@ -1,4 +1,4 @@
-import type { Result } from "neverthrow";
+import type { ResultAsync } from "neverthrow";
 import type { components } from "../../../../shared/types";
 import type { Quiz } from "../entities/Quiz";
 
@@ -10,14 +10,14 @@ export interface IQuizRepository {
   create(
     quiz: Quiz,
     solution: components["schemas"]["Solution"],
-  ): Promise<Result<Quiz, string>>;
+  ): ResultAsync<Quiz, string>;
 
   /**
    * IDでクイズを取得
    */
   findById(
     id: string,
-  ): Promise<Result<components["schemas"]["QuizWithSolution"] | null, string>>;
+  ): ResultAsync<components["schemas"]["QuizWithSolution"] | null, string>;
 
   /**
    * クイズリストを取得
@@ -28,24 +28,22 @@ export interface IQuizRepository {
     tags?: string[];
     limit?: number;
     offset?: number;
-  }): Promise<
-    Result<
-      {
-        items: components["schemas"]["QuizWithSolution"][];
-        totalCount: number;
-        hasMore: boolean;
-      },
-      string
-    >
+  }): ResultAsync<
+    {
+      items: components["schemas"]["QuizWithSolution"][];
+      totalCount: number;
+      hasMore: boolean;
+    },
+    string
   >;
 
   /**
    * クイズを更新
    */
-  update(id: string, quiz: Partial<Quiz>): Promise<Result<Quiz, string>>;
+  update(id: string, quiz: Partial<Quiz>): ResultAsync<Quiz, string>;
 
   /**
    * クイズを削除
    */
-  delete(id: string): Promise<Result<void, string>>;
+  delete(id: string): ResultAsync<void, string>;
 }

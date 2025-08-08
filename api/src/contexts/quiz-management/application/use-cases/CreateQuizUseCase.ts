@@ -1,4 +1,4 @@
-import { err, ok, type Result } from "neverthrow";
+import { ok, type ResultAsync } from "neverthrow";
 import type { components } from "../../../../shared/types";
 import { Quiz } from "../../domain/entities/Quiz";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
@@ -15,9 +15,9 @@ export type CreateQuizCommand = {
 export class CreateQuizUseCase {
   constructor(private readonly quizRepository: IQuizRepository) {}
 
-  async execute(
+  execute(
     command: CreateQuizCommand,
-  ): Promise<Result<components["schemas"]["Quiz"], string>> {
+  ): ResultAsync<components["schemas"]["Quiz"], string> {
     // ドメインエンティティの作成
     const quiz = new Quiz(
       Date.now().toString(), // 簡易ID生成
@@ -30,32 +30,27 @@ export class CreateQuizUseCase {
     );
 
     // リポジトリを通じて永続化
-    const result = await this.quizRepository.create(quiz, command.solution);
+    return this.quizRepository
+      .create(quiz, command.solution)
+      .andThen((createdQuiz) => {
+        const dtoQuiz: components["schemas"]["Quiz"] = {
+          id: createdQuiz.id,
+          question: createdQuiz.question,
+          answerType: createdQuiz.answerType,
+          solutionId: createdQuiz.solutionId,
+          status: createdQuiz.status,
+          creatorId: createdQuiz.creatorId,
+          createdAt: createdQuiz.createdAt,
+        };
 
-    if (result.isErr()) {
-      return err(result.error);
-    }
-
-    // ドメインエンティティからDTO形式に変換
-    const createdQuiz = result.value;
-    const dtoQuiz: components["schemas"]["Quiz"] = {
-      id: createdQuiz.id,
-      question: createdQuiz.question,
-      answerType: createdQuiz.answerType,
-      solutionId: createdQuiz.solutionId,
-      status: createdQuiz.status,
-      creatorId: createdQuiz.creatorId,
-      createdAt: createdQuiz.createdAt,
-    };
-
-    // オプショナルフィールドを個別に設定
-    if (createdQuiz.explanation) {
-      dtoQuiz.explanation = createdQuiz.explanation;
-    }
-    if (createdQuiz.approvedAt) {
-      dtoQuiz.approvedAt = createdQuiz.approvedAt;
-    }
-
-    return ok(dtoQuiz);
+        // オプショナルフィールドを個別に設定
+        if (createdQuiz.explanation) {
+          dtoQuiz.explanation = createdQuiz.explanation;
+        }
+        if (createdQuiz.approvedAt) {
+          dtoQuiz.approvedAt = createdQuiz.approvedAt;
+        }
+        return ok(dtoQuiz);
+      });
   }
 }

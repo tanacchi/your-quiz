@@ -1,4 +1,4 @@
-import { err, ok, type Result } from "neverthrow";
+import { err, ok, type Result, ResultAsync } from "neverthrow";
 import type { z } from "zod";
 
 /**
@@ -6,15 +6,15 @@ import type { z } from "zod";
  * @param request - json()メソッドを持つリクエストオブジェクト
  * @returns Result<unknown, string> - パース結果またはエラー
  */
-export const parseJsonSafe = async (request: {
+export const parseJsonSafe = (request: {
   json(): Promise<unknown>;
-}): Promise<Result<unknown, string>> => {
-  try {
-    const json = await request.json();
-    return ok(json);
-  } catch {
-    return err("INVALID_JSON");
-  }
+}): ResultAsync<unknown, string> => {
+  return ResultAsync.fromPromise(request.json(), (error) => {
+    if (error instanceof SyntaxError) {
+      return "INVALID_JSON";
+    }
+    return "UNKNOWN_ERROR";
+  });
 };
 
 /**
