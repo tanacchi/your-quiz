@@ -40,15 +40,9 @@ export class QuizStatusError extends ConflictError {
       `Quiz ${quizId} is in ${currentStatus} status, but ${requiredStatus} is required`,
       requestId,
     );
-    Object.defineProperty(this, "quizId", { value: quizId, enumerable: true });
-    Object.defineProperty(this, "currentStatus", {
-      value: currentStatus,
-      enumerable: true,
-    });
-    Object.defineProperty(this, "requiredStatus", {
-      value: requiredStatus,
-      enumerable: true,
-    });
+    this.quizId = quizId;
+    this.currentStatus = currentStatus;
+    this.requiredStatus = requiredStatus;
   }
 }
 
@@ -71,8 +65,8 @@ export class QuizApprovalError extends ConflictError {
    */
   constructor(quizId: string, reason: string, requestId?: string) {
     super(`Quiz ${quizId} cannot be approved: ${reason}`, requestId);
-    Object.defineProperty(this, "quizId", { value: quizId, enumerable: true });
-    Object.defineProperty(this, "reason", { value: reason, enumerable: true });
+    this.quizId = quizId;
+    this.reason = reason;
   }
 }
 
@@ -134,7 +128,9 @@ export class QuizCreatorOnlyError extends ForbiddenError {
     );
     this.quizId = quizId;
     this.operation = operation;
-    this.requesterId = requesterId;
+    if (requesterId !== undefined) {
+      this.requesterId = requesterId;
+    }
     this.creatorId = creatorId;
   }
 }
