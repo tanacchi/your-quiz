@@ -2,12 +2,15 @@
   "devDependencies": {
     "@biomejs/biome": "2.1.3",
     "husky": "^9.1.7",
-    "lint-staged": "^16.1.2",
+    "lint-staged": "^16.1.5",
     "markdownlint": "^0.38.0",
     "markdownlint-cli2": "^0.18.1",
     "npm-run-all2": "^8.0.4"
   },
   "scripts": {
+    "build": "run-p build:*",
+    "build:api": "pnpm --filter api build",
+    "build:ui": "pnpm --filter ui build",
     "dev": "run-p dev:*",
     "dev:api": "pnpm --filter api dev",
     "dev:ui": "pnpm --filter ui dev",

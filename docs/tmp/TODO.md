@@ -9,10 +9,8 @@
 - 必須でないドキュメントがあるならその時点で炙り出したい。
 - ドキュメントをコンパクトにしたい。
 
-## API Spec 生成
+zod の schema による堅牢なシステムに仕上げていきたい。エンティティ内部とその周辺で保持するデータ型は brand などで極限まで厳密に扱う。
+リクエストパラメータについてはルーズに構えておき、エンティティが持つスタティックな parse メソッドで、内部で変換やある程度の補完をした上でオブジェクトを構築し Result を返す。変換できなかったものは不正な値として Err を返す。
 
-- database.dbml を修正してください。指摘は以下のとおりです。
-  - entity-relationship-analysis.md に記載された説明を可能な限り DBML ファイルに組み込んでくだしあ。
-- database.dbml を入念に読み込み、
-- api-design 配下のドキュメント、database.dbml、TypeSpec の公式ドキュメントおよび type_spec_tsp_cheatsheet.mdを参考に TypeSpec ファイルを作成してほしいです。 api/spec/main.tsp にサンプルを記載済みです。適度にファイルを分けてもOKです。
-- api-design に問題がないか、API設計書として不足がないかレビューしてください。
+Quiz 詳細を取得する際は Solution も返す。
+
