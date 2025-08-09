@@ -1,7 +1,29 @@
 import { z } from "zod";
 import type { components } from "../../types/generated/api";
 
-// TypeSpec由来の型を活用したSolution Zodスキーマ定義
+/**
+ * クイズ正解データ用Zodスキーマ
+ *
+ * クイズの正解情報を検証するためのZodスキーマです。
+ * 回答タイプ（boolean、free_text、single_choice、multiple_choice）に応じて
+ * 異なる構造を持つ正解データを検証します。
+ *
+ * TypeSpecで定義されたSolution型と型互換性があります。
+ *
+ * @example
+ * ```typescript
+ * // 単一選択の場合
+ * const singleChoiceSolution = {
+ *   type: "single_choice",
+ *   id: "solution-123",
+ *   correctChoiceId: "choice-1",
+ *   choices: [
+ *     { id: "choice-1", solutionId: "solution-123", text: "TypeScript", orderIndex: 0 },
+ *     { id: "choice-2", solutionId: "solution-123", text: "JavaScript", orderIndex: 1 }
+ *   ]
+ * };
+ * ```
+ */
 export const solutionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("boolean"),
