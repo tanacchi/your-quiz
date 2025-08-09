@@ -1,9 +1,12 @@
 import type { Context } from "hono";
+import qs from "qs";
 import type { CloudflareBindings } from "../../../../shared/types";
+import { validateWithZod } from "../../../../shared/utils/validation";
 import type {
   SearchQuizzesUseCase,
   SearchQuizzesUseCaseError,
 } from "../../application/use-cases/SearchQuizzesUseCase";
+import { SearchQuerySchema } from "../schemas/search-query.schema";
 
 /**
  * アプリケーションコンテキスト型
@@ -28,44 +31,50 @@ export class SearchController {
    * クイズ検索HTTPハンドラー
    *
    * GET /api/search/v1/quizzes エンドポイントのリクエストを処理します。
-   * クエリパラメータから検索条件を取得し、検索ユースケースに委譲します。
+   * クエリパラメータをqsでパースし、zodで型安全にバリデーションします。
    *
    * @param c - Honoアプリケーションコンテキスト
    * @returns HTTP 200 (検索成功) またはエラーレスポンス
    */
   async searchQuizzes(c: AppContext) {
     try {
-      // クエリパラメータから検索条件を取得
-      const query = c.req.query();
+      // クエリストリングを取得してqsでパース、直接zodバリデーションに渡す
+      const queryString = c.req.url.split("?")[1] || "";
 
-      // 検索リクエストを構築
+      // Zodスキーマでバリデーション（qsパース結果を直接渡す）
+      const validationResult = validateWithZod(
+        SearchQuerySchema,
+        qs.parse(queryString),
+      );
+
+      if (validationResult.isErr()) {
+        return c.json(
+          {
+            error: "VALIDATION_ERROR",
+            message: "Invalid query parameters",
+            details: validationResult.error,
+          },
+          400,
+        );
+      }
+
+      const searchQuery = validationResult.value;
+
+      // SearchQuizzesRequestに変換（既存のユースケースインターフェースに合わせる）
       const searchRequest = {
-        q: query["q"],
-        tags: query["tags"]
-          ? Array.isArray(query["tags"])
-            ? query["tags"]
-            : [query["tags"]]
-          : undefined,
-        difficulty: query["difficulty"],
-        answerType: query["answerType"],
-        creatorId: query["creatorId"],
-        minCorrectRate: query["minCorrectRate"]
-          ? parseFloat(query["minCorrectRate"])
-          : undefined,
-        maxCorrectRate: query["maxCorrectRate"]
-          ? parseFloat(query["maxCorrectRate"])
-          : undefined,
-        createdAfter: query["createdAfter"],
-        createdBefore: query["createdBefore"],
-        sortBy: query["sortBy"] as
-          | "relevance"
-          | "created_date"
-          | "popularity"
-          | "difficulty"
-          | undefined,
-        sortOrder: query["sortOrder"] as "asc" | "desc" | undefined,
-        limit: query["limit"] ? parseInt(query["limit"], 10) : undefined,
-        offset: query["offset"] ? parseInt(query["offset"], 10) : undefined,
+        q: searchQuery.q,
+        tags: searchQuery.tags,
+        difficulty: searchQuery.difficulty,
+        answerType: searchQuery.answerType,
+        creatorId: searchQuery.creatorId,
+        minCorrectRate: searchQuery.minCorrectRate,
+        maxCorrectRate: searchQuery.maxCorrectRate,
+        createdAfter: searchQuery.createdAfter,
+        createdBefore: searchQuery.createdBefore,
+        sortBy: searchQuery.sortBy,
+        sortOrder: searchQuery.sortOrder,
+        limit: searchQuery.limit,
+        offset: searchQuery.offset,
       };
 
       // ユースケース実行
