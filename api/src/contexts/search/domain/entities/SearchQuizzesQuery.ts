@@ -12,6 +12,7 @@ export class SearchQuizzesQuery {
    *
    * @param searchText - 検索テキスト（オプション）
    * @param tags - タグフィルタ（オプション）
+   * @param excludeTags - 除外タグフィルタ（オプション）
    * @param difficulty - 難易度フィルタ（オプション）
    * @param answerType - 回答タイプフィルタ（オプション）
    * @param creatorId - 作成者IDフィルタ（オプション）
@@ -20,13 +21,14 @@ export class SearchQuizzesQuery {
    * @param createdAfter - 作成日以降フィルタ（オプション）
    * @param createdBefore - 作成日以前フィルタ（オプション）
    * @param sortBy - ソート基準（デフォルト: relevance）
-   * @param sortOrder - ソート順序（デフォルト: desc）
+   * @param sortOrder - ソート順序（デフォルト: asc）
    * @param limit - 取得件数制限（デフォルト: 20）
    * @param offset - オフセット（デフォルト: 0）
    */
   constructor(
     public readonly searchText?: string,
     public readonly tags?: string[],
+    public readonly excludeTags?: string[],
     public readonly difficulty?: string,
     public readonly answerType?: components["schemas"]["AnswerType"],
     public readonly creatorId?: string,
@@ -39,7 +41,7 @@ export class SearchQuizzesQuery {
       | "created_date"
       | "popularity"
       | "difficulty" = "relevance",
-    public readonly sortOrder: "asc" | "desc" = "desc",
+    public readonly sortOrder: "asc" | "desc" = "asc",
     public readonly limit: number = 20,
     public readonly offset: number = 0,
   ) {}
@@ -93,7 +95,8 @@ export class SearchQuizzesQuery {
     let score = 0;
 
     if (this.searchText) score += 0.3;
-    if (this.tags && this.tags.length > 0) score += 0.2;
+    if (this.tags && this.tags.length > 0) score += 0.15;
+    if (this.excludeTags && this.excludeTags.length > 0) score += 0.15;
     if (this.difficulty) score += 0.1;
     if (this.answerType) score += 0.1;
     if (this.creatorId) score += 0.1;

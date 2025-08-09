@@ -64,6 +64,7 @@ export class SearchController {
       const searchRequest = {
         q: searchQuery.q,
         tags: searchQuery.tags,
+        excludeTags: searchQuery.excludeTags,
         difficulty: searchQuery.difficulty,
         answerType: searchQuery.answerType,
         creatorId: searchQuery.creatorId,

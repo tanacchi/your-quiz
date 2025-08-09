@@ -153,10 +153,20 @@ export class MockSearchRepository implements ISearchRepository {
         );
       }
 
-      // タグフィルタ
+      // タグフィルタ（肯定的タグ）
       if (query.tags && query.tags.length > 0) {
         filteredQuizzes = filteredQuizzes.filter((quiz) =>
           query.tags?.some((tag) => quiz.tags?.includes(tag)),
+        );
+      }
+
+      // 除外タグフィルタ（否定的タグ）
+      if (query.excludeTags && query.excludeTags.length > 0) {
+        filteredQuizzes = filteredQuizzes.filter(
+          (quiz) =>
+            !query.excludeTags?.some((excludeTag) =>
+              quiz.tags?.includes(excludeTag),
+            ),
         );
       }
 

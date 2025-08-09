@@ -22,16 +22,15 @@ interface Search {
   @route("/quizzes")
   searchQuizzes(
     @query q?: string, // search query
-    @query tags?: string[],
+    @query tags?: string[], // supports ~prefix for negation (e.g., "~beginner")
     @query difficulty?: string,
-    @query answerType?: AnswerType,
-    @query creatorId?: UserId,
-    @query minCorrectRate?: float32,
-    @query maxCorrectRate?: float32,
-    @query createdAfter?: string, // ISO date
-    @query createdBefore?: string, // ISO date
-    @query sortBy?: "relevance" | "created_date" | "popularity" | "difficulty" = "relevance",
-    @query sortOrder?: "asc" | "desc" = "desc",
+    @query answer_type?: AnswerType,
+    @query creator_id?: UserId,
+    @query min_correct_rate?: float32,
+    @query max_correct_rate?: float32,
+    @query created_after?: string, // ISO date
+    @query created_before?: string, // ISO date
+    @query sort?: string, // supports -prefix for desc order (e.g., "-created_date")
     ...PaginationRequest
   ): QuizListResponse;
   

@@ -13,6 +13,7 @@ import type {
 export type SearchQuizzesRequest = {
   q?: string | undefined;
   tags?: string[] | undefined;
+  excludeTags?: string[] | undefined;
   difficulty?: string | undefined;
   answerType?: string | undefined;
   creatorId?: string | undefined;
@@ -106,6 +107,7 @@ export class SearchQuizzesUseCase {
     return new SearchQuizzesQuery(
       request.q,
       request.tags,
+      request.excludeTags,
       request.difficulty,
       request.answerType as components["schemas"]["AnswerType"] | undefined,
       request.creatorId,
@@ -114,7 +116,7 @@ export class SearchQuizzesUseCase {
       request.createdAfter,
       request.createdBefore,
       request.sortBy || "relevance",
-      request.sortOrder || "desc",
+      request.sortOrder || "asc",
       request.limit || 20,
       request.offset || 0,
     );

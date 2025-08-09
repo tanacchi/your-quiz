@@ -12,11 +12,23 @@ export const VALID_ANSWER_TYPES = [
 ] as const;
 
 /**
+ * 有効なソート基準の定数定義
+ */
+export const VALID_SORT_FIELDS = [
+  "relevance",
+  "created_date",
+  "popularity",
+  "difficulty",
+] as const;
+
+/**
  * クエリストリングから直接パースされた生の値用スキーマ
  *
  * query stringでは以下のような形でパラメータが渡される可能性がある：
  * - tags=javascript (単一文字列)
  * - tags[]=javascript&tags[]=typescript (配列)
+ * - tags=~beginner (否定タグ)
+ * - sort=-created_date (降順ソート)
  * - limit=20 (文字列として渡される数値)
  */
 export const RawSearchQuerySchema = z.object({
@@ -28,16 +40,13 @@ export const RawSearchQuerySchema = z.object({
     ])
     .optional(),
   difficulty: z.string().optional(),
-  answerType: z.string().optional(),
-  creatorId: z.string().optional(),
-  minCorrectRate: z.string().optional(),
-  maxCorrectRate: z.string().optional(),
-  createdAfter: z.string().optional(),
-  createdBefore: z.string().optional(),
-  sortBy: z
-    .enum(["relevance", "created_date", "popularity", "difficulty"])
-    .optional(),
-  sortOrder: z.enum(["asc", "desc"]).optional(),
+  answer_type: z.string().optional(),
+  creator_id: z.string().optional(),
+  min_correct_rate: z.string().optional(),
+  max_correct_rate: z.string().optional(),
+  created_after: z.string().optional(),
+  created_before: z.string().optional(),
+  sort: z.string().optional(),
   limit: z.string().optional(),
   offset: z.string().optional(),
 });
@@ -47,42 +56,69 @@ export const RawSearchQuerySchema = z.object({
  *
  * zodのtransformを使って生の値から正規化された値への変換を定義
  */
-export const SearchQuerySchema = RawSearchQuerySchema.transform((data) => ({
-  q: data.q,
+export const SearchQuerySchema = RawSearchQuerySchema.transform((data) => {
+  // ソート処理：-プレフィックスで降順判定
+  let sortField = data.sort || "relevance";
+  let sortOrder: "asc" | "desc" = "asc";
 
-  // tags: 文字列 or 配列 → 配列に正規化
-  tags: data.tags
-    ? Array.isArray(data.tags)
-      ? data.tags
-      : [data.tags]
-    : undefined,
+  if (sortField.startsWith("-")) {
+    sortOrder = "desc";
+    sortField = sortField.substring(1);
+  }
 
-  difficulty: data.difficulty,
+  // タグ処理：~プレフィックスで否定タグ分離
+  const positiveTags: string[] = [];
+  const negativeTags: string[] = [];
 
-  // answerType: 文字列 → AnswerType型
-  answerType: data.answerType as
-    | components["schemas"]["AnswerType"]
-    | undefined,
+  if (data.tags) {
+    const tagArray = Array.isArray(data.tags) ? data.tags : [data.tags];
+    tagArray.forEach((tag) => {
+      if (tag.startsWith("~")) {
+        negativeTags.push(tag.substring(1));
+      } else {
+        positiveTags.push(tag);
+      }
+    });
+  }
 
-  creatorId: data.creatorId,
+  return {
+    q: data.q,
 
-  // 数値文字列 → 数値変換
-  minCorrectRate: data.minCorrectRate
-    ? parseFloat(data.minCorrectRate)
-    : undefined,
-  maxCorrectRate: data.maxCorrectRate
-    ? parseFloat(data.maxCorrectRate)
-    : undefined,
+    // タグ: 肯定・否定に分離
+    tags: positiveTags.length > 0 ? positiveTags : undefined,
+    excludeTags: negativeTags.length > 0 ? negativeTags : undefined,
 
-  createdAfter: data.createdAfter,
-  createdBefore: data.createdBefore,
+    difficulty: data.difficulty,
 
-  // デフォルト値設定
-  sortBy: data.sortBy || "relevance",
-  sortOrder: data.sortOrder || "desc",
-  limit: data.limit ? parseInt(data.limit, 10) : 20,
-  offset: data.offset ? parseInt(data.offset, 10) : 0,
-}))
+    // answerType: 文字列 → AnswerType型
+    answerType: data.answer_type as
+      | components["schemas"]["AnswerType"]
+      | undefined,
+
+    creatorId: data.creator_id,
+
+    // 数値文字列 → 数値変換
+    minCorrectRate: data.min_correct_rate
+      ? parseFloat(data.min_correct_rate)
+      : undefined,
+    maxCorrectRate: data.max_correct_rate
+      ? parseFloat(data.max_correct_rate)
+      : undefined,
+
+    createdAfter: data.created_after,
+    createdBefore: data.created_before,
+
+    // ソート設定
+    sortBy: sortField as
+      | "relevance"
+      | "created_date"
+      | "popularity"
+      | "difficulty",
+    sortOrder: sortOrder,
+    limit: data.limit ? parseInt(data.limit, 10) : 20,
+    offset: data.offset ? parseInt(data.offset, 10) : 0,
+  };
+})
   .refine(
     (data) => {
       // answerTypeのバリデーション
@@ -94,8 +130,20 @@ export const SearchQuerySchema = RawSearchQuerySchema.transform((data) => ({
       return true;
     },
     {
-      message: `Invalid answerType. Must be one of: ${VALID_ANSWER_TYPES.join(", ")}`,
+      message: `Invalid answer_type. Must be one of: ${VALID_ANSWER_TYPES.join(", ")}`,
       path: ["answerType"],
+    },
+  )
+  .refine(
+    (data) => {
+      // sortByのバリデーション
+      return VALID_SORT_FIELDS.includes(
+        data.sortBy as (typeof VALID_SORT_FIELDS)[number],
+      );
+    },
+    {
+      message: `Invalid sort field. Must be one of: ${VALID_SORT_FIELDS.join(", ")}`,
+      path: ["sortBy"],
     },
   )
   .refine(
@@ -111,7 +159,7 @@ export const SearchQuerySchema = RawSearchQuerySchema.transform((data) => ({
       return true;
     },
     {
-      message: "minCorrectRate must be a number between 0 and 1",
+      message: "min_correct_rate must be a number between 0 and 1",
       path: ["minCorrectRate"],
     },
   )
@@ -128,7 +176,7 @@ export const SearchQuerySchema = RawSearchQuerySchema.transform((data) => ({
       return true;
     },
     {
-      message: "maxCorrectRate must be a number between 0 and 1",
+      message: "max_correct_rate must be a number between 0 and 1",
       path: ["maxCorrectRate"],
     },
   )
@@ -164,8 +212,19 @@ export const SearchQuerySchema = RawSearchQuerySchema.transform((data) => ({
       return true;
     },
     {
-      message: "minCorrectRate cannot be greater than maxCorrectRate",
+      message: "min_correct_rate cannot be greater than max_correct_rate",
       path: ["correctRate"],
+    },
+  )
+  .refine(
+    (data) => {
+      // タグの妥当性チェック
+      const allTags = [...(data.tags || []), ...(data.excludeTags || [])];
+      return allTags.every((tag) => tag.length > 0 && tag.length <= 50);
+    },
+    {
+      message: "Tag names must be between 1 and 50 characters",
+      path: ["tags"],
     },
   );
 
