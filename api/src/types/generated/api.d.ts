@@ -127,9 +127,10 @@ export interface components {
       code: 409;
       /** @enum {string} */
       message: "Resource conflict";
-      details?: string;
-      requestId?: string;
-    };
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
     CreateDeckFromSearchRequest: {
       searchQuery: string;
       filters?: components["schemas"]["QuizSearchFilters"];
@@ -239,9 +240,10 @@ export interface components {
       code: 403;
       /** @enum {string} */
       message: "Forbidden operation";
-      details?: string;
-      requestId?: string;
-    };
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
     FreeTextAnswer: {
       /** @enum {string} */
       type: "free_text";
@@ -263,9 +265,10 @@ export interface components {
       code: 500;
       /** @enum {string} */
       message: "Internal server error";
-      details?: string;
-      requestId?: string;
-    };
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
     /** @enum {string} */
     MatchingStrategy: "exact" | "partial" | "regex";
     MultipleChoiceAnswer: {
@@ -291,9 +294,10 @@ export interface components {
       code: 404;
       /** @enum {string} */
       message: "Resource not found";
-      details?: string;
-      requestId?: string;
-    };
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
     PaginationRequest: {
       /**
        * Format: int32
@@ -383,9 +387,10 @@ export interface components {
       code: 429;
       /** @enum {string} */
       message: "Rate limit exceeded";
-      details?: string;
-      requestId?: string;
-    };
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
     /** @enum {string} */
     RelationType: "hierarchy" | "category" | "synonym" | "related";
     SessionId: string;
@@ -538,9 +543,10 @@ export interface components {
       code: 401;
       /** @enum {string} */
       message: "Unauthorized access";
-      details?: string;
-      requestId?: string;
-    };
+    } & WithRequired<
+      components["schemas"]["ErrorResponse"],
+      "code" | "message"
+    >;
     UpdateQuizRequest: {
       question?: string;
       explanation?: string;
@@ -591,11 +597,8 @@ export interface components {
     ValidationError: {
       /** @enum {number} */
       code: 400;
-      message: string;
-      details?: string;
-      requestId?: string;
       fieldErrors?: Record<string, never>;
-    };
+    } & WithRequired<components["schemas"]["ErrorResponse"], "code">;
   };
   responses: never;
   parameters: never;
@@ -769,3 +772,6 @@ export interface operations {
     };
   };
 }
+type WithRequired<T, K extends keyof T> = T & {
+  [P in K]-?: T[P];
+};
