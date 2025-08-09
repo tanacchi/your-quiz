@@ -1,19 +1,26 @@
 import { err, ok, type Result, ResultAsync } from "neverthrow";
 import type { z } from "zod";
+import type { JsonParseError, ValidationError } from "../errors";
+import {
+  createJsonParseError,
+  ValidationErrorFactory,
+} from "../errors/factories";
 
 /**
  * JSONの安全なパース処理
  * @param request - json()メソッドを持つリクエストオブジェクト
- * @returns Result<unknown, string> - パース結果またはエラー
+ * @returns ResultAsync<unknown, JsonParseError> - パース結果またはエラー
  */
 export const parseJsonSafe = (request: {
   json(): Promise<unknown>;
-}): ResultAsync<unknown, string> => {
+}): ResultAsync<unknown, JsonParseError> => {
   return ResultAsync.fromPromise(request.json(), (error) => {
     if (error instanceof SyntaxError) {
-      return "INVALID_JSON";
+      return createJsonParseError(error);
     }
-    return "UNKNOWN_ERROR";
+    return createJsonParseError(
+      error instanceof Error ? error : new Error("Unknown parsing error"),
+    );
   });
 };
 
@@ -21,12 +28,17 @@ export const parseJsonSafe = (request: {
  * Zodスキーマによるバリデーション
  * @param schema - Zodスキーマ
  * @param data - バリデーション対象データ
- * @returns Result<T, string> - バリデーション結果またはエラー
+ * @returns Result<T, ValidationError> - バリデーション結果またはエラー
  */
 export const validateWithZod = <T>(
   schema: z.ZodSchema<T>,
   data: unknown,
-): Result<T, string> => {
+): Result<T, ValidationError> => {
   const result = schema.safeParse(data);
-  return result.success ? ok(result.data) : err("VALIDATION_ERROR");
+  if (result.success) {
+    return ok(result.data);
+  }
+
+  // Zodエラーを詳細なValidationErrorに変換
+  return err(ValidationErrorFactory.fromZodError(result.error));
 };

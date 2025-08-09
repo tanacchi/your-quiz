@@ -1,8 +1,11 @@
 import { ResultAsync } from "neverthrow";
+import {
+  type RepositoryError,
+  RepositoryErrorFactory,
+} from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
 import type { Quiz } from "../../domain/entities/Quiz";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
-
 /**
  * モッククイズリポジトリ実装
  * 本番環境ではCloudflare D1に置き換える
@@ -59,7 +62,7 @@ export class MockQuizRepository implements IQuizRepository {
   create(
     quiz: Quiz,
     solution: components["schemas"]["Solution"],
-  ): ResultAsync<Quiz, string> {
+  ): ResultAsync<Quiz, RepositoryError> {
     // モックデータに追加（実際のD1では永続化）
     const newQuizWithSolution: components["schemas"]["QuizWithSolution"] = {
       id: quiz.id,
@@ -79,14 +82,17 @@ export class MockQuizRepository implements IQuizRepository {
       new Promise((resolve) => resolve(quiz)),
       (error) => {
         console.error("Failed to create quiz:", error);
-        return "CREATE_FAILED";
+        return RepositoryErrorFactory.createFailed("Quiz", error);
       },
     );
   }
 
   findById(
     id: string,
-  ): ResultAsync<components["schemas"]["QuizWithSolution"] | null, string> {
+  ): ResultAsync<
+    components["schemas"]["QuizWithSolution"] | null,
+    RepositoryError
+  > {
     return ResultAsync.fromPromise(
       new Promise((resolve) => {
         const quiz = this.mockData.find((q) => q.id === id) || null;
@@ -94,7 +100,7 @@ export class MockQuizRepository implements IQuizRepository {
       }),
       (error) => {
         console.error("Failed to find quiz by ID:", error);
-        return "FIND_BY_ID_FAILED";
+        return RepositoryErrorFactory.findFailed("Quiz", error);
       },
     );
   }
@@ -113,7 +119,7 @@ export class MockQuizRepository implements IQuizRepository {
       totalCount: number;
       hasMore: boolean;
     },
-    string
+    RepositoryError
   > {
     let filteredData = [...this.mockData];
 
@@ -144,29 +150,32 @@ export class MockQuizRepository implements IQuizRepository {
       }),
       (error) => {
         console.error("Failed to find quizzes:", error);
-        return "FIND_MANY_FAILED";
+        return RepositoryErrorFactory.findFailed("Quiz", error);
       },
     );
   }
 
-  update(_id: string, _quiz: Partial<Quiz>): ResultAsync<Quiz, string> {
+  update(
+    _id: string,
+    _quiz: Partial<Quiz>,
+  ): ResultAsync<Quiz, RepositoryError> {
     // 今回は実装せず、将来追加
     return ResultAsync.fromPromise(
-      Promise.reject("NOT_IMPLEMENTED"),
+      Promise.reject(new Error("NOT_IMPLEMENTED")),
       (error) => {
         console.error("Failed to update quiz:", error);
-        return "UPDATE_FAILED";
+        return RepositoryErrorFactory.notImplemented("update quiz");
       },
     );
   }
 
-  delete(_id: string): ResultAsync<void, string> {
+  delete(_id: string): ResultAsync<void, RepositoryError> {
     // 今回は実装せず、将来追加
     return ResultAsync.fromPromise(
-      Promise.reject("NOT_IMPLEMENTED"),
+      Promise.reject(new Error("NOT_IMPLEMENTED")),
       (error) => {
         console.error("Failed to delete quiz:", error);
-        return "DELETE_FAILED";
+        return RepositoryErrorFactory.notImplemented("delete quiz");
       },
     );
   }
