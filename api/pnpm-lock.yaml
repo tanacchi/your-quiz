@@ -39,6 +39,9 @@ importers:
       pactum:
         specifier: ^3.7.1
         version: 3.8.0
+      pactum-matchers:
+        specifier: ^1.1.7
+        version: 1.1.7
       ts-jest:
         specifier: ^29.0.0
         version: 29.4.1(@babel/core@7.28.0)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.0))(jest-util@29.7.0)(jest@29.7.0(@types/node@20.19.9))(typescript@5.9.2)
