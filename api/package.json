@@ -12,7 +12,11 @@
     "test": "run-p test:*",
     "test:api": "jest --config=jest.config.cjs",
     "test:api:watch": "pnpm test:api --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:mig:create": "wrangler d1 migrations create quiz-db init",
+    "db:mig:apply": "wrangler d1 migrations apply quiz-db --local",
+    "db:seed": "wrangler d1 execute quiz-db --local --file migrations/dev/seed.sql",
+    "db:reset": "rm -rf .wrangler/state && pnpm db:mig:apply && pnpm db:seed"
   },
   "dependencies": {
     "hono": "^4.9.0",
