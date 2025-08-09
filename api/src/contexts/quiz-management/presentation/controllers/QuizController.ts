@@ -4,6 +4,7 @@ import { parseJsonSafe, validateWithZod } from "../../../../shared/utils";
 import type {
   CreateQuizUseCase,
   GetQuizUseCase,
+  ListQuizzesQuery,
   ListQuizzesUseCase,
 } from "../../application/use-cases";
 import { ControllerErrorHandler } from "../errors";
@@ -118,12 +119,24 @@ export class QuizController {
    */
   async listQuizzes(c: AppContext) {
     // クエリパラメータから検索条件を取得
-    const query = {
+    const query: ListQuizzesQuery = {
       status: c.req.query("status") as components["schemas"]["QuizStatus"],
-      creatorId: c.req.query("creatorId"),
-      limit: c.req.query("limit") ? Number(c.req.query("limit")) : undefined,
-      offset: c.req.query("offset") ? Number(c.req.query("offset")) : undefined,
     };
+
+    const creatorId = c.req.query("creatorId");
+    if (creatorId) {
+      query.creatorId = creatorId;
+    }
+
+    const limitParam = c.req.query("limit");
+    if (limitParam) {
+      query.limit = Number(limitParam);
+    }
+
+    const offsetParam = c.req.query("offset");
+    if (offsetParam) {
+      query.offset = Number(offsetParam);
+    }
 
     const result = await this.listQuizzesUseCase.execute(query);
 
