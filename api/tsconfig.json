@@ -10,7 +10,7 @@
     "lib": ["ESNext"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "types": ["./worker-configuration.d.ts", "jest", "node"],
+    "types": ["./worker-configuration.d.ts", "vitest/globals", "node"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true

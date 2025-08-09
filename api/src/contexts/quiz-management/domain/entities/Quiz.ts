@@ -1,4 +1,5 @@
 import type { components } from "../../../../shared/types";
+import { ok, err, type Result } from "neverthrow";
 
 /**
  * クイズドメインエンティティ
@@ -45,7 +46,7 @@ export class Quiz {
   /**
    * クイズが更新可能かどうかを判定する
    *
-   * @returns 承認待ち状態の場合のみtrue、それ以外はfalse
+   * @returns draft または pending_approval 状態の場合true、それ以外false
    */
   public canBeUpdated(): boolean {
     return this.status === "pending_approval";
@@ -54,22 +55,24 @@ export class Quiz {
   /**
    * クイズが削除可能かどうかを判定する
    *
-   * @returns 拒否状態でない場合はtrue、拒否状態の場合はfalse
-   * @remarks publishedステータスは未実装のため、現在はrejected以外を削除可能としている
+   * @returns draft、pending_approval、rejected 状態の場合true、approved状態の場合false
    */
   public canBeDeleted(): boolean {
-    // publishedはまだ未実装のため、rejectedでない場合は削除可能とする
-    return this.status !== "rejected";
+    return this.status !== "approved";
   }
 
   /**
    * クイズを承認状態に変更する
    *
-   * @param _approverId - 承認者の識別子（現在は未使用）
-   * @returns 承認状態に更新された新しいQuizインスタンス
+   * @param approvedAt - 承認日時
+   * @returns 成功時は承認状態に更新されたQuizインスタンス、失敗時はエラー
    */
-  public approve(_approverId: string): Quiz {
-    return new Quiz(
+  public approve(approvedAt: string): Result<Quiz, Error> {
+    if (this.status !== "pending_approval") {
+      return err(new Error(`Quiz with status ${this.status} cannot be approved`));
+    }
+
+    return ok(new Quiz(
       this.id,
       this.question,
       this.answerType,
@@ -78,7 +81,7 @@ export class Quiz {
       "approved",
       this.creatorId,
       this.createdAt,
-      new Date().toISOString(),
-    );
+      approvedAt,
+    ));
   }
 }
