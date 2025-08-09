@@ -82,7 +82,10 @@ export class MockQuizRepository implements IQuizRepository {
       new Promise((resolve) => resolve(quiz)),
       (error) => {
         console.error("Failed to create quiz:", error);
-        return RepositoryErrorFactory.createFailed("Quiz", error);
+        return RepositoryErrorFactory.createFailed(
+          "Quiz",
+          error instanceof Error ? error : undefined,
+        );
       },
     );
   }
@@ -100,7 +103,10 @@ export class MockQuizRepository implements IQuizRepository {
       }),
       (error) => {
         console.error("Failed to find quiz by ID:", error);
-        return RepositoryErrorFactory.findFailed("Quiz", error);
+        return RepositoryErrorFactory.findFailed(
+          "Quiz",
+          error instanceof Error ? error : undefined,
+        );
       },
     );
   }
@@ -150,7 +156,10 @@ export class MockQuizRepository implements IQuizRepository {
       }),
       (error) => {
         console.error("Failed to find quizzes:", error);
-        return RepositoryErrorFactory.findFailed("Quiz", error);
+        return RepositoryErrorFactory.findFailed(
+          "Quiz",
+          error instanceof Error ? error : undefined,
+        );
       },
     );
   }
@@ -164,7 +173,10 @@ export class MockQuizRepository implements IQuizRepository {
       Promise.reject(new Error("NOT_IMPLEMENTED")),
       (error) => {
         console.error("Failed to update quiz:", error);
-        return RepositoryErrorFactory.notImplemented("update quiz");
+        return RepositoryErrorFactory.updateFailed(
+          "Quiz",
+          error instanceof Error ? error : undefined,
+        );
       },
     );
   }
@@ -175,7 +187,10 @@ export class MockQuizRepository implements IQuizRepository {
       Promise.reject(new Error("NOT_IMPLEMENTED")),
       (error) => {
         console.error("Failed to delete quiz:", error);
-        return RepositoryErrorFactory.notImplemented("delete quiz");
+        return RepositoryErrorFactory.deleteFailed(
+          "Quiz",
+          error instanceof Error ? error : undefined,
+        );
       },
     );
   }
