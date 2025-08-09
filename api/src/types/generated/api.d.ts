@@ -41,6 +41,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/search/v1/quizzes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search quizzes with advanced filters */
+    get: operations["Search_searchQuizzes"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -173,23 +190,6 @@ export interface components {
       /** @enum {string} */
       status: "pending_approval";
       estimatedApprovalDate?: components["schemas"]["UtcDateTime"];
-    };
-    CreateTagRelationRequest: {
-      parentTagId: components["schemas"]["TagId"];
-      childTagId: components["schemas"]["TagId"];
-      relationType: components["schemas"]["RelationType"];
-    };
-    CreateTagRequest: {
-      name: string;
-      /** @default user */
-      type: components["schemas"]["TagType"];
-      parentTagId?: components["schemas"]["TagId"];
-      /** @default hierarchy */
-      relationType: components["schemas"]["RelationType"];
-    };
-    CreateTagResponse: {
-      tag: components["schemas"]["Tag"];
-      relation?: components["schemas"]["TagRelation"];
     };
     CreateUserAccountRequest: {
       name: string;
@@ -362,12 +362,6 @@ export interface components {
     };
     /** @enum {string} */
     QuizStatus: "pending_approval" | "approved" | "rejected";
-    QuizTag: {
-      id: components["schemas"]["QuizTagId"];
-      quizId: components["schemas"]["QuizId"];
-      tagId: components["schemas"]["TagId"];
-      assignedAt: components["schemas"]["UtcDateTime"];
-    };
     QuizTagId: string;
     QuizWithSolution: {
       id: components["schemas"]["QuizId"];
@@ -463,81 +457,10 @@ export interface components {
       createdBy?: components["schemas"]["UserId"];
       createdAt: components["schemas"]["UtcDateTime"];
     };
-    TagHierarchy: {
-      tag: components["schemas"]["Tag"];
-      ancestors: components["schemas"]["Tag"][];
-      descendants: components["schemas"]["Tag"][];
-      /** Format: int32 */
-      level: number;
-    };
-    TagHierarchyResponse: {
-      items: components["schemas"]["TagHierarchy"][];
-      /** Format: int32 */
-      totalCount: number;
-      hasMore: boolean;
-      continuationToken?: string;
-    };
     TagId: string;
-    TagListResponse: {
-      items: components["schemas"]["TagWithChildren"][];
-      /** Format: int32 */
-      totalCount: number;
-      hasMore: boolean;
-      continuationToken?: string;
-    };
-    TagRelation: {
-      id: components["schemas"]["TagRelationId"];
-      parentTagId: components["schemas"]["TagId"];
-      childTagId: components["schemas"]["TagId"];
-      relationType: components["schemas"]["RelationType"];
-      createdAt: components["schemas"]["UtcDateTime"];
-    };
     TagRelationId: string;
-    TagSearchRequest: {
-      query?: string;
-      type?: components["schemas"]["TagType"];
-      parentTagId?: components["schemas"]["TagId"];
-      /** @default false */
-      includeHierarchy: boolean;
-    };
-    TagStatisticsResponse: {
-      items: components["schemas"]["TagUsageStatistics"][];
-      /** Format: int32 */
-      totalCount: number;
-      hasMore: boolean;
-      continuationToken?: string;
-    };
     /** @enum {string} */
     TagType: "official" | "user";
-    TagUsageStatistics: {
-      tag: components["schemas"]["Tag"];
-      /** Format: int32 */
-      quizCount: number;
-      /** Format: float */
-      popularityScore: number;
-      /** Format: int32 */
-      recentUsage: number;
-    };
-    TagWithChildren: {
-      id: components["schemas"]["TagId"];
-      name: string;
-      type: components["schemas"]["TagType"];
-      createdBy?: components["schemas"]["UserId"];
-      createdAt: components["schemas"]["UtcDateTime"];
-      children: components["schemas"]["Tag"][];
-      /** Format: int32 */
-      childrenCount: number;
-    };
-    TagWithParents: {
-      id: components["schemas"]["TagId"];
-      name: string;
-      type: components["schemas"]["TagType"];
-      createdBy?: components["schemas"]["UserId"];
-      createdAt: components["schemas"]["UtcDateTime"];
-      parents: components["schemas"]["Tag"][];
-      /** Format: int32 */
-      parentsCount: number;
-    };
     UnauthorizedError: {
       /** @enum {number} */
       code: 401;
@@ -554,9 +477,6 @@ export interface components {
     };
     UpdateSessionRequest: {
       isCompleted?: boolean;
-    };
-    UpdateTagRequest: {
-      name?: string;
     };
     UpdateUserAccountRequest: {
       name?: string;
@@ -613,7 +533,7 @@ export interface operations {
       query?: {
         status?: components["schemas"]["QuizStatus"];
         creatorId?: components["schemas"]["UserId"];
-        tags?: string[];
+        ids?: string[];
       };
       header?: never;
       path?: never;
@@ -767,6 +687,42 @@ export interface operations {
           "application/json":
             | components["schemas"]["NotFoundError"]
             | components["schemas"]["ForbiddenError"];
+        };
+      };
+    };
+  };
+  Search_searchQuizzes: {
+    parameters: {
+      query?: {
+        q?: string;
+        tags?: string[];
+        difficulty?: string;
+        answerType?: components["schemas"]["AnswerType"];
+        creatorId?: components["schemas"]["UserId"];
+        minCorrectRate?: number;
+        maxCorrectRate?: number;
+        createdAfter?: string;
+        createdBefore?: string;
+        sortBy?: "relevance" | "created_date" | "popularity" | "difficulty";
+        sortOrder?: "asc" | "desc";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PaginationRequest"];
+      };
+    };
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuizListResponse"];
         };
       };
     };

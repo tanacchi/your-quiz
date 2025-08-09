@@ -43,7 +43,7 @@ interface QuizManagement {
     ...PaginationRequest,
     @query status?: QuizStatus,
     @query creatorId?: UserId,
-    @query tags?: string[]
+    @query ids?: string[]
   ): QuizListResponse;
   
   // Approval workflow operations (commented out)

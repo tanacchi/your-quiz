@@ -115,7 +115,7 @@ export class MockQuizRepository implements IQuizRepository {
     options: {
       status?: components["schemas"]["QuizStatus"];
       creatorId?: string;
-      tags?: string[];
+      ids?: string[];
       limit?: number;
       offset?: number;
     } = {},
@@ -138,6 +138,11 @@ export class MockQuizRepository implements IQuizRepository {
     if (options.creatorId) {
       filteredData = filteredData.filter(
         (quiz) => quiz.creatorId === options.creatorId,
+      );
+    }
+    if (options.ids && options.ids.length > 0) {
+      filteredData = filteredData.filter((quiz) =>
+        options.ids?.includes(quiz.id),
       );
     }
 
