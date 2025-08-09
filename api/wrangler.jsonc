@@ -30,7 +30,9 @@
     {
       "binding": "DB",
       "database_name": "quiz-db",
-      "database_id": "YOUR_DATABASE_ID"
+      "migrations_dir": "migrations",
+      "database_id": "b873de55-c382-443d-8714-3d7c1eeef282",
+      "preview_database_id": "local"
     }
   ],
 

@@ -6,7 +6,11 @@ import type { Context } from "hono";
  * 環境変数、KV、D1、R2などのCloudflare Workers固有のリソースへのアクセスを提供します。
  * プロジェクトの要件に応じて具体的な型を定義することができます。
  */
-export type CloudflareBindings = Record<string, unknown>;
+export type CloudflareBindings = {
+  DB: D1Database;
+  NODE_ENV: string;
+  ASSETS: Fetcher;
+};
 
 /**
  * アプリケーション共通のContext型定義
