@@ -128,6 +128,12 @@ export class QuizController {
       query.creatorId = creatorId;
     }
 
+    // idsパラメータの処理（配列形式に対応）
+    const idsParam = c.req.queries("ids");
+    if (idsParam && idsParam.length > 0) {
+      query.ids = idsParam;
+    }
+
     const limitParam = c.req.query("limit");
     if (limitParam) {
       query.limit = Number(limitParam);

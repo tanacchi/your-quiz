@@ -4,40 +4,6 @@
  */
 
 export interface paths {
-  "/api/quiz/v1/manage/quality/flag": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** @description Flag quiz for quality review */
-    post: operations["QuizManagement_flagQuiz"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/quiz/v1/manage/quality/report": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** @description Get quality report */
-    get: operations["QuizManagement_getQualityReport"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/quiz/v1/manage/quizzes": {
     parameters: {
       query?: never;
@@ -48,7 +14,7 @@ export interface paths {
     /** @description List quizzes (with filters) */
     get: operations["QuizManagement_listQuizzes"];
     put?: never;
-    /** @description Create a new quiz (pending approval) */
+    /** @description Create a new quiz */
     post: operations["QuizManagement_createQuiz"];
     delete?: never;
     options?: never;
@@ -65,93 +31,25 @@ export interface paths {
     };
     /** @description Get quiz details */
     get: operations["QuizManagement_getQuiz"];
-    /** @description Update quiz (creator only, before approval) */
+    /** @description Update quiz */
     put: operations["QuizManagement_updateQuiz"];
     post?: never;
-    /** @description Delete quiz (creator only) */
+    /** @description Delete quiz */
     delete: operations["QuizManagement_deleteQuiz"];
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/quiz/v1/manage/quizzes/{id}/approve": {
+  "/api/search/v1/quizzes": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get?: never;
-    put?: never;
-    /** @description Approve quiz (admin only) */
-    post: operations["QuizManagement_approveQuiz"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/quiz/v1/manage/quizzes/{id}/publish": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** @description Publish approved quiz (admin only) */
-    post: operations["QuizManagement_publishQuiz"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/quiz/v1/manage/quizzes/{id}/reject": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** @description Reject quiz (admin only) */
-    post: operations["QuizManagement_rejectQuiz"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/quiz/v1/manage/quizzes/{id}/submit": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** @description Submit quiz for approval */
-    post: operations["QuizManagement_submitForApproval"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/quiz/v1/manage/statistics/creator/{creatorId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** @description Get creator statistics */
-    get: operations["QuizManagement_getCreatorStatistics"];
+    /** @description Search quizzes with advanced filters */
+    get: operations["Search_searchQuizzes"];
     put?: never;
     post?: never;
     delete?: never;
@@ -292,23 +190,6 @@ export interface components {
       /** @enum {string} */
       status: "pending_approval";
       estimatedApprovalDate?: components["schemas"]["UtcDateTime"];
-    };
-    CreateTagRelationRequest: {
-      parentTagId: components["schemas"]["TagId"];
-      childTagId: components["schemas"]["TagId"];
-      relationType: components["schemas"]["RelationType"];
-    };
-    CreateTagRequest: {
-      name: string;
-      /** @default user */
-      type: components["schemas"]["TagType"];
-      parentTagId?: components["schemas"]["TagId"];
-      /** @default hierarchy */
-      relationType: components["schemas"]["RelationType"];
-    };
-    CreateTagResponse: {
-      tag: components["schemas"]["Tag"];
-      relation?: components["schemas"]["TagRelation"];
     };
     CreateUserAccountRequest: {
       name: string;
@@ -481,12 +362,6 @@ export interface components {
     };
     /** @enum {string} */
     QuizStatus: "pending_approval" | "approved" | "rejected";
-    QuizTag: {
-      id: components["schemas"]["QuizTagId"];
-      quizId: components["schemas"]["QuizId"];
-      tagId: components["schemas"]["TagId"];
-      assignedAt: components["schemas"]["UtcDateTime"];
-    };
     QuizTagId: string;
     QuizWithSolution: {
       id: components["schemas"]["QuizId"];
@@ -582,81 +457,10 @@ export interface components {
       createdBy?: components["schemas"]["UserId"];
       createdAt: components["schemas"]["UtcDateTime"];
     };
-    TagHierarchy: {
-      tag: components["schemas"]["Tag"];
-      ancestors: components["schemas"]["Tag"][];
-      descendants: components["schemas"]["Tag"][];
-      /** Format: int32 */
-      level: number;
-    };
-    TagHierarchyResponse: {
-      items: components["schemas"]["TagHierarchy"][];
-      /** Format: int32 */
-      totalCount: number;
-      hasMore: boolean;
-      continuationToken?: string;
-    };
     TagId: string;
-    TagListResponse: {
-      items: components["schemas"]["TagWithChildren"][];
-      /** Format: int32 */
-      totalCount: number;
-      hasMore: boolean;
-      continuationToken?: string;
-    };
-    TagRelation: {
-      id: components["schemas"]["TagRelationId"];
-      parentTagId: components["schemas"]["TagId"];
-      childTagId: components["schemas"]["TagId"];
-      relationType: components["schemas"]["RelationType"];
-      createdAt: components["schemas"]["UtcDateTime"];
-    };
     TagRelationId: string;
-    TagSearchRequest: {
-      query?: string;
-      type?: components["schemas"]["TagType"];
-      parentTagId?: components["schemas"]["TagId"];
-      /** @default false */
-      includeHierarchy: boolean;
-    };
-    TagStatisticsResponse: {
-      items: components["schemas"]["TagUsageStatistics"][];
-      /** Format: int32 */
-      totalCount: number;
-      hasMore: boolean;
-      continuationToken?: string;
-    };
     /** @enum {string} */
     TagType: "official" | "user";
-    TagUsageStatistics: {
-      tag: components["schemas"]["Tag"];
-      /** Format: int32 */
-      quizCount: number;
-      /** Format: float */
-      popularityScore: number;
-      /** Format: int32 */
-      recentUsage: number;
-    };
-    TagWithChildren: {
-      id: components["schemas"]["TagId"];
-      name: string;
-      type: components["schemas"]["TagType"];
-      createdBy?: components["schemas"]["UserId"];
-      createdAt: components["schemas"]["UtcDateTime"];
-      children: components["schemas"]["Tag"][];
-      /** Format: int32 */
-      childrenCount: number;
-    };
-    TagWithParents: {
-      id: components["schemas"]["TagId"];
-      name: string;
-      type: components["schemas"]["TagType"];
-      createdBy?: components["schemas"]["UserId"];
-      createdAt: components["schemas"]["UtcDateTime"];
-      parents: components["schemas"]["Tag"][];
-      /** Format: int32 */
-      parentsCount: number;
-    };
     UnauthorizedError: {
       /** @enum {number} */
       code: 401;
@@ -673,9 +477,6 @@ export interface components {
     };
     UpdateSessionRequest: {
       isCompleted?: boolean;
-    };
-    UpdateTagRequest: {
-      name?: string;
     };
     UpdateUserAccountRequest: {
       name?: string;
@@ -727,99 +528,12 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  QuizManagement_flagQuiz: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          quizId: components["schemas"]["QuizId"];
-          /** @enum {string} */
-          reason:
-            | "spam"
-            | "inappropriate"
-            | "incorrect"
-            | "duplicate"
-            | "other";
-          description?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description The request has succeeded. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            flagId: string;
-            /** @enum {string} */
-            status: "pending_review";
-          };
-        };
-      };
-      /** @description An unexpected error response. */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["NotFoundError"]
-            | components["schemas"]["ValidationError"];
-        };
-      };
-    };
-  };
-  QuizManagement_getQualityReport: {
-    parameters: {
-      query?: {
-        period?: "day" | "week" | "month";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["PaginationRequest"];
-      };
-    };
-    responses: {
-      /** @description The request has succeeded. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            items: {
-              quizId: components["schemas"]["QuizId"];
-              /** Format: float */
-              qualityScore: number;
-              issues: string[];
-              recommendations: string[];
-            }[];
-            /** Format: int32 */
-            totalCount: number;
-            hasMore: boolean;
-            continuationToken?: string;
-          };
-        };
-      };
-    };
-  };
   QuizManagement_listQuizzes: {
     parameters: {
       query?: {
         status?: components["schemas"]["QuizStatus"];
         creatorId?: components["schemas"]["UserId"];
-        tags?: string[];
+        ids?: string[];
       };
       header?: never;
       path?: never;
@@ -861,7 +575,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CreateQuizResponse"];
+          "application/json": components["schemas"]["QuizWithSolution"];
         };
       };
       /** @description An unexpected error response. */
@@ -977,18 +691,28 @@ export interface operations {
       };
     };
   };
-  QuizManagement_approveQuiz: {
+  Search_searchQuizzes: {
     parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: components["schemas"]["QuizId"];
+      query?: {
+        q?: string;
+        tags?: string[];
+        difficulty?: string;
+        answerType?: components["schemas"]["AnswerType"];
+        creatorId?: components["schemas"]["UserId"];
+        minCorrectRate?: number;
+        maxCorrectRate?: number;
+        createdAfter?: string;
+        createdBefore?: string;
+        sortBy?: "relevance" | "created_date" | "popularity" | "difficulty";
+        sortOrder?: "asc" | "desc";
       };
+      header?: never;
+      path?: never;
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["ApprovalRequest"];
+        "application/json": components["schemas"]["PaginationRequest"];
       };
     };
     responses: {
@@ -998,174 +722,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["Quiz"];
-        };
-      };
-      /** @description An unexpected error response. */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["NotFoundError"]
-            | components["schemas"]["ForbiddenError"];
-        };
-      };
-    };
-  };
-  QuizManagement_publishQuiz: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: components["schemas"]["QuizId"];
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description The request has succeeded. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Quiz"];
-        };
-      };
-      /** @description An unexpected error response. */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["NotFoundError"]
-            | components["schemas"]["ForbiddenError"]
-            | components["schemas"]["ConflictError"];
-        };
-      };
-    };
-  };
-  QuizManagement_rejectQuiz: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: components["schemas"]["QuizId"];
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ApprovalRequest"];
-      };
-    };
-    responses: {
-      /** @description The request has succeeded. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Quiz"];
-        };
-      };
-      /** @description An unexpected error response. */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["NotFoundError"]
-            | components["schemas"]["ForbiddenError"];
-        };
-      };
-    };
-  };
-  QuizManagement_submitForApproval: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: components["schemas"]["QuizId"];
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description The request has succeeded. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            quiz: components["schemas"]["Quiz"];
-            /** @enum {string} */
-            status: "pending_approval";
-            estimatedApprovalDate?: components["schemas"]["UtcDateTime"];
-          };
-        };
-      };
-      /** @description An unexpected error response. */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["NotFoundError"]
-            | components["schemas"]["ForbiddenError"]
-            | components["schemas"]["ConflictError"];
-        };
-      };
-    };
-  };
-  QuizManagement_getCreatorStatistics: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        creatorId: components["schemas"]["UserId"];
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description The request has succeeded. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            /** Format: int32 */
-            totalQuizzes: number;
-            /** Format: int32 */
-            publishedQuizzes: number;
-            /** Format: int32 */
-            totalAnswers: number;
-            /** Format: float */
-            averageCorrectRate: number;
-            /** Format: float */
-            popularityScore: number;
-            /** Format: float */
-            qualityScore: number;
-            tagDistribution: Record<string, never>;
-            difficultyDistribution: Record<string, never>;
-          };
-        };
-      };
-      /** @description An unexpected error response. */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["NotFoundError"];
+          "application/json": components["schemas"]["QuizListResponse"];
         };
       };
     };

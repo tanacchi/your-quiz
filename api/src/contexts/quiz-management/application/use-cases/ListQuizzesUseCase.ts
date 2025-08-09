@@ -11,7 +11,7 @@ import {
 export type ListQuizzesQuery = {
   status?: components["schemas"]["QuizStatus"];
   creatorId?: string;
-  tags?: string[];
+  ids?: string[];
   limit?: number;
   offset?: number;
 };

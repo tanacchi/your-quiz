@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { quizRoutes } from "./contexts/quiz-management/presentation/routes/quiz.routes";
+import { searchRoutes } from "./contexts/search/presentation/routes/search.routes";
 import type { CloudflareBindings } from "./shared/types";
 
 /**
@@ -28,8 +29,10 @@ const app = new Hono<{ Bindings: CloudflareBindings }>();
  * API ルートの設定
  *
  * クイズ管理関連のルートを /api/quiz/v1/manage パスにマウントします。
+ * 検索関連のルートを /api/search/v1 パスにマウントします。
  */
 app.route("/api/quiz/v1/manage", quizRoutes);
+app.route("/api/search/v1", searchRoutes);
 
 /**
  * ヘルスチェックエンドポイント
