@@ -26,7 +26,7 @@ describe("Quiz Creation - クイズ作成", () => {
           // When: Quiz creation endpoint is executed
           const response = await spec()
             .post(testCase.endpoint)
-            .withJson(testCase.testData as object)
+            .withJson(testCase.testData)
             .expectStatus(testCase.expectedStatus);
 
           const body = response.json;
@@ -56,7 +56,7 @@ describe("Quiz Creation - クイズ作成", () => {
         // When: Quiz is created
         const response = await spec()
           .post(testCase.endpoint)
-          .withJson(testCase.input as object)
+          .withJson(testCase.input)
           .expectStatus(testCase.expectedStatus);
 
         // Then: Quiz creation should succeed
@@ -88,7 +88,7 @@ describe("Quiz Creation - クイズ作成", () => {
         // When: Quiz creation is attempted
         const response = await spec()
           .post(testCase.endpoint)
-          .withJson(testCase.input as object)
+          .withJson(testCase.input)
           .expectStatus(testCase.expectedStatus);
 
         // Then: Should return validation error
@@ -109,7 +109,7 @@ describe("Quiz Creation - クイズ作成", () => {
           // When: Quiz is created
           const response = await spec()
             .post(testCase.endpoint)
-            .withJson(testCase.testData as object)
+            .withJson(testCase.testData)
             .expectStatus(testCase.expectedStatus);
 
           // Then: Quiz creation should succeed with correct type
@@ -131,7 +131,7 @@ describe("Quiz Creation - クイズ作成", () => {
           // When: Request is made to creation endpoint
           const response = await spec()
             .post(testCase.endpoint)
-            .withJson(testCase.testData as object)
+            .withJson(testCase.testData)
             .expectStatus(testCase.expectedStatus);
 
           const body = response.json;
@@ -163,7 +163,7 @@ describe("Quiz Creation - クイズ作成", () => {
           // When: Request schema component is validated
           const response = await spec()
             .post(testCase.endpoint)
-            .withJson(testCase.testData as object)
+            .withJson(testCase.testData)
             .expectStatus(testCase.expectedStatus);
 
           // Then: Current implementation should match generated types
@@ -194,7 +194,7 @@ describe("Quiz Creation - クイズ作成", () => {
         // When: Quiz creation is attempted
         const response = await spec()
           .post(testCase.endpoint)
-          .withJson(testData as object)
+          .withJson(testData)
           .expectStatus(testCase.expectedStatus);
 
         // Then: Character limit validation should work correctly
