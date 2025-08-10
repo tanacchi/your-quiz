@@ -61,7 +61,7 @@ interface Search {
     @doc("作成者のユーザーIDによるフィルター（UUID形式）")
     @query creator_id?: UserId,
     
-    @doc("除外するクイズのID配列（UUID形式）。指定されたIDのクイズを検索結果から除外")
+    @doc("除外するクイズのID配列。指定されたIDのクイズを検索結果から除外")
     @query exclude_ids?: QuizId[],
     
     @doc("最小正答率フィルター（0.0〜1.0）。例：0.8で正答率80%以上のクイズのみ")

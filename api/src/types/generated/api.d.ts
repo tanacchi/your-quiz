@@ -863,7 +863,7 @@ export interface operations {
         answer_type?: components["schemas"]["AnswerType"];
         /** @description 作成者のユーザーIDによるフィルター（UUID形式） */
         creator_id?: components["schemas"]["UserId"];
-        /** @description 除外するクイズのID配列（UUID形式）。指定されたIDのクイズを検索結果から除外 */
+        /** @description 除外するクイズのID配列。指定されたIDのクイズを検索結果から除外 */
         exclude_ids?: components["schemas"]["QuizId"][];
         /** @description 最小正答率フィルター（0.0〜1.0）。例：0.8で正答率80%以上のクイズのみ */
         min_correct_rate?: number;
