@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { Quiz } from "./Quiz";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { components } from "../../../../shared/types";
+import { Quiz } from "./Quiz";
 
 // TDDアプローチ：Quiz エンティティの単体テスト
 describe("Quiz Domain Entity", () => {
@@ -29,7 +29,7 @@ describe("Quiz Domain Entity", () => {
           VALID_QUIZ_DATA.explanation,
           VALID_QUIZ_DATA.status,
           VALID_QUIZ_DATA.creatorId,
-          VALID_QUIZ_DATA.createdAt
+          VALID_QUIZ_DATA.createdAt,
         );
 
         // Assert
@@ -50,7 +50,7 @@ describe("Quiz Domain Entity", () => {
           VALID_QUIZ_DATA.id,
           VALID_QUIZ_DATA.question,
           VALID_QUIZ_DATA.answerType,
-          VALID_QUIZ_DATA.solutionId
+          VALID_QUIZ_DATA.solutionId,
         );
 
         // Assert
@@ -71,15 +71,21 @@ describe("Quiz Domain Entity", () => {
       it.each([
         ["boolean", "boolean" as components["schemas"]["AnswerType"]],
         ["free_text", "free_text" as components["schemas"]["AnswerType"]],
-        ["single_choice", "single_choice" as components["schemas"]["AnswerType"]],
-        ["multiple_choice", "multiple_choice" as components["schemas"]["AnswerType"]],
+        [
+          "single_choice",
+          "single_choice" as components["schemas"]["AnswerType"],
+        ],
+        [
+          "multiple_choice",
+          "multiple_choice" as components["schemas"]["AnswerType"],
+        ],
       ])("should accept valid answer type: %s", (_description, answerType) => {
         // Arrange & Act
         const quiz = new Quiz(
           "test-id",
           "Test question?",
           answerType,
-          "test-solution"
+          "test-solution",
         );
 
         // Assert
@@ -88,7 +94,10 @@ describe("Quiz Domain Entity", () => {
 
       // パラメータ化テスト：異なるstatus値での境界値テスト
       it.each([
-        ["pending_approval", "pending_approval" as components["schemas"]["QuizStatus"]],
+        [
+          "pending_approval",
+          "pending_approval" as components["schemas"]["QuizStatus"],
+        ],
         ["approved", "approved" as components["schemas"]["QuizStatus"]],
         ["rejected", "rejected" as components["schemas"]["QuizStatus"]],
       ])("should accept valid status: %s", (_description, status) => {
@@ -99,7 +108,7 @@ describe("Quiz Domain Entity", () => {
           "boolean",
           "test-solution",
           undefined,
-          status
+          status,
         );
 
         // Assert
@@ -120,7 +129,7 @@ describe("Quiz Domain Entity", () => {
         VALID_QUIZ_DATA.explanation,
         VALID_QUIZ_DATA.status,
         VALID_QUIZ_DATA.creatorId,
-        VALID_QUIZ_DATA.createdAt
+        VALID_QUIZ_DATA.createdAt,
       );
     });
 
@@ -130,23 +139,26 @@ describe("Quiz Domain Entity", () => {
         ["pending_approval", true, "承認待ち状態では更新可能"],
         ["approved", false, "承認済み状態では更新不可"],
         ["rejected", false, "却下済み状態では更新不可"],
-      ])("should return %s when status is %s (%s)", (status, expected, _description) => {
-        // Arrange
-        const quizWithStatus = new Quiz(
-          "test-id",
-          "Test question?",
-          "boolean",
-          "test-solution",
-          undefined,
-          status as components["schemas"]["QuizStatus"]
-        );
+      ])(
+        "should return %s when status is %s (%s)",
+        (status, expected, _description) => {
+          // Arrange
+          const quizWithStatus = new Quiz(
+            "test-id",
+            "Test question?",
+            "boolean",
+            "test-solution",
+            undefined,
+            status as components["schemas"]["QuizStatus"],
+          );
 
-        // Act
-        const result = quizWithStatus.canBeUpdated();
+          // Act
+          const result = quizWithStatus.canBeUpdated();
 
-        // Assert
-        expect(result).toBe(expected);
-      });
+          // Assert
+          expect(result).toBe(expected);
+        },
+      );
     });
 
     describe("canBeDeleted() - 削除可能性判定", () => {
@@ -155,23 +167,26 @@ describe("Quiz Domain Entity", () => {
         ["pending_approval", true, "承認待ち状態では削除可能"],
         ["approved", false, "承認済み状態では削除不可"],
         ["rejected", true, "却下済み状態では削除可能"],
-      ])("should return %s when status is %s (%s)", (status, expected, _description) => {
-        // Arrange
-        const quizWithStatus = new Quiz(
-          "test-id",
-          "Test question?",
-          "boolean",
-          "test-solution",
-          undefined,
-          status as components["schemas"]["QuizStatus"]
-        );
+      ])(
+        "should return %s when status is %s (%s)",
+        (status, expected, _description) => {
+          // Arrange
+          const quizWithStatus = new Quiz(
+            "test-id",
+            "Test question?",
+            "boolean",
+            "test-solution",
+            undefined,
+            status as components["schemas"]["QuizStatus"],
+          );
 
-        // Act
-        const result = quizWithStatus.canBeDeleted();
+          // Act
+          const result = quizWithStatus.canBeDeleted();
 
-        // Assert
-        expect(result).toBe(expected);
-      });
+          // Assert
+          expect(result).toBe(expected);
+        },
+      );
     });
 
     describe("approve() - 承認処理", () => {
@@ -202,7 +217,7 @@ describe("Quiz Domain Entity", () => {
           "boolean",
           "test-solution",
           undefined,
-          status as components["schemas"]["QuizStatus"]
+          status as components["schemas"]["QuizStatus"],
         );
 
         // Act
@@ -228,7 +243,7 @@ describe("Quiz Domain Entity", () => {
         VALID_QUIZ_DATA.explanation,
         VALID_QUIZ_DATA.status,
         VALID_QUIZ_DATA.creatorId,
-        VALID_QUIZ_DATA.createdAt
+        VALID_QUIZ_DATA.createdAt,
       );
 
       // Assert - TypeScript型チェックが実行時まで保持されることを確認

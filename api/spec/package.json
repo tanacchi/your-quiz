@@ -9,7 +9,10 @@
     "build:api": "run-s gen-openapi-schema gen-types",
     "gen-database-schema": "dbml2sql database.dbml --dialect sqlite -o generated/db.raw.sql && tsx scripts/convert-to-sqlite.ts",
     "gen-openapi-schema": "tsp compile .",
-    "gen-types": "openapi-typescript ./generated/api.yaml --output ../src/types/generated/api.d.ts"
+    "gen-types": "openapi-typescript ./generated/api.yaml --output ../src/types/generated/api.d.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@typespec/compiler": "1.2.1",
@@ -20,8 +23,12 @@
   },
   "devDependencies": {
     "@dbml/cli": "^3.13.9",
+    "@types/node": "^20.19.10",
+    "@vitest/coverage-v8": "^2.1.8",
     "npm-run-all2": "^8.0.4",
     "openapi-typescript": "^7.8.0",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.8"
   }
 }
