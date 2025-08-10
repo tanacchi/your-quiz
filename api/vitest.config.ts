@@ -21,7 +21,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
-      reportsDirectory: "coverage/unit",
+      reportsDirectory: "reports/unit/coverage",
       include: ["src/**/*.ts"],
       exclude: [
         "src/**/*.d.ts",
@@ -42,7 +42,10 @@ export default defineConfig({
     // ファイル変更監視設定は自動で除外される
 
     // レポーター設定
-    reporters: ["verbose"],
+    reporters: ["verbose", "html"],
+    outputFile: {
+      html: "reports/unit/html/index.html",
+    },
 
     // 並列実行設定
     pool: "forks",
