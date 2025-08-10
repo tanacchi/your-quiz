@@ -9,107 +9,593 @@ using Rest;
 
 namespace YourQuizAPI;
 
-// Quiz Management API - DDD Quiz Management Context
+@doc("""
+Quiz Management API - クイズの作成・管理・承認に関する包括的なAPI群
+
+## 概要
+このAPIは、クイズコンテンツのライフサイクル全体を管理するための機能を提供します。
+作成から承認、公開、統計分析まで、クイズプラットフォームの核となる管理機能を包括しています。
+
+## 主要機能
+- **クイズCRUD操作**: 作成・取得・更新・削除の基本操作
+- **承認ワークフロー**: 品質管理のための段階的承認プロセス
+- **統計・分析**: 作成者実績と全体品質の詳細分析
+- **品質管理**: コンテンツ品質向上のための報告・審査機能
+
+## ワークフロー例
+
+### 基本的なクイズ作成フロー
+1. **作成** → `POST /quizzes` で新しいクイズを作成
+2. **確認** → `GET /quizzes/{id}` で作成内容を確認
+3. **編集** → `PUT /quizzes/{id}` で必要に応じて修正
+4. **申請** → `POST /quizzes/{id}/submit` で承認申請（未実装）
+5. **承認** → 管理者による `POST /quizzes/{id}/approve` （未実装）
+6. **公開** → `POST /quizzes/{id}/publish` で一般公開（未実装）
+
+### 管理者による品質管理フロー
+1. **一覧確認** → `GET /quizzes?status=pending_approval` で承認待ちクイズ確認
+2. **詳細審査** → `GET /quizzes/{id}` で個別クイズの詳細確認
+3. **承認/却下** → 品質に応じて承認または却下処理
+4. **品質分析** → `GET /quality/reports` で全体品質動向の把握（未実装）
+
+### 作成者による実績確認フロー
+1. **作品一覧** → `GET /quizzes?creatorId={userId}` で自身の作成クイズ一覧
+2. **統計確認** → `GET /creators/{userId}/statistics` で作成実績統計（未実装）
+3. **改善活動** → フィードバックに基づくクイズ品質向上
+
+## 権限レベル
+- **一般ユーザー**: 公開クイズの参照のみ
+- **作成者**: 自身のクイズのCRUD操作
+- **管理者**: 全クイズの管理・承認・統計閲覧
+
+## 品質管理方針
+- **段階的承認**: pending_approval → approved → published
+- **コミュニティ報告**: ユーザーによる品質問題報告システム
+- **継続的改善**: 統計に基づく品質向上施策
+
+## 技術仕様
+- **認証**: 全操作でユーザー認証が必要
+- **レート制限**: 作成操作に1日50問の制限
+- **データ整合性**: 論理削除によるデータ保護
+- **監査ログ**: 全ての重要操作の記録・追跡
+""")
+// Quiz Management API - Basic CRUD operations
 @route("/api/quiz/v1/manage")
 @tag("Quiz Management")
 interface QuizManagement {
   
   // Quiz CRUD operations
   
-  /** Create a new quiz (pending approval) */
+  @doc("""
+    新しいクイズ作成API
+    
+    ## 機能
+    - **多様な問題形式対応**: 真偽値、自由記述、単択、複数選択の4形式をサポート
+    - **自動バリデーション**: 問題文・解答・選択肢の妥当性を自動検証
+    - **承認待ち状態**: 作成されたクイズは承認待ち状態で管理者レビューを経て公開
+    - **タグ分類**: 学習分野・難易度別のタグ付けが可能
+    
+    ## 制限事項
+    - 問題文は最大500文字
+    - 解説は最大1000文字
+    - タグは最大10個まで
+    - 1日あたりの作成上限：50問（レート制限）
+    
+    ## 作成フロー
+    1. リクエスト送信
+    2. バリデーション実行
+    3. pending_approval状態でデータベースに保存
+    4. 管理者による承認待ちキューに追加
+    
+    ## 使用例
+    - 教育コンテンツの作成
+    - 自習用問題集の構築
+    - スキルチェック問題の準備
+    """)
   @post 
   @route("/quizzes")
-  createQuiz(@body request: CreateQuizRequest): CreateQuizResponse | ValidationError | RateLimitError;
+  createQuiz(
+    @doc("新しいクイズの作成情報を含むリクエスト")
+    @body request: CreateQuizRequest
+  ): QuizWithSolution | ValidationError | RateLimitError;
   
-  /** Get quiz details */
+  @doc("""
+    クイズ詳細情報取得API
+    
+    ## 機能
+    - **完全な問題情報**: 問題文、解答、解説、タグを含む全データを取得
+    - **権限制御**: 作成者または管理者のみアクセス可能（承認前クイズの場合）
+    - **解答情報付き**: QuizWithSolution形式で解答も含めて返却
+    
+    ## アクセス制御
+    - **公開クイズ（approved）**: 全ユーザーがアクセス可能
+    - **承認待ちクイズ**: 作成者・管理者のみアクセス可能
+    - **却下クイズ**: 作成者のみアクセス可能
+    
+    ## レスポンス構造
+    - 基本クイズ情報（id、問題文、ステータス、作成日時等）
+    - 解答情報（問題形式に応じた Solution オブジェクト）
+    - 関連タグ配列
+    - 承認日時（承認済みの場合）
+    
+    ## 使用場面
+    - クイズ編集画面での詳細表示
+    - 管理画面での承認レビュー
+    - 作成者による内容確認
+    """)
   @get
   @route("/quizzes/{id}")
-  getQuiz(@path id: QuizId): QuizWithSolution | NotFoundError;
+  getQuiz(
+    @doc("取得対象のクイズID（UUID形式）")
+    @path id: QuizId
+  ): QuizWithSolution | NotFoundError;
   
-  /** Update quiz (creator only, before approval) */
+  @doc("""
+    クイズ情報更新API
+    
+    ## 機能
+    - **部分更新対応**: 指定されたフィールドのみを更新
+    - **権限制御**: 作成者のみ更新可能
+    - **承認状態制限**: 承認済みクイズは更新不可
+    - **バリデーション**: 更新内容の妥当性を自動検証
+    
+    ## 更新可能フィールド
+    - 問題文（question）
+    - 解説（explanation）
+    - タグ（tags）
+    
+    ## 更新制限
+    - **承認済みクイズ**: 更新不可（approved状態）
+    - **他者作成クイズ**: 更新不可（作成者以外）
+    - **解答部分**: 作成後は変更不可（整合性保持のため）
+    
+    ## 更新後の動作
+    - 更新されたクイズは承認待ち状態を維持
+    - 管理者に再レビュー通知
+    - 更新履歴の記録
+    
+    ## 使用場面
+    - 誤字脱字の修正
+    - 解説の充実化
+    - タグ分類の見直し
+    """)
   @put
   @route("/quizzes/{id}")
-  updateQuiz(@path id: QuizId, @body request: UpdateQuizRequest): QuizWithSolution | NotFoundError | ForbiddenError | ValidationError;
+  updateQuiz(
+    @doc("更新対象のクイズID（UUID形式）")
+    @path id: QuizId, 
+    @doc("更新情報を含むリクエスト（部分更新対応）")
+    @body request: UpdateQuizRequest
+  ): QuizWithSolution | NotFoundError | ForbiddenError | ValidationError;
   
-  /** Delete quiz (creator only) */
+  @doc("""
+    クイズ削除API
+    
+    ## 機能
+    - **論理削除**: データは保持し、ステータスを削除済みに変更
+    - **権限制御**: 作成者または管理者のみ削除可能
+    - **関連データ保護**: 回答履歴や統計データは保持
+    
+    ## 削除条件
+    - **作成者権限**: 自身が作成したクイズの削除
+    - **管理者権限**: 全てのクイズの削除（規約違反等）
+    - **承認状態**: 全ステータスのクイズが削除対象
+    
+    ## 削除の影響
+    - **学習セッション**: 進行中セッションは継続可能
+    - **統計データ**: 過去の回答履歴は保持
+    - **デッキ**: 含まれるデッキからは自動除外
+    
+    ## 削除後の状態
+    - データベースからは物理削除されない
+    - 検索結果には表示されない
+    - 作成者統計からは除外される
+    
+    ## 使用場面
+    - 不適切コンテンツの除去
+    - 作成者による自主削除
+    - 重複問題の整理
+    """)
   @delete
   @route("/quizzes/{id}")
-  deleteQuiz(@path id: QuizId): void | NotFoundError | ForbiddenError;
+  deleteQuiz(
+    @doc("削除対象のクイズID（UUID形式）")
+    @path id: QuizId
+  ): void | NotFoundError | ForbiddenError;
   
-  /** List quizzes (with filters) */
+  @doc("""
+    クイズ一覧取得API（フィルタ・ページネーション対応）
+    
+    ## 機能
+    - **多彩なフィルタ**: ステータス・作成者・ID指定による絞り込み
+    - **効率的ページネーション**: オフセットベースでの分割取得
+    - **ソート機能**: 作成日時順（最新順）での並び替え
+    - **権限考慮**: ユーザー権限に応じた表示制御
+    
+    ## フィルタ機能
+    - **ステータス別**: pending_approval, approved, rejected
+    - **作成者別**: 特定ユーザーの作成クイズのみ表示
+    - **ID指定**: 複数のクイズIDを指定して一括取得
+    
+    ## 権限による表示制御
+    - **一般ユーザー**: 承認済みクイズのみ表示
+    - **作成者**: 自身の作成したクイズ（全ステータス）も表示
+    - **管理者**: 全てのクイズ（全ステータス）を表示
+    
+    ## ページネーション
+    - デフォルト: 20件/ページ
+    - 最大: 100件/ページ
+    - オフセットベース: skip/limit パターン
+    
+    ## レスポンス情報
+    - クイズ一覧（QuizWithSolution形式）
+    - 総件数（フィルタ適用後）
+    - 続きの存在フラグ
+    - 継続トークン（将来のカーソルベース対応用）
+    
+    ## 使用場面
+    - 管理画面でのクイズ管理
+    - 作成者マイページでの作品一覧
+    - 承認待ちキューの表示
+    """)
   @get
   @route("/quizzes")
   listQuizzes(
     ...PaginationRequest,
+    @doc("ステータス別フィルター。指定されない場合は全ステータス（権限に応じて）")
     @query status?: QuizStatus,
+    @doc("作成者ID別フィルター。特定ユーザーの作成クイズのみ取得")
     @query creatorId?: UserId,
-    @query tags?: string[]
+    @doc("クイズID配列による指定取得。複数IDの一括取得に使用")
+    @query ids?: string[]
   ): QuizListResponse;
   
-  // Approval workflow operations
+  // 承認ワークフロー操作（初期リリース版では未実装）
   
-  /** Submit quiz for approval */
-  @post
-  @route("/quizzes/{id}/submit")
-  submitForApproval(@path id: QuizId): {
-    quiz: Quiz;
-    status: "pending_approval";
-    estimatedApprovalDate?: UtcDateTime;
-  } | NotFoundError | ForbiddenError | ConflictError;
+  // @doc("""
+  //   クイズ承認申請API
+  //   
+  //   ## 機能
+  //   - **承認プロセス開始**: 作成者が自身のクイズを承認申請に送る
+  //   - **ステータス管理**: pending_approval状態への明示的な変更
+  //   - **申請履歴記録**: 申請日時・申請理由の記録
+  //   
+  //   ## 申請条件
+  //   - **作成者権限**: 自身が作成したクイズのみ申請可能
+  //   - **ドラフト状態**: draft状態のクイズのみ申請対象
+  //   - **必須項目完了**: 問題文・解答・解説が全て入力済み
+  //   
+  //   ## 申請後の流れ
+  //   1. ステータスをpending_approvalに変更
+  //   2. 管理者承認待ちキューに追加
+  //   3. 作成者に申請完了通知
+  //   4. 管理者に新規申請通知
+  //   
+  //   ## 使用場面
+  //   - クイズ作成完了時の承認申請
+  //   - 修正完了後の再申請
+  //   """)
+  // @post
+  // @route("/quizzes/{id}/submit")
+  // submitForApproval(
+  //   @doc("承認申請対象のクイズID（UUID形式）")
+  //   @path id: QuizId
+  // ): Quiz | NotFoundError | ForbiddenError | ConflictError;
+  // 
+  // @doc("""
+  //   クイズ承認API（管理者専用）
+  //   
+  //   ## 機能
+  //   - **承認処理**: pending_approvalのクイズをapproved状態に変更
+  //   - **承認理由記録**: レビュー内容・承認理由の記録
+  //   - **即時公開オプション**: 承認と同時に公開するかの選択
+  //   - **作成者通知**: 承認完了の自動通知
+  //   
+  //   ## 承認権限
+  //   - **管理者権限**: admin役割を持つユーザーのみ
+  //   - **承認者記録**: 承認した管理者の情報を記録
+  //   - **承認日時**: 承認実行日時の自動記録
+  //   
+  //   ## 承認プロセス
+  //   1. 問題内容・品質の確認
+  //   2. 承認/却下の判断
+  //   3. 承認理由・コメントの記録
+  //   4. 即時公開設定の適用
+  //   
+  //   ## 承認後の状態
+  //   - ステータス: approved
+  //   - 検索対象: 公開検索に含まれる
+  //   - 学習利用: デッキ・セッションで利用可能
+  //   
+  //   ## 使用場面
+  //   - 管理画面での承認作業
+  //   - 品質管理・コンテンツ審査
+  //   """)
+  // @post
+  // @route("/quizzes/{id}/approve")
+  // approveQuiz(
+  //   @doc("承認対象のクイズID（UUID形式）")
+  //   @path id: QuizId, 
+  //   @doc("承認処理の詳細情報を含むリクエスト")
+  //   @body request: ApprovalRequest
+  // ): Quiz | NotFoundError | ForbiddenError;
+  // 
+  // @doc("""
+  //   クイズ却下API（管理者専用）
+  //   
+  //   ## 機能
+  //   - **却下処理**: pending_approvalのクイズをrejected状態に変更
+  //   - **却下理由記録**: 詳細な却下理由・改善点の記録
+  //   - **作成者フィードバック**: 修正点・改善提案の提供
+  //   - **再申請可能**: 却下後も修正して再申請が可能
+  //   
+  //   ## 却下権限
+  //   - **管理者権限**: admin役割を持つユーザーのみ
+  //   - **却下者記録**: 却下した管理者の情報を記録
+  //   - **却下日時**: 却下実行日時の自動記録
+  //   
+  //   ## 却下理由の種類
+  //   - **内容不適切**: 問題内容が規約に違反
+  //   - **品質不足**: 誤字脱字・解説不足等
+  //   - **重複問題**: 既存問題との重複
+  //   - **難易度不適切**: タグと実際の難易度の乖離
+  //   
+  //   ## 却下後の流れ
+  //   1. ステータスをrejectedに変更
+  //   2. 作成者に却下通知・理由を送信
+  //   3. 修正後の再申請を促す
+  //   4. 却下履歴を記録
+  //   
+  //   ## 使用場面
+  //   - 品質基準に満たない問題の却下
+  //   - 規約違反コンテンツの審査
+  //   - 建設的フィードバックの提供
+  //   """)
+  // @post
+  // @route("/quizzes/{id}/reject")
+  // rejectQuiz(
+  //   @doc("却下対象のクイズID（UUID形式）")
+  //   @path id: QuizId, 
+  //   @doc("却下処理の詳細情報・理由を含むリクエスト")
+  //   @body request: ApprovalRequest
+  // ): Quiz | NotFoundError | ForbiddenError;
+  // 
+  // @doc("""
+  //   クイズ公開API（管理者専用）
+  //   
+  //   ## 機能
+  //   - **即時公開**: 承認済みクイズを即座に公開状態に変更
+  //   - **公開制御**: 段階的公開・予約公開の管理
+  //   - **可視性変更**: 検索・学習での利用開始
+  //   
+  //   ## 公開権限
+  //   - **管理者権限**: admin役割を持つユーザーのみ
+  //   - **承認済み限定**: approved状態のクイズのみ公開可能
+  //   - **公開者記録**: 公開した管理者・日時を記録
+  //   
+  //   ## 公開条件
+  //   - **承認完了**: approved状態であること
+  //   - **品質確認**: 最終品質チェック完了
+  //   - **メタデータ完備**: タグ・難易度設定完了
+  //   
+  //   ## 公開後の状態
+  //   - **検索対象**: 一般ユーザーの検索に含まれる
+  //   - **学習利用**: デッキ作成・学習セッションで選択可能
+  //   - **統計対象**: 公開問題統計に含まれる
+  //   
+  //   ## 使用場面
+  //   - 新規コンテンツの段階的公開
+  //   - 品質確認完了後の最終公開
+  //   - 管理画面での公開管理
+  //   """)
+  // @post
+  // @route("/quizzes/{id}/publish")
+  // publishQuiz(
+  //   @doc("公開対象のクイズID（UUID形式）")
+  //   @path id: QuizId
+  // ): Quiz | NotFoundError | ForbiddenError | ConflictError;
   
-  /** Approve quiz (admin only) */
-  @post
-  @route("/quizzes/{id}/approve")
-  approveQuiz(@path id: QuizId, @body request: ApprovalRequest): Quiz | NotFoundError | ForbiddenError;
+  // 統計・品質管理機能（初期リリース版では未実装）
   
-  /** Reject quiz (admin only) */
-  @post
-  @route("/quizzes/{id}/reject")  
-  rejectQuiz(@path id: QuizId, @body request: ApprovalRequest): Quiz | NotFoundError | ForbiddenError;
-  
-  /** Publish approved quiz (admin only) */
-  @post
-  @route("/quizzes/{id}/publish")
-  publishQuiz(@path id: QuizId): Quiz | NotFoundError | ForbiddenError | ConflictError;
-  
-  // Statistics and quality management
-  
-  /** Get creator statistics */
-  @get
-  @route("/statistics/creator/{creatorId}")
-  getCreatorStatistics(@path creatorId: UserId): {
-    totalQuizzes: int32;
-    publishedQuizzes: int32;
-    totalAnswers: int32;
-    averageCorrectRate: float32;
-    popularityScore: float32;
-    qualityScore: float32;
-    tagDistribution: Record<int32>;
-    difficultyDistribution: Record<int32>;
-  } | NotFoundError;
-  
-  /** Get quality report */
-  @get
-  @route("/quality/report")
-  getQualityReport(
-    ...PaginationRequest,
-    @query period?: "day" | "week" | "month" = "week"
-  ): PaginationResponse<{
-    quizId: QuizId;
-    qualityScore: float32;
-    issues: string[];
-    recommendations: string[];
-  }>;
-  
-  /** Flag quiz for quality review */
-  @post
-  @route("/quality/flag")
-  flagQuiz(@body request: {
-    quizId: QuizId;
-    reason: "spam" | "inappropriate" | "incorrect" | "duplicate" | "other";
-    description?: string;
-  }): {
-    flagId: string;
-    status: "pending_review";
-  } | NotFoundError | ValidationError;
+  // @doc("""
+  //   作成者統計情報取得API
+  //   
+  //   ## 機能
+  //   - **作成実績統計**: クイズ作成数・承認率・人気度などの総合統計
+  //   - **期間別分析**: 日・週・月単位での作成・承認動向
+  //   - **品質指標**: 平均評価・正答率・ユーザーフィードバック統計
+  //   - **ランキング情報**: 作成者ランキング内での順位・レベル
+  //   
+  //   ## 統計項目
+  //   - **作成統計**: 総作成数、承認数、却下数、承認率
+  //   - **人気統計**: 総回答数、お気に入り数、シェア数
+  //   - **品質統計**: 平均正答率、平均評価点、フィードバック数
+  //   - **成長統計**: 月次成長率、連続作成日数、実績バッジ
+  //   
+  //   ## 期間フィルター
+  //   - **全期間**: 登録から現在までの累計統計
+  //   - **月次**: 指定月の詳細統計
+  //   - **週次**: 直近週・指定週の統計
+  //   - **日次**: 日別の作成・承認動向
+  //   
+  //   ## 権限制御
+  //   - **本人のみ**: 作成者は自身の統計のみ閲覧可能
+  //   - **管理者**: 全ての作成者統計を閲覧可能
+  //   - **匿名化データ**: 管理者以外には匿名化された形で提供
+  //   
+  //   ## 使用場面
+  //   - 作成者マイページでの実績表示
+  //   - 管理画面での作成者分析
+  //   - 成長モチベーション向上
+  //   - コンテンツ戦略立案
+  //   """)
+  // @get
+  // @route("/creators/{creatorId}/statistics")
+  // getCreatorStatistics(
+  //   @doc("統計取得対象の作成者ID（UUID形式）")
+  //   @path creatorId: UserId,
+  //   @doc("統計期間。'all'（全期間）、'month'（月次）、'week'（週次）、'day'（日次）。デフォルト：'all'")
+  //   @query period?: "all" | "month" | "week" | "day" = "all",
+  //   @doc("期間指定時の基準日（ISO 8601形式）。未指定時は現在日時")
+  //   @query baseDate?: string
+  // ): {
+  //   creatorId: UserId;                    // 作成者ID
+  //   period: string;                       // 統計期間
+  //   creationStats: {                      // 作成統計
+  //     totalQuizzes: int32;                // 総作成数
+  //     approvedQuizzes: int32;             // 承認数
+  //     rejectedQuizzes: int32;             // 却下数
+  //     pendingQuizzes: int32;              // 承認待ち数
+  //     approvalRate: float32;              // 承認率（0.0-1.0）
+  //   };
+  //   popularityStats: {                    // 人気統計
+  //     totalAttempts: int32;               // 総回答数
+  //     totalFavorites: int32;              // お気に入り総数
+  //     totalShares: int32;                 // シェア総数
+  //     avgAttemptsPerQuiz: float32;        // 問題当たり平均回答数
+  //   };
+  //   qualityStats: {                       // 品質統計
+  //     avgCorrectRate: float32;            // 平均正答率
+  //     avgRating: float32;                 // 平均評価点
+  //     totalFeedbacks: int32;              // フィードバック総数
+  //     qualityScore: float32;              // 品質スコア（独自算出）
+  //   };
+  //   achievements: {                       // 実績情報
+  //     level: int32;                       // 作成者レベル
+  //     badges: string[];                   // 獲得バッジ
+  //     rank: int32;                        // ランキング順位
+  //     consecutiveDays: int32;             // 連続作成日数
+  //   };
+  // } | NotFoundError;
+  // 
+  // @doc("""
+  //   品質レポート取得API（管理者専用）
+  //   
+  //   ## 機能
+  //   - **全体品質動向**: システム全体のコンテンツ品質推移
+  //   - **問題検出**: 品質基準を下回るコンテンツの特定
+  //   - **改善提案**: データに基づく品質向上施策の提案
+  //   - **トレンド分析**: 品質の時系列変化・季節性の分析
+  //   
+  //   ## レポート内容
+  //   - **承認動向**: 期間別の承認・却下率推移
+  //   - **品質指標**: 平均正答率・評価点・フィードバック分析
+  //   - **問題分類**: 分野別・難易度別の品質分布
+  //   - **改善領域**: 重点改善が必要な領域の特定
+  //   
+  //   ## 期間設定
+  //   - **日次**: 日別の詳細な品質変動
+  //   - **週次**: 週別トレンドと変動要因分析
+  //   - **月次**: 月別の中長期的品質動向
+  //   
+  //   ## 分析軸
+  //   - **作成者別**: 作成者による品質のばらつき
+  //   - **分野別**: 学習分野による品質差異
+  //   - **難易度別**: 難易度設定の適切性
+  //   - **時系列**: 品質の経時的変化
+  //   
+  //   ## 使用場面
+  //   - 管理ダッシュボードでの品質監視
+  //   - 定期的な品質改善会議
+  //   - 作成者向け改善提案
+  //   - システム改善の優先順位決定
+  //   """)
+  // @get
+  // @route("/quality/reports")
+  // getQualityReport(
+  //   ...PaginationRequest,
+  //   @doc("レポート期間。'day'（日次）、'week'（週次）、'month'（月次）。デフォルト：'week'")
+  //   @query period?: "day" | "week" | "month" = "week",
+  //   @doc("分析開始日（ISO 8601形式）。未指定時は指定期間の適切なデフォルト")
+  //   @query startDate?: string,
+  //   @doc("分析終了日（ISO 8601形式）。未指定時は現在日時")
+  //   @query endDate?: string,
+  //   @doc("作成者IDフィルター。特定作成者のレポートのみ取得")
+  //   @query creatorId?: UserId,
+  //   @doc("分野フィルター。特定分野のレポートのみ取得")
+  //   @query category?: string
+  // ): {
+  //   period: string;                       // レポート期間
+  //   dateRange: {                          // 対象期間
+  //     startDate: string;                  // 開始日
+  //     endDate: string;                    // 終了日
+  //   };
+  //   overallMetrics: {                     // 全体指標
+  //     totalQuizzes: int32;                // 対象クイズ総数
+  //     approvalRate: float32;              // 全体承認率
+  //     avgQualityScore: float32;           // 平均品質スコア
+  //     avgCorrectRate: float32;            // 平均正答率
+  //   };
+  //   trendAnalysis: {                      // トレンド分析
+  //     qualityTrend: "improving" | "stable" | "declining";  // 品質動向
+  //     periodComparison: float32;          // 前期間比較（%変化）
+  //     seasonalPattern: string;            // 季節性パターン
+  //   }[];
+  //   problemAreas: {                       // 問題領域
+  //     category: string;                   // 問題分類
+  //     severity: "high" | "medium" | "low"; // 重要度
+  //     description: string;                // 問題説明
+  //     suggestedActions: string[];         // 推奨改善策
+  //   }[];
+  //   improvements: {                       // 改善提案
+  //     priority: int32;                    // 優先順位
+  //     area: string;                       // 改善領域
+  //     expectedImpact: "high" | "medium" | "low"; // 期待効果
+  //     implementationEffort: "high" | "medium" | "low"; // 実装負荷
+  //     description: string;                // 詳細説明
+  //   }[];
+  // };
+  // 
+  // @doc("""
+  //   クイズ報告・フラグ設定API
+  //   
+  //   ## 機能
+  //   - **不適切コンテンツ報告**: ユーザーによる問題コンテンツの報告
+  //   - **品質問題報告**: 誤字脱字・解答誤り等の品質問題報告
+  //   - **重複問題報告**: 既存問題との重複・類似性の報告
+  //   - **自動審査トリガー**: 報告に基づく自動的な審査プロセス開始
+  //   
+  //   ## 報告種類
+  //   - **inappropriate**: 不適切・規約違反コンテンツ
+  //   - **quality_issue**: 品質問題（誤字・解答誤り等）
+  //   - **duplicate**: 重複・類似問題
+  //   - **difficulty_mismatch**: 難易度設定の不適切性
+  //   - **offensive**: 攻撃的・差別的内容
+  //   
+  //   ## 報告プロセス
+  //   1. ユーザーによる報告送信
+  //   2. 報告内容の自動分類・優先順位付け
+  //   3. 管理者への通知・審査キュー追加
+  //   4. 必要に応じた一時的な非表示化
+  //   
+  //   ## 報告後の処理
+  //   - **緊急度評価**: 報告内容による緊急度の自動判定
+  //   - **一時措置**: 必要に応じた問題の一時非表示
+  //   - **審査待ち**: 管理者審査キューへの追加
+  //   - **報告者通知**: 処理状況の報告者への通知
+  //   
+  //   ## 使用場面
+  //   - ユーザーによるコンテンツ品質向上への貢献
+  //   - 不適切コンテンツの迅速な発見・対処
+  //   - コミュニティベースの品質管理
+  //   """)
+  // @post
+  // @route("/quizzes/flag")
+  // flagQuiz(
+  //   @doc("クイズ報告・フラグ設定情報を含むリクエスト")
+  //   @body request: {
+  //     quizId: QuizId;                     // 報告対象クイズID
+  //     flagType: "inappropriate" | "quality_issue" | "duplicate" | "difficulty_mismatch" | "offensive"; // 報告種類
+  //     reason: string;                     // 詳細な報告理由
+  //     reporterId?: UserId;                // 報告者ID（匿名報告も可能）
+  //     evidence?: string;                  // 報告の根拠・証拠
+  //     urgency?: "high" | "medium" | "low"; // 緊急度（システムが自動判定も可能）
+  //   }
+  // ): {
+  //   reportId: string;                     // 報告ID
+  //   status: "received" | "under_review" | "resolved"; // 処理状況
+  //   estimatedReviewTime: int32;           // 予想審査時間（時間）
+  //   automaticActions: string[];           // 自動実行された措置
+  //   nextSteps: string[];                  // 今後の処理予定
+  // } | NotFoundError | ValidationError;
 }

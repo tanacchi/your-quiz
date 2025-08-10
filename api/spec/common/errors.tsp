@@ -4,6 +4,12 @@ namespace YourQuizAPI;
 
 // Base error model
 @error
+@example(#{
+  code: 400,
+  message: "リクエストの形式が正しくありません",
+  details: "問題文は500文字以下で入力してください",
+  requestId: "req-12345-abcde"
+})
 model ErrorResponse {
   code: int32;
   message: string;
@@ -13,6 +19,16 @@ model ErrorResponse {
 
 // Specific error types
 @error
+@example(#{
+  code: 400,
+  message: "バリデーションエラー",
+  details: "入力された値に問題があります",
+  requestId: "req-val-001",
+  fieldErrors: #{
+    question: "問題文は必須です",
+    tags: "タグは最大10個までです"
+  }
+})
 model ValidationError extends ErrorResponse {
   code: 400;
   fieldErrors?: Record<string>;
@@ -31,9 +47,14 @@ model ForbiddenError extends ErrorResponse {
 }
 
 @error
+@example(#{
+  code: 404,
+  message: "リソースが見つかりません",
+  details: "指定されたクイズID 'quiz-999' は存在しません",
+  requestId: "req-404-001"
+})
 model NotFoundError extends ErrorResponse {
   code: 404;
-  message: "Resource not found";
 }
 
 @error
@@ -43,9 +64,14 @@ model ConflictError extends ErrorResponse {
 }
 
 @error
+@example(#{
+  code: 429,
+  message: "レート制限に達しました",
+  details: "1日あたりのクイズ作成上限（50問）に達しています。明日の00:00 UTCにリセットされます。",
+  requestId: "req-rate-001"
+})
 model RateLimitError extends ErrorResponse {
   code: 429;
-  message: "Rate limit exceeded";
 }
 
 @error

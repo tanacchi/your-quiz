@@ -30,14 +30,32 @@ export const createValidationError = (
   requestId?: string,
 ): ValidationError => {
   const fieldErrors: Record<string, string> = {};
+  let primaryMessage = "Validation failed";
 
   zodError.issues.forEach((error) => {
     const path = error.path.join(".");
     fieldErrors[path] = error.message;
+
+    // Use the first custom error message as the primary message if it's more specific
+    if (error.code === "custom" && primaryMessage === "Validation failed") {
+      primaryMessage = error.message;
+    }
   });
 
+  // If we have specific solution/field error messages, prioritize them
+  const solutionErrors = Object.values(fieldErrors).filter(
+    (msg) =>
+      msg.includes("Solution type") ||
+      msg.includes("answerType") ||
+      msg.includes("does not match"),
+  );
+
+  if (solutionErrors.length > 0 && solutionErrors[0]) {
+    primaryMessage = solutionErrors[0];
+  }
+
   return new ValidationError(
-    "Validation failed",
+    primaryMessage,
     fieldErrors,
     JSON.stringify(zodError.issues),
     requestId,

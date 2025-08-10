@@ -53,8 +53,13 @@ enum MatchingStrategy {
 
 // Pagination types
 model PaginationRequest {
+  @doc("Maximum number of items to return per page (1-100). Default: 20")
   limit?: int32 = 20;
+  
+  @doc("Number of items to skip from the beginning of the result set. Default: 0")
   offset?: int32 = 0;
+  
+  @doc("Token for cursor-based pagination (optional, for future implementation)")
   continuationToken?: string;
 }
 

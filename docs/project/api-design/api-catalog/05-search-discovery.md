@@ -40,11 +40,16 @@ GET    /api/quiz/v1/learning/popular
 | パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
 |-------------|------|------|----|-----------|----|---------|
 | q | query | 任意 | string | - | 1-50文字 | キーワード検索<br/>例: "JavaScript", "配列" |
-| tags | query | 任意 | string[] | - | 1-10個、各1-50文字 | タグフィルター（カンマ区切り）<br/>例: "javascript,react" |
+| tags | query | 任意 | string[] | - | 1-10個、各1-50文字 | タグフィルター（カンマ区切り）<br/>例: "javascript,react"<br/>否定: "~beginner" (除外) |
 | difficulty | query | 任意 | enum | "all" | beginner/intermediate/advanced/all | 難易度フィルター |
 | status | query | 任意 | enum | "published" | draft/pending/approved/published/all | ステータスフィルター |
-| sort | query | 任意 | enum | "popularity" | popularity/latest/difficulty/accuracy | ソート基準 |
-| order | query | 任意 | enum | "desc" | asc/desc | ソート順序 |
+| sort | query | 任意 | string | "relevance" | relevance/created_date/popularity/difficulty | ソート基準<br/>降順: "-created_date" |
+| answer_type | query | 任意 | enum | - | boolean/free_text/single_choice/multiple_choice | 回答タイプフィルター |
+| creator_id | query | 任意 | string | - | UUID | 作成者IDフィルター |
+| min_correct_rate | query | 任意 | number | - | 0-1 | 正答率下限<br/>例: 0.7 |
+| max_correct_rate | query | 任意 | number | - | 0-1 | 正答率上限 |
+| created_after | query | 任意 | string | - | ISO 8601 | 作成日時以降<br/>例: "2024-01-01T00:00:00Z" |
+| created_before | query | 任意 | string | - | ISO 8601 | 作成日時以前 |
 | limit | query | 任意 | number | 20 | 1-100 | 取得件数 |
 | offset | query | 任意 | number | 0 | ≥0 | オフセット |
 
@@ -59,19 +64,17 @@ GET    /api/quiz/v1/learning/popular
 | パラメータ名 | 種別 | 必須 | 型 | デフォルト値 | 制約 | 説明・例 |
 |-------------|------|------|----|-----------|----|---------|
 | q | query | 任意 | string | - | 1-50文字 | キーワード検索<br/>例: "JavaScript", "配列" |
-| tags | query | 任意 | string[] | - | 1-10個、各1-50文字 | タグフィルター（カンマ区切り）<br/>例: "javascript,react" |
+| tags | query | 任意 | string[] | - | 1-10個、各1-50文字 | タグフィルター（カンマ区切り）<br/>例: "javascript,react"<br/>否定: "~beginner" (除外) |
 | difficulty | query | 任意 | enum | "all" | beginner/intermediate/advanced/all | 難易度フィルター |
-| sort | query | 任意 | enum | "popularity" | popularity/latest/difficulty/accuracy | ソート基準 |
-| order | query | 任意 | enum | "desc" | asc/desc | ソート順序 |
+| sort | query | 任意 | string | "relevance" | relevance/created_date/popularity/difficulty | ソート基準<br/>降順: "-created_date" |
 | limit | query | 任意 | number | 20 | 1-50 | 取得件数 |
 | offset | query | 任意 | number | 0 | ≥0 | オフセット |
 | cursor | query | 任意 | string | - | - | 次ページカーソル |
-| accuracy_min | query | 任意 | number | - | 0-100 | 正答率下限（%）<br/>例: 70 |
-| accuracy_max | query | 任意 | number | - | 0-100 | 正答率上限（%） |
+| min_correct_rate | query | 任意 | number | - | 0-1 | 正答率下限<br/>例: 0.7 |
+| max_correct_rate | query | 任意 | number | - | 0-1 | 正答率上限 |
 | created_after | query | 任意 | string | - | ISO 8601 | 作成日時以降<br/>例: "2024-01-01T00:00:00Z" |
 | created_before | query | 任意 | string | - | ISO 8601 | 作成日時以前 |
 | exclude_answered | query | 任意 | boolean | false | - | 回答済み除外 |
-| excludeTags | query | 任意 | string[] | - | 1-10個、各1-50文字 | 除外タグ（カンマ区切り）<br/>例: "basic,tutorial" |
 | user_preference | query | 任意 | boolean | false | - | 個人化推奨適用 |
 | include | query | 任意 | string[] | - | statistics/creator/tags/related | 含める関連データ<br/>例: "statistics,creator" |
 | fields | query | 任意 | string[] | - | - | 返すフィールド指定<br/>例: "id,question,tags" |

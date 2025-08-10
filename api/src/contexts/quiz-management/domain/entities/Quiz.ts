@@ -1,5 +1,5 @@
+import { err, ok, type Result } from "neverthrow";
 import type { components } from "../../../../shared/types";
-import { ok, err, type Result } from "neverthrow";
 
 /**
  * クイズドメインエンティティ
@@ -69,19 +69,23 @@ export class Quiz {
    */
   public approve(approvedAt: string): Result<Quiz, Error> {
     if (this.status !== "pending_approval") {
-      return err(new Error(`Quiz with status ${this.status} cannot be approved`));
+      return err(
+        new Error(`Quiz with status ${this.status} cannot be approved`),
+      );
     }
 
-    return ok(new Quiz(
-      this.id,
-      this.question,
-      this.answerType,
-      this.solutionId,
-      this.explanation,
-      "approved",
-      this.creatorId,
-      this.createdAt,
-      approvedAt,
-    ));
+    return ok(
+      new Quiz(
+        this.id,
+        this.question,
+        this.answerType,
+        this.solutionId,
+        this.explanation,
+        "approved",
+        this.creatorId,
+        this.createdAt,
+        approvedAt,
+      ),
+    );
   }
 }

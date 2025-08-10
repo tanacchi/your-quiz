@@ -25,19 +25,20 @@ export class MockQuizRepository implements IQuizRepository {
       solution: {
         type: "single_choice",
         id: "sol-1",
-        correctChoiceId: "choice-1",
         choices: [
           {
             id: "choice-1",
             solutionId: "sol-1",
             text: "A typed superset",
             orderIndex: 1,
+            isCorrect: true,
           },
           {
             id: "choice-2",
             solutionId: "sol-1",
             text: "A framework",
             orderIndex: 2,
+            isCorrect: false,
           },
         ],
       },
@@ -115,7 +116,7 @@ export class MockQuizRepository implements IQuizRepository {
     options: {
       status?: components["schemas"]["QuizStatus"];
       creatorId?: string;
-      tags?: string[];
+      ids?: string[];
       limit?: number;
       offset?: number;
     } = {},
@@ -138,6 +139,11 @@ export class MockQuizRepository implements IQuizRepository {
     if (options.creatorId) {
       filteredData = filteredData.filter(
         (quiz) => quiz.creatorId === options.creatorId,
+      );
+    }
+    if (options.ids && options.ids.length > 0) {
+      filteredData = filteredData.filter((quiz) =>
+        options.ids?.includes(quiz.id),
       );
     }
 
