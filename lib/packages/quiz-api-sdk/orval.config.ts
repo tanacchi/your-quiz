@@ -1,29 +1,32 @@
-import { defineConfig } from 'orval';
+import { defineConfig } from "orval";
 
 export default defineConfig({
   api: {
-    input: { target: './api.yaml' },
+    input: { target: "./api.yaml" },
     output: {
-      // SDKの出力先を「src/generated/index.ts」に集約
-      client: 'fetch',                   // axiosでも可。今回はfetch
-      target: 'src/generated/index.ts',
-      // Zodスキーマはディレクトリで出力
-      schemas: 'src/generated/schemas',
-      // 契約準拠モックを自動生成（MSW）
-      mock: { type: 'msw', indexMockFiles: true, useExamples: true },
-      mode: "tags-split",
-      override: {
-        // 必要に応じて調整（coerceなども可）
-        zod: { strict: { response: true }, generate: {
-          param: true, // パラメータのZodスキーマも生成
-          query: true, // クエリパラメータのZodスキーマ
-          header: true, // ヘッダーのZodスキーマも生成
-          body: true, // リクエストボディのZodスキーマも
-          response: true, // レスポンスボディのZodスキーマも生成
-        } }
-      }
+      client: "fetch",
+      target: "src/generated/client.ts",
+      schemas: "src/generated/types",
+      mock: false, // ← ここは false のまま（単一出力を汚さない）
     },
-    // 生成後にフォーマッタなど走らせたい場合
-    // hooks: { afterAllFilesWrite: 'pnpm biome format . || true' },
-  }
+  },
+
+  apiZod: {
+    input: { target: "./api.yaml" },
+    output: {
+      client: "zod",
+      target: "src/generated/schemas.zod.ts",
+      fileExtension: ".zod.ts",
+    },
+  },
+
+  apiMsw: {
+    input: { target: "./api.yaml" },
+    output: {
+      client: "fetch", // ここでもSDKは出るが使わない想定
+      target: "src/generated/msw", // ← ディレクトリにする（重要）
+      mode: "tags-split",
+      mock: { type: "msw", indexMockFiles: true }, // ← index.msw.ts を生成
+    },
+  },
 });

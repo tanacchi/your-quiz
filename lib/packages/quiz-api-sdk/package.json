@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "generate": "orval --config orval.config.ts"
+    "typecheck": "tsc --noEmit",
+    "generate": "orval --config orval.config.ts",
+    "gen:msw": "tsx scripts/gen-msw-handlers.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +19,7 @@
     "@types/node": "^20.19.10",
     "msw": "^2.10.4",
     "orval": "^7.11.2",
+    "tsx": "^4.20.3",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4",
     "zod": "^4.0.17"

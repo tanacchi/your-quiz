@@ -23,7 +23,7 @@ Accepted
 
 ### Chosen Option
 
-**OrvalによるfetchベースSDK生成 + Zodスキーマ生成 + MSWモック生成 + neverthrowアダプタ適用**
+OrvalによるfetchベースSDK生成 + Zodスキーマ生成 + MSWモック生成 + neverthrowアダプタ適用
 
 - Orvalを用いて以下を自動生成：
   - fetchベースの型付きSDK関数群
@@ -92,4 +92,3 @@ Accepted
 **Last Updated**: 2025-08-10\
 **Authors**: Daiki Tanaka\
 **Reviewers**: [@tanacchi](https://github.com/tanacchi)
-
