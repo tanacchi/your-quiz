@@ -21,7 +21,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
-      reportsDirectory: "coverage/bdd",
+      reportsDirectory: "reports/bdd/coverage",
       include: ["src/**/*.ts"],
       exclude: [
         "src/**/*.d.ts",
@@ -34,7 +34,10 @@ export default defineConfig({
     // ファイル変更監視設定は自動で除外される
 
     // レポーター設定（詳細表示）
-    reporters: ["verbose"],
+    reporters: ["verbose", "html"],
+    outputFile: {
+      html: "reports/bdd/html/index.html",
+    },
 
     // 並列実行無効（PactumJSのAPI呼び出しが競合する可能性があるため）
     pool: "forks",

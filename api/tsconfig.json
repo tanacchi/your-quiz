@@ -6,7 +6,8 @@
     "build",
     "coverage",
     "*.config.cjs",
-    "spec/coverage/**/*"
+    "spec/coverage/**/*",
+    "reports"
   ],
   "compilerOptions": {
     "target": "ESNext",
