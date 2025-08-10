@@ -11,10 +11,65 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description List quizzes (with filters) */
+    /** @description クイズ一覧取得API（フィルタ・ページネーション対応）
+     *
+     *     ## 機能
+     *     - **多彩なフィルタ**: ステータス・作成者・ID指定による絞り込み
+     *     - **効率的ページネーション**: オフセットベースでの分割取得
+     *     - **ソート機能**: 作成日時順（最新順）での並び替え
+     *     - **権限考慮**: ユーザー権限に応じた表示制御
+     *
+     *     ## フィルタ機能
+     *     - **ステータス別**: pending_approval, approved, rejected
+     *     - **作成者別**: 特定ユーザーの作成クイズのみ表示
+     *     - **ID指定**: 複数のクイズIDを指定して一括取得
+     *
+     *     ## 権限による表示制御
+     *     - **一般ユーザー**: 承認済みクイズのみ表示
+     *     - **作成者**: 自身の作成したクイズ（全ステータス）も表示
+     *     - **管理者**: 全てのクイズ（全ステータス）を表示
+     *
+     *     ## ページネーション
+     *     - デフォルト: 20件/ページ
+     *     - 最大: 100件/ページ
+     *     - オフセットベース: skip/limit パターン
+     *
+     *     ## レスポンス情報
+     *     - クイズ一覧（QuizWithSolution形式）
+     *     - 総件数（フィルタ適用後）
+     *     - 続きの存在フラグ
+     *     - 継続トークン（将来のカーソルベース対応用）
+     *
+     *     ## 使用場面
+     *     - 管理画面でのクイズ管理
+     *     - 作成者マイページでの作品一覧
+     *     - 承認待ちキューの表示 */
     get: operations["QuizManagement_listQuizzes"];
     put?: never;
-    /** @description Create a new quiz */
+    /** @description 新しいクイズ作成API
+     *
+     *     ## 機能
+     *     - **多様な問題形式対応**: 真偽値、自由記述、単択、複数選択の4形式をサポート
+     *     - **自動バリデーション**: 問題文・解答・選択肢の妥当性を自動検証
+     *     - **承認待ち状態**: 作成されたクイズは承認待ち状態で管理者レビューを経て公開
+     *     - **タグ分類**: 学習分野・難易度別のタグ付けが可能
+     *
+     *     ## 制限事項
+     *     - 問題文は最大500文字
+     *     - 解説は最大1000文字
+     *     - タグは最大10個まで
+     *     - 1日あたりの作成上限：50問（レート制限）
+     *
+     *     ## 作成フロー
+     *     1. リクエスト送信
+     *     2. バリデーション実行
+     *     3. pending_approval状態でデータベースに保存
+     *     4. 管理者による承認待ちキューに追加
+     *
+     *     ## 使用例
+     *     - 教育コンテンツの作成
+     *     - 自習用問題集の構築
+     *     - スキルチェック問題の準備 */
     post: operations["QuizManagement_createQuiz"];
     delete?: never;
     options?: never;
@@ -29,12 +84,84 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description Get quiz details */
+    /** @description クイズ詳細情報取得API
+     *
+     *     ## 機能
+     *     - **完全な問題情報**: 問題文、解答、解説、タグを含む全データを取得
+     *     - **権限制御**: 作成者または管理者のみアクセス可能（承認前クイズの場合）
+     *     - **解答情報付き**: QuizWithSolution形式で解答も含めて返却
+     *
+     *     ## アクセス制御
+     *     - **公開クイズ（approved）**: 全ユーザーがアクセス可能
+     *     - **承認待ちクイズ**: 作成者・管理者のみアクセス可能
+     *     - **却下クイズ**: 作成者のみアクセス可能
+     *
+     *     ## レスポンス構造
+     *     - 基本クイズ情報（id、問題文、ステータス、作成日時等）
+     *     - 解答情報（問題形式に応じた Solution オブジェクト）
+     *     - 関連タグ配列
+     *     - 承認日時（承認済みの場合）
+     *
+     *     ## 使用場面
+     *     - クイズ編集画面での詳細表示
+     *     - 管理画面での承認レビュー
+     *     - 作成者による内容確認 */
     get: operations["QuizManagement_getQuiz"];
-    /** @description Update quiz */
+    /** @description クイズ情報更新API
+     *
+     *     ## 機能
+     *     - **部分更新対応**: 指定されたフィールドのみを更新
+     *     - **権限制御**: 作成者のみ更新可能
+     *     - **承認状態制限**: 承認済みクイズは更新不可
+     *     - **バリデーション**: 更新内容の妥当性を自動検証
+     *
+     *     ## 更新可能フィールド
+     *     - 問題文（question）
+     *     - 解説（explanation）
+     *     - タグ（tags）
+     *
+     *     ## 更新制限
+     *     - **承認済みクイズ**: 更新不可（approved状態）
+     *     - **他者作成クイズ**: 更新不可（作成者以外）
+     *     - **解答部分**: 作成後は変更不可（整合性保持のため）
+     *
+     *     ## 更新後の動作
+     *     - 更新されたクイズは承認待ち状態を維持
+     *     - 管理者に再レビュー通知
+     *     - 更新履歴の記録
+     *
+     *     ## 使用場面
+     *     - 誤字脱字の修正
+     *     - 解説の充実化
+     *     - タグ分類の見直し */
     put: operations["QuizManagement_updateQuiz"];
     post?: never;
-    /** @description Delete quiz */
+    /** @description クイズ削除API
+     *
+     *     ## 機能
+     *     - **論理削除**: データは保持し、ステータスを削除済みに変更
+     *     - **権限制御**: 作成者または管理者のみ削除可能
+     *     - **関連データ保護**: 回答履歴や統計データは保持
+     *
+     *     ## 削除条件
+     *     - **作成者権限**: 自身が作成したクイズの削除
+     *     - **管理者権限**: 全てのクイズの削除（規約違反等）
+     *     - **承認状態**: 全ステータスのクイズが削除対象
+     *
+     *     ## 削除の影響
+     *     - **学習セッション**: 進行中セッションは継続可能
+     *     - **統計データ**: 過去の回答履歴は保持
+     *     - **デッキ**: 含まれるデッキからは自動除外
+     *
+     *     ## 削除後の状態
+     *     - データベースからは物理削除されない
+     *     - 検索結果には表示されない
+     *     - 作成者統計からは除外される
+     *
+     *     ## 使用場面
+     *     - 不適切コンテンツの除去
+     *     - 作成者による自主削除
+     *     - 重複問題の整理 */
     delete: operations["QuizManagement_deleteQuiz"];
     options?: never;
     head?: never;
@@ -48,7 +175,24 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** @description Search quizzes with advanced filters */
+    /** @description 高度なフィルタリング、ソート、ページネーション機能を持つクイズ検索API
+     *
+     *     ## 機能
+     *     - **全文検索**: 問題文、解説、タグ全体での横断検索
+     *     - **高度なフィルタリング**: 難易度、回答タイプ、作成者、日付などによる絞り込み
+     *     - **スマートタグ処理**: 肯定・否定両方のタグフィルター対応
+     *     - **柔軟なソート**: 複数ソート項目での昇順・降順指定
+     *     - **ページネーション**: 効率的なオフセットベースページング（カスタマイズ可能なページサイズ）
+     *
+     *     ## 特殊構文
+     *     - **方向付きソート**: 降順指定は`-`プレフィックス使用（例：`sort=-created_date`で最新順）
+     *     - **タグ除外**: 除外指定は`~`プレフィックス使用（例：`tags=~beginner`で初心者レベル除外）
+     *     - **複合タグフィルター**: 肯定・否定タグの組み合わせ可能（例：`tags=javascript&tags=~beginner`）
+     *
+     *     ## 使用例
+     *     - 基本検索: `?q=JavaScript`
+     *     - 高度なフィルタリング: `?q=配列&tags=javascript&difficulty=intermediate&sort=-created_date`
+     *     - カテゴリ除外: `?tags=programming&tags=~tutorial&min_correct_rate=0.8` */
     get: operations["Search_searchQuizzes"];
     put?: never;
     post?: never;
@@ -301,14 +445,17 @@ export interface components {
     PaginationRequest: {
       /**
        * Format: int32
+       * @description Maximum number of items to return per page (1-100). Default: 20
        * @default 20
        */
       limit: number;
       /**
        * Format: int32
+       * @description Number of items to skip from the beginning of the result set. Default: 0
        * @default 0
        */
       offset: number;
+      /** @description Token for cursor-based pagination (optional, for future implementation) */
       continuationToken?: string;
     };
     Quiz: {
@@ -531,8 +678,11 @@ export interface operations {
   QuizManagement_listQuizzes: {
     parameters: {
       query?: {
+        /** @description ステータス別フィルター。指定されない場合は全ステータス（権限に応じて） */
         status?: components["schemas"]["QuizStatus"];
+        /** @description 作成者ID別フィルター。特定ユーザーの作成クイズのみ取得 */
         creatorId?: components["schemas"]["UserId"];
+        /** @description クイズID配列による指定取得。複数IDの一括取得に使用 */
         ids?: string[];
       };
       header?: never;
@@ -563,6 +713,7 @@ export interface operations {
       path?: never;
       cookie?: never;
     };
+    /** @description 新しいクイズの作成情報を含むリクエスト */
     requestBody: {
       content: {
         "application/json": components["schemas"]["CreateQuizRequest"];
@@ -596,6 +747,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
+        /** @description 取得対象のクイズID（UUID形式） */
         id: components["schemas"]["QuizId"];
       };
       cookie?: never;
@@ -627,10 +779,12 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
+        /** @description 更新対象のクイズID（UUID形式） */
         id: components["schemas"]["QuizId"];
       };
       cookie?: never;
     };
+    /** @description 更新情報を含むリクエスト（部分更新対応） */
     requestBody: {
       content: {
         "application/json": components["schemas"]["UpdateQuizRequest"];
@@ -665,6 +819,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
+        /** @description 削除対象のクイズID（UUID形式） */
         id: components["schemas"]["QuizId"];
       };
       cookie?: never;
@@ -694,15 +849,32 @@ export interface operations {
   Search_searchQuizzes: {
     parameters: {
       query?: {
+        /** @description 問題文、解説、関連タグ全体での全文検索クエリ */
         q?: string;
+        /** @description クイズ分類用タグフィルター。包含・除外両方の指定が可能：
+         *     - 包含タグ: `tags=javascript` または `tags=javascript&tags=react`
+         *     - 除外タグ: `tags=~beginner` (初心者レベルコンテンツを除外)
+         *     - 混合フィルター: `tags=javascript&tags=~tutorial` (JavaScriptを含み、チュートリアルを除外) */
         tags?: string[];
+        /** @description 難易度レベルによるフィルター。一般的な値：'beginner'、'intermediate'、'advanced' */
         difficulty?: string;
+        /** @description 回答タイプによるフィルター。有効な値：'boolean'、'free_text'、'single_choice'、'multiple_choice' */
         answer_type?: components["schemas"]["AnswerType"];
+        /** @description 作成者のユーザーIDによるフィルター（UUID形式） */
         creator_id?: components["schemas"]["UserId"];
+        /** @description 最小正答率フィルター（0.0〜1.0）。例：0.8で正答率80%以上のクイズのみ */
         min_correct_rate?: number;
+        /** @description 最大正答率フィルター（0.0〜1.0）。例：0.5で正答率50%以下のクイズのみ */
         max_correct_rate?: number;
+        /** @description 指定日時以降に作成されたクイズをフィルター（ISO 8601形式）。例：'2024-01-01T00:00:00Z' */
         created_after?: string;
+        /** @description 指定日時以前に作成されたクイズをフィルター（ISO 8601形式）。例：'2024-12-31T23:59:59Z' */
         created_before?: string;
+        /** @description 方向プレフィックス付きソート項目：
+         *     - 利用可能項目：'relevance'、'created_date'、'popularity'、'difficulty'
+         *     - 昇順：`sort=created_date`（デフォルト）
+         *     - 降順：`sort=-created_date`（マイナス記号をプレフィックス）
+         *     - デフォルト：キーワード検索時は'relevance'、それ以外は'created_date' */
         sort?: string;
       };
       header?: never;
