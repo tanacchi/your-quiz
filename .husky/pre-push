@@ -1,0 +1,5 @@
+pnpm install -r
+if ! git diff --quiet -- pnpm-lock.yaml; then
+  echo "ERROR: pnpm-lock.yaml に未コミットの差分があります。 push 前に処理してください。" >&2
+  exit 1
+fi

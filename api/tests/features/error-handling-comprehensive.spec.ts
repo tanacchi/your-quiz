@@ -24,7 +24,7 @@ describe("Comprehensive Error Handling - 包括的エラーハンドリング", 
         // When: Request is made with invalid data
         const response = await spec()
           .post(testCase.endpoint)
-          .withJson(testCase.input as object)
+          .withJson(testCase.input)
           .expectStatus(testCase.expectedStatus);
 
         // Then: Should return ValidationError with typed structure
@@ -66,13 +66,13 @@ describe("Comprehensive Error Handling - 包括的エラーハンドリング", 
           case "PUT":
             request = request.put(testCase.endpoint);
             if (testCase.input) {
-              request = request.withJson(testCase.input as object);
+              request = request.withJson(testCase.input);
             }
             break;
           case "POST":
             request = request.post(testCase.endpoint);
             if (testCase.input) {
-              request = request.withJson(testCase.input as object);
+              request = request.withJson(testCase.input);
             }
             break;
           case "DELETE":
@@ -135,7 +135,7 @@ describe("Comprehensive Error Handling - 包括的エラーハンドリング", 
           case "PUT":
             request = request.put(testCase.endpoint);
             if (testCase.input) {
-              request = request.withJson(testCase.input as object);
+              request = request.withJson(testCase.input);
             }
             break;
           case "DELETE":
@@ -144,7 +144,7 @@ describe("Comprehensive Error Handling - 包括的エラーハンドリング", 
           default:
             request = request.post(testCase.endpoint);
             if (testCase.input) {
-              request = request.withJson(testCase.input as object);
+              request = request.withJson(testCase.input);
             }
         }
 
@@ -185,7 +185,7 @@ describe("Comprehensive Error Handling - 包括的エラーハンドリング", 
         if (testCase.rawBody) {
           request = request.withBody(testCase.rawBody);
         } else if (testCase.input) {
-          request = request.withJson(testCase.input as object);
+          request = request.withJson(testCase.input);
         }
 
         // Add simulation headers
@@ -243,7 +243,7 @@ describe("Comprehensive Error Handling - 包括的エラーハンドリング", 
 
         // Add input data if present
         if (testCase.input) {
-          request = request.withJson(testCase.input as object);
+          request = request.withJson(testCase.input);
         }
 
         // Add headers if specified

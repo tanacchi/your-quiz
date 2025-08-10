@@ -170,7 +170,7 @@ describe("Quiz Retrieval by ID - Quiz ID別取得", () => {
             // When: Complex scenario requires creation then retrieval
             const createResponse = await spec()
               .post(testCase.createEndpoint)
-              .withJson(testCase.createData as object)
+              .withJson(testCase.createData)
               .expectStatus(201);
 
             response = await spec()

@@ -84,12 +84,11 @@ interface CreateQuizRequest {
   "question": "次のうち、JavaScriptのプリミティブ型はどれ？",
   "answerType": "single_choice",
   "solution": {
-    "type": "single_choice", 
-    "correctChoiceId": "choice-2",
+    "type": "single_choice",
     "choices": [
-      {"id": "choice-1", "text": "Object", "orderIndex": 0},
-      {"id": "choice-2", "text": "string", "orderIndex": 1},
-      {"id": "choice-3", "text": "Array", "orderIndex": 2}
+      {"id": "choice-1", "text": "Object", "orderIndex": 0, "isCorrect": false},
+      {"id": "choice-2", "text": "string", "orderIndex": 1, "isCorrect": true},
+      {"id": "choice-3", "text": "Array", "orderIndex": 2, "isCorrect": false}
     ]
   },
   "tags": ["javascript", "types"],
@@ -162,13 +161,11 @@ type FreeTextSolution = {
 
 type SingleChoiceSolution = {
   type: "single_choice";
-  correctChoiceId: string;
   choices: Choice[];
 };
 
 type MultipleChoiceSolution = {
   type: "multiple_choice";
-  correctChoiceIds: string[];
   choices: Choice[];
   minCorrectAnswers: number;
 };
@@ -177,6 +174,7 @@ type Choice = {
   id: string;
   text: string;
   orderIndex: number;
+  isCorrect: boolean;
 };
 ```
 
@@ -222,11 +220,10 @@ type Choice = {
   "answerType": "single_choice",
   "solution": {
     "type": "single_choice",
-    "correctChoiceId": "choice-2",
     "choices": [
-      {"id": "choice-1", "text": "Object", "orderIndex": 0},
-      {"id": "choice-2", "text": "string", "orderIndex": 1}, 
-      {"id": "choice-3", "text": "Array", "orderIndex": 2}
+      {"id": "choice-1", "text": "Object", "orderIndex": 0, "isCorrect": false},
+      {"id": "choice-2", "text": "string", "orderIndex": 1, "isCorrect": true}, 
+      {"id": "choice-3", "text": "Array", "orderIndex": 2, "isCorrect": false}
     ]
   },
   "difficulty": "beginner"

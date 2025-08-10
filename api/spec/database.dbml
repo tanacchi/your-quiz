@@ -52,17 +52,15 @@ Table FreeTextSolution {
 
 Table SingleChoiceSolution {
   id SolutionId [pk]
-  correct_choice_id ChoiceId [not null, ref: > Choice.id]
 
-  Note: 'Solution for single choice quizzes (4-choice questions etc.)'
+  Note: 'Solution for single choice quizzes (4-choice questions etc.). Correct answer indicated by Choice.is_correct=true (exactly one required).'
 }
 
 Table MultipleChoiceSolution {
   id SolutionId [pk]
-  correct_choice_ids ChoiceId[] [not null, note: 'Array of correct choice IDs']
   min_correct_answers int [not null, default: 1, note: 'Minimum correct answers required']
 
-  Note: 'Solution for multiple choice quizzes'
+  Note: 'Solution for multiple choice quizzes. Correct answers indicated by Choice.is_correct=true (min_correct_answers required).'
 }
 
 Table Choice {
@@ -70,8 +68,9 @@ Table Choice {
   solution_id SolutionId [not null, note: 'References SingleChoice or MultipleChoice solution']
   text varchar(500) [not null, note: 'Choice option text']
   order_index int [not null, note: 'Display order within solution']
+  is_correct boolean [not null, note: 'Whether this choice is a correct answer']
 
-  Note: 'Choice options for single/multiple choice solutions'
+  Note: 'Choice options for single/multiple choice solutions. Each choice knows if it is correct.'
 }
 
 Table Tag {
