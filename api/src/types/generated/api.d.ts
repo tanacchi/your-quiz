@@ -437,12 +437,7 @@ export interface components {
     NotFoundError: {
       /** @enum {number} */
       code: 404;
-      /** @enum {string} */
-      message: "Resource not found";
-    } & WithRequired<
-      components["schemas"]["ErrorResponse"],
-      "code" | "message"
-    >;
+    } & WithRequired<components["schemas"]["ErrorResponse"], "code">;
     PaginationRequest: {
       /**
        * Format: int32
@@ -527,12 +522,7 @@ export interface components {
     RateLimitError: {
       /** @enum {number} */
       code: 429;
-      /** @enum {string} */
-      message: "Rate limit exceeded";
-    } & WithRequired<
-      components["schemas"]["ErrorResponse"],
-      "code" | "message"
-    >;
+    } & WithRequired<components["schemas"]["ErrorResponse"], "code">;
     /** @enum {string} */
     RelationType: "hierarchy" | "category" | "synonym" | "related";
     SessionId: string;
