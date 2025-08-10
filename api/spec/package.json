@@ -5,9 +5,8 @@
   "private": true,
   "scripts": {
     "build": "run-p build:*",
-    "build:api": "run-s gen-openapi-schema gen-types",
+    "build:api": "run-s gen-openapi-schema && run-p gen-docs gen-types",
     "build:db": "pnpm gen-database-schema",
-    "build:docs": "run-s gen-docs",
     "gen-database-schema": "dbml2sql database.dbml --dialect sqlite -o generated/db.raw.sql && printf 'PRAGMA foreign_keys = ON;\n\n' > generated/db.sql && cat generated/db.raw.sql >> generated/db.sql && rm generated/db.raw.sql",
     "gen-docs": "pnpm exec redocly build-docs generated/api.yaml --output generated/redoc.html",
     "gen-openapi-schema": "tsp compile .",

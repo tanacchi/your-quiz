@@ -282,6 +282,7 @@ export interface components {
       text: string;
       /** Format: int32 */
       orderIndex: number;
+      isCorrect: boolean;
     };
     ChoiceId: string;
     ConflictError: {
@@ -426,7 +427,6 @@ export interface components {
       /** @enum {string} */
       type: "multiple_choice";
       id: components["schemas"]["SolutionId"];
-      correctChoiceIds: components["schemas"]["ChoiceId"][];
       /**
        * Format: int32
        * @default 1
@@ -437,12 +437,7 @@ export interface components {
     NotFoundError: {
       /** @enum {number} */
       code: 404;
-      /** @enum {string} */
-      message: "Resource not found";
-    } & WithRequired<
-      components["schemas"]["ErrorResponse"],
-      "code" | "message"
-    >;
+    } & WithRequired<components["schemas"]["ErrorResponse"], "code">;
     PaginationRequest: {
       /**
        * Format: int32
@@ -527,12 +522,7 @@ export interface components {
     RateLimitError: {
       /** @enum {number} */
       code: 429;
-      /** @enum {string} */
-      message: "Rate limit exceeded";
-    } & WithRequired<
-      components["schemas"]["ErrorResponse"],
-      "code" | "message"
-    >;
+    } & WithRequired<components["schemas"]["ErrorResponse"], "code">;
     /** @enum {string} */
     RelationType: "hierarchy" | "category" | "synonym" | "related";
     SessionId: string;
@@ -568,7 +558,6 @@ export interface components {
       /** @enum {string} */
       type: "single_choice";
       id: components["schemas"]["SolutionId"];
-      correctChoiceId: components["schemas"]["ChoiceId"];
       choices: components["schemas"]["Choice"][];
     };
     Solution:

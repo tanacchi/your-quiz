@@ -28,25 +28,27 @@ export class MockSearchRepository implements ISearchRepository {
       solution: {
         type: "single_choice" as const,
         id: "solution-1",
-        correctChoiceId: "choice-1",
         choices: [
           {
             id: "choice-1",
             solutionId: "solution-1",
             text: "sort()",
             orderIndex: 0,
+            isCorrect: true,
           },
           {
             id: "choice-2",
             solutionId: "solution-1",
             text: "order()",
             orderIndex: 1,
+            isCorrect: false,
           },
           {
             id: "choice-3",
             solutionId: "solution-1",
             text: "arrange()",
             orderIndex: 2,
+            isCorrect: false,
           },
         ],
       },
@@ -65,25 +67,27 @@ export class MockSearchRepository implements ISearchRepository {
       solution: {
         type: "single_choice" as const,
         id: "solution-2",
-        correctChoiceId: "choice-4",
         choices: [
           {
             id: "choice-4",
             solutionId: "solution-2",
             text: "reverse()",
             orderIndex: 0,
+            isCorrect: true,
           },
           {
             id: "choice-5",
             solutionId: "solution-2",
             text: "invert()",
             orderIndex: 1,
+            isCorrect: false,
           },
           {
             id: "choice-6",
             solutionId: "solution-2",
             text: "backward()",
             orderIndex: 2,
+            isCorrect: false,
           },
         ],
       },
@@ -102,7 +106,6 @@ export class MockSearchRepository implements ISearchRepository {
       solution: {
         type: "multiple_choice" as const,
         id: "solution-3",
-        correctChoiceIds: ["choice-7", "choice-8"],
         minCorrectAnswers: 2,
         choices: [
           {
@@ -110,18 +113,21 @@ export class MockSearchRepository implements ISearchRepository {
             solutionId: "solution-3",
             text: "コンパイル時エラー検出",
             orderIndex: 0,
+            isCorrect: true,
           },
           {
             id: "choice-8",
             solutionId: "solution-3",
             text: "IDE支援の向上",
             orderIndex: 1,
+            isCorrect: true,
           },
           {
             id: "choice-9",
             solutionId: "solution-3",
             text: "実行速度の向上",
             orderIndex: 2,
+            isCorrect: false,
           },
         ],
       },
