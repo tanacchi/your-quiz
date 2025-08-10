@@ -36,6 +36,7 @@ interface Search {
     - 基本検索: `?q=JavaScript`
     - 高度なフィルタリング: `?q=配列&tags=javascript&difficulty=intermediate&sort=-created_date`
     - カテゴリ除外: `?tags=programming&tags=~tutorial&min_correct_rate=0.8`
+    - ID除外: `?q=React&exclude_ids=quiz-id-1&exclude_ids=quiz-id-2`（特定のクイズを除外した検索）
     """)
   @get
   @route("/quizzes")
@@ -59,6 +60,9 @@ interface Search {
     
     @doc("作成者のユーザーIDによるフィルター（UUID形式）")
     @query creator_id?: UserId,
+    
+    @doc("除外するクイズのID配列（UUID形式）。指定されたIDのクイズを検索結果から除外")
+    @query exclude_ids?: QuizId[],
     
     @doc("最小正答率フィルター（0.0〜1.0）。例：0.8で正答率80%以上のクイズのみ")
     @query min_correct_rate?: float32,

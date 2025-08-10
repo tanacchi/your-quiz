@@ -192,7 +192,8 @@ export interface paths {
      *     ## 使用例
      *     - 基本検索: `?q=JavaScript`
      *     - 高度なフィルタリング: `?q=配列&tags=javascript&difficulty=intermediate&sort=-created_date`
-     *     - カテゴリ除外: `?tags=programming&tags=~tutorial&min_correct_rate=0.8` */
+     *     - カテゴリ除外: `?tags=programming&tags=~tutorial&min_correct_rate=0.8`
+     *     - ID除外: `?q=React&exclude_ids=quiz-id-1&exclude_ids=quiz-id-2`（特定のクイズを除外した検索） */
     get: operations["Search_searchQuizzes"];
     put?: never;
     post?: never;
@@ -862,6 +863,8 @@ export interface operations {
         answer_type?: components["schemas"]["AnswerType"];
         /** @description 作成者のユーザーIDによるフィルター（UUID形式） */
         creator_id?: components["schemas"]["UserId"];
+        /** @description 除外するクイズのID配列（UUID形式）。指定されたIDのクイズを検索結果から除外 */
+        exclude_ids?: components["schemas"]["QuizId"][];
         /** @description 最小正答率フィルター（0.0〜1.0）。例：0.8で正答率80%以上のクイズのみ */
         min_correct_rate?: number;
         /** @description 最大正答率フィルター（0.0〜1.0）。例：0.5で正答率50%以下のクイズのみ */
