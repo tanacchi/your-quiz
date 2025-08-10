@@ -1,6 +1,13 @@
 {
   "extends": "@tsconfig/strictest/tsconfig.json",
-  "exclude": ["node_modules", "dist", "build", "coverage", "*.config.cjs"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "*.config.cjs",
+    "spec/coverage/**/*"
+  ],
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",

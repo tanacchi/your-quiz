@@ -5,14 +5,12 @@
  * PostgreSQL形式のSQLをSQLite形式に変換します
  */
 
-import * as fs from "fs";
-import * as path from "path";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   arrayTypePattern,
-  convertCustomType,
-  convertFunction,
   enumMappings,
   functionMappings,
   generateCheckConstraint,
@@ -23,8 +21,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 class SQLiteConverter {
-  private inputFile: string;
-  private outputFile: string;
+  protected inputFile: string;
+  protected outputFile: string;
   private content: string = "";
 
   constructor() {
@@ -82,7 +80,7 @@ class SQLiteConverter {
    */
   private addPragma(): void {
     if (!this.content.includes("PRAGMA foreign_keys = ON;")) {
-      this.content = "PRAGMA foreign_keys = ON;\n\n" + this.content;
+      this.content = `PRAGMA foreign_keys = ON;\n\n${this.content}`;
     }
     console.log("✓ Added PRAGMA foreign_keys");
   }
@@ -182,7 +180,7 @@ class SQLiteConverter {
 
       this.content = this.content.replace(
         columnPattern,
-        (match, columnName, notNull, defaultValue) => {
+        (_match, columnName, notNull, defaultValue) => {
           const checkConstraint = generateCheckConstraint(
             columnName,
             enumMapping.name,

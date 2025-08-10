@@ -3,8 +3,8 @@
  * @description SQLite変換プロセスの統合テスト
  */
 
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SQLiteConverter } from "../scripts/convert-to-sqlite.js";
 
@@ -27,7 +27,7 @@ describe("SQLite Conversion Integration Tests", () => {
       if (fs.existsSync(inputFile)) fs.unlinkSync(inputFile);
       if (fs.existsSync(outputFile)) fs.unlinkSync(outputFile);
       if (fs.existsSync(testDir)) fs.rmdirSync(testDir);
-    } catch (error) {
+    } catch (_error) {
       // クリーンアップエラーは無視
     }
   });
@@ -102,8 +102,8 @@ ALTER TABLE "Deck" ADD FOREIGN KEY ("creator_id") REFERENCES "UserIdentity" ("id
       class TestSQLiteConverter extends SQLiteConverter {
         constructor() {
           super();
-          this["inputFile"] = inputFile;
-          this["outputFile"] = outputFile;
+          this.inputFile = inputFile;
+          this.outputFile = outputFile;
         }
       }
 
@@ -178,8 +178,8 @@ ALTER TABLE "Deck" ADD FOREIGN KEY ("creator_id") REFERENCES "UserIdentity" ("id
       class TestSQLiteConverter extends SQLiteConverter {
         constructor() {
           super();
-          this["inputFile"] = inputFile;
-          this["outputFile"] = outputFile;
+          this.inputFile = inputFile;
+          this.outputFile = outputFile;
         }
       }
 
@@ -216,8 +216,8 @@ CREATE TABLE "test_table" (
       class TestSQLiteConverter extends SQLiteConverter {
         constructor() {
           super();
-          this["inputFile"] = inputFile;
-          this["outputFile"] = outputFile;
+          this.inputFile = inputFile;
+          this.outputFile = outputFile;
         }
       }
 
@@ -272,8 +272,8 @@ CREATE TABLE "test_table" (
         class TestSQLiteConverter extends SQLiteConverter {
           constructor() {
             super();
-            this["inputFile"] = inputFile;
-            this["outputFile"] = outputFile;
+            this.inputFile = inputFile;
+            this.outputFile = outputFile;
           }
         }
 
@@ -311,8 +311,8 @@ CREATE TABLE "test_table" (
       class TestSQLiteConverter extends SQLiteConverter {
         constructor() {
           super();
-          this["inputFile"] = path.join(testDir, "nonexistent.sql");
-          this["outputFile"] = outputFile;
+          this.inputFile = path.join(testDir, "nonexistent.sql");
+          this.outputFile = outputFile;
         }
       }
 
@@ -335,8 +335,8 @@ CREATE TABLE "test_table" (
       class TestSQLiteConverter extends SQLiteConverter {
         constructor() {
           super();
-          this["inputFile"] = inputFile;
-          this["outputFile"] = outputFile;
+          this.inputFile = inputFile;
+          this.outputFile = outputFile;
         }
       }
 

@@ -3,7 +3,7 @@
  * @description SQLite変換スクリプトのユニットテスト
  */
 
-import * as fs from "fs";
+import * as fs from "node:fs";
 import {
   beforeEach,
   describe,
@@ -30,11 +30,9 @@ const mockFs = fs as typeof fs & {
 
 describe("SQLiteConverter", () => {
   let converter: SQLiteConverter;
-  let consoleSpy: MockedFunction<typeof console.log>;
-
   beforeEach(() => {
     // コンソールログをスパイ
-    consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => {});
 
     // FSモックのリセット
     vi.clearAllMocks();
@@ -85,7 +83,7 @@ ALTER TABLE "Quiz" ADD FOREIGN KEY ("creator_id") REFERENCES "UserIdentity" ("id
 
       const writeCall = mockFs.writeFileSync.mock.calls[0];
       expect(writeCall).toBeDefined();
-      const output = writeCall[1] as string;
+      const output = writeCall?.[1] as string;
 
       // 基本的な変換確認
       expect(output).toContain("PRAGMA foreign_keys = ON;");
@@ -129,7 +127,7 @@ ALTER TABLE "Quiz" ADD FOREIGN KEY ("creator_id") REFERENCES "UserIdentity" ("id
 
       await converter.convert();
 
-      const output = mockFs.writeFileSync.mock.calls[0][1] as string;
+      const output = mockFs.writeFileSync.mock.calls[0]?.[1] as string;
       expect(output).not.toContain('"QuizId"');
       expect(output).not.toContain('"UserId"');
       expect(output).toContain("INTEGER");
@@ -146,7 +144,7 @@ ALTER TABLE "Quiz" ADD FOREIGN KEY ("creator_id") REFERENCES "UserIdentity" ("id
 
       await converter.convert();
 
-      const output = mockFs.writeFileSync.mock.calls[0][1] as string;
+      const output = mockFs.writeFileSync.mock.calls[0]?.[1] as string;
       expect(output).toContain('CHECK ("answer_type" IN');
       expect(output).toContain("'boolean'");
       expect(output).toContain('CHECK ("status" IN');
@@ -163,7 +161,7 @@ ALTER TABLE "Quiz" ADD FOREIGN KEY ("creator_id") REFERENCES "UserIdentity" ("id
 
       await converter.convert();
 
-      const output = mockFs.writeFileSync.mock.calls[0][1] as string;
+      const output = mockFs.writeFileSync.mock.calls[0]?.[1] as string;
       expect(output).not.toContain("QuizId[]");
       expect(output).not.toContain("TagId[]");
       expect(output).toContain("TEXT");
@@ -179,7 +177,7 @@ ALTER TABLE "Quiz" ADD FOREIGN KEY ("creator_id") REFERENCES "UserIdentity" ("id
 
       await converter.convert();
 
-      const output = mockFs.writeFileSync.mock.calls[0][1] as string;
+      const output = mockFs.writeFileSync.mock.calls[0]?.[1] as string;
       expect(output).toContain("INTEGER PRIMARY KEY AUTOINCREMENT");
       // AUTOINCREMENTがない場合のパターンをより具体的にチェック
       expect(output).not.toContain("INTEGER PRIMARY KEY,");
@@ -196,7 +194,7 @@ ALTER TABLE "Quiz" ADD FOREIGN KEY ("creator_id") REFERENCES "UserIdentity" ("id
 
       await converter.convert();
 
-      const output = mockFs.writeFileSync.mock.calls[0][1] as string;
+      const output = mockFs.writeFileSync.mock.calls[0]?.[1] as string;
       expect(output).toContain(
         'FOREIGN KEY ("creator_id") REFERENCES "UserIdentity" ("id")',
       );
@@ -232,7 +230,7 @@ ALTER TABLE "Quiz" ADD FOREIGN KEY ("creator_id") REFERENCES "UserIdentity" ("id
 
       await converter.convert();
 
-      const output = mockFs.writeFileSync.mock.calls[0][1] as string;
+      const output = mockFs.writeFileSync.mock.calls[0]?.[1] as string;
       expect(output).toMatch(/^PRAGMA foreign_keys = ON;/);
     });
 
@@ -243,7 +241,7 @@ CREATE TABLE test (id INTEGER);`;
 
       await converter.convert();
 
-      const output = mockFs.writeFileSync.mock.calls[0][1] as string;
+      const output = mockFs.writeFileSync.mock.calls[0]?.[1] as string;
       const pragmaCount = (output.match(/PRAGMA foreign_keys = ON;/g) || [])
         .length;
       expect(pragmaCount).toBe(1);
