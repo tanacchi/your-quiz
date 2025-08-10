@@ -282,6 +282,7 @@ export interface components {
       text: string;
       /** Format: int32 */
       orderIndex: number;
+      isCorrect: boolean;
     };
     ChoiceId: string;
     ConflictError: {
@@ -426,7 +427,6 @@ export interface components {
       /** @enum {string} */
       type: "multiple_choice";
       id: components["schemas"]["SolutionId"];
-      correctChoiceIds: components["schemas"]["ChoiceId"][];
       /**
        * Format: int32
        * @default 1
@@ -558,7 +558,6 @@ export interface components {
       /** @enum {string} */
       type: "single_choice";
       id: components["schemas"]["SolutionId"];
-      correctChoiceId: components["schemas"]["ChoiceId"];
       choices: components["schemas"]["Choice"][];
     };
     Solution:

@@ -16,10 +16,9 @@ import type { components } from "../../types/generated/api";
  * const singleChoiceSolution = {
  *   type: "single_choice",
  *   id: "solution-123",
- *   correctChoiceId: "choice-1",
  *   choices: [
- *     { id: "choice-1", solutionId: "solution-123", text: "TypeScript", orderIndex: 0 },
- *     { id: "choice-2", solutionId: "solution-123", text: "JavaScript", orderIndex: 1 }
+ *     { id: "choice-1", solutionId: "solution-123", text: "TypeScript", orderIndex: 0, isCorrect: true },
+ *     { id: "choice-2", solutionId: "solution-123", text: "JavaScript", orderIndex: 1, isCorrect: false }
  *   ]
  * };
  * ```
@@ -41,20 +40,19 @@ export const solutionSchema = z
     z.object({
       type: z.literal("single_choice"),
       id: z.string(),
-      correctChoiceId: z.string(),
       choices: z.array(
         z.object({
           id: z.string(),
           solutionId: z.string(),
           text: z.string(),
           orderIndex: z.number().int(),
+          isCorrect: z.boolean(),
         }),
       ),
     }),
     z.object({
       type: z.literal("multiple_choice"),
       id: z.string(),
-      correctChoiceIds: z.array(z.string()),
       minCorrectAnswers: z.number().int().default(1),
       choices: z.array(
         z.object({
@@ -62,6 +60,7 @@ export const solutionSchema = z
           solutionId: z.string(),
           text: z.string(),
           orderIndex: z.number().int(),
+          isCorrect: z.boolean(),
         }),
       ),
     }),
@@ -80,8 +79,6 @@ export const solutionSchema = z
       const invalidFields = [];
       if ("correctAnswer" in data) invalidFields.push("correctAnswer");
       if ("choices" in data) invalidFields.push("choices");
-      if ("correctChoiceId" in data) invalidFields.push("correctChoiceId");
-      if ("correctChoiceIds" in data) invalidFields.push("correctChoiceIds");
 
       if (invalidFields.length > 0 && invalidFields[0]) {
         ctx.addIssue({
@@ -105,8 +102,6 @@ export const solutionSchema = z
       const invalidFields = [];
       if ("value" in data) invalidFields.push("value");
       if ("choices" in data) invalidFields.push("choices");
-      if ("correctChoiceId" in data) invalidFields.push("correctChoiceId");
-      if ("correctChoiceIds" in data) invalidFields.push("correctChoiceIds");
 
       if (invalidFields.length > 0 && invalidFields[0]) {
         ctx.addIssue({
@@ -119,15 +114,6 @@ export const solutionSchema = z
 
     // Single choice solution validation
     else if (data.type === "single_choice") {
-      if (!("correctChoiceId" in data)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            "Solution type 'single_choice' requires 'correctChoiceId' field",
-          path: ["correctChoiceId"],
-        });
-      }
-
       if (!("choices" in data)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -136,10 +122,24 @@ export const solutionSchema = z
         });
       }
 
+      // Validate that exactly one choice is marked as correct
+      if ("choices" in data && Array.isArray(data.choices)) {
+        const correctChoices = data.choices.filter(
+          (choice: { isCorrect?: boolean }) => choice.isCorrect === true,
+        );
+        if (correctChoices.length !== 1) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "Single choice solution must have exactly one correct choice (isCorrect: true)",
+            path: ["choices"],
+          });
+        }
+      }
+
       const invalidFields = [];
       if ("value" in data) invalidFields.push("value");
       if ("correctAnswer" in data) invalidFields.push("correctAnswer");
-      if ("correctChoiceIds" in data) invalidFields.push("correctChoiceIds");
 
       if (invalidFields.length > 0 && invalidFields[0]) {
         ctx.addIssue({
@@ -152,15 +152,6 @@ export const solutionSchema = z
 
     // Multiple choice solution validation
     else if (data.type === "multiple_choice") {
-      if (!("correctChoiceIds" in data)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            "Solution type 'multiple_choice' requires 'correctChoiceIds' array",
-          path: ["correctChoiceIds"],
-        });
-      }
-
       if (!("choices" in data)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -169,10 +160,38 @@ export const solutionSchema = z
         });
       }
 
+      // Validate that at least minCorrectAnswers choices are marked as correct
+      if ("choices" in data && Array.isArray(data.choices)) {
+        const correctChoices = data.choices.filter(
+          (choice: { isCorrect?: boolean }) => choice.isCorrect === true,
+        );
+        const minCorrect =
+          "minCorrectAnswers" in data &&
+          typeof data.minCorrectAnswers === "number"
+            ? data.minCorrectAnswers
+            : 1;
+
+        if (correctChoices.length < minCorrect) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Multiple choice solution must have at least ${minCorrect} correct choices (isCorrect: true)`,
+            path: ["choices"],
+          });
+        }
+
+        if (correctChoices.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "Multiple choice solution must have at least one correct choice (isCorrect: true)",
+            path: ["choices"],
+          });
+        }
+      }
+
       const invalidFields = [];
       if ("value" in data) invalidFields.push("value");
       if ("correctAnswer" in data) invalidFields.push("correctAnswer");
-      if ("correctChoiceId" in data) invalidFields.push("correctChoiceId");
 
       if (invalidFields.length > 0 && invalidFields[0]) {
         ctx.addIssue({
