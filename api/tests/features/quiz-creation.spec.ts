@@ -208,6 +208,49 @@ describe("Quiz Creation - クイズ作成", () => {
       });
     });
   });
+
+  describe("Solution型矛盾: Solution type mismatch validation", () => {
+    quizCreationData.solutionTypeMismatchScenarios.forEach(
+      (testCase, _index) => {
+        it(`Solution type mismatch: ${testCase.description}`, async () => {
+          // Given: Quiz data with solution type and field mismatch
+
+          // When: Quiz creation is attempted with mismatched solution
+          const response = await spec()
+            .post(testCase.endpoint)
+            .withJson(testCase.input)
+            .expectStatus(testCase.expectedStatus);
+
+          const body = response.json;
+
+          // Then: Should return 400 validation error
+          expect(response.statusCode).toBe(400);
+          expect(body).toHaveProperty("code");
+          expect(body).toHaveProperty("message");
+          expect(typeof body.code).toBe("number");
+          expect(typeof body.message).toBe("string");
+
+          // And: Error message should be descriptive and specific
+          expect(body.message.length).toBeGreaterThan(0);
+
+          // And: Should follow ErrorResponse schema structure
+          validateErrorResponseStructure(body, {
+            hasErrorCode: true,
+            errorCodeType: "number",
+            hasErrorMessage: true,
+            errorMessageType: "string",
+          });
+
+          // And: Error should contain relevant validation context
+          // The actual error message format may vary depending on server implementation
+          // but should indicate the nature of the validation failure
+          expect(body.message.toLowerCase()).toMatch(
+            /solution|type|mismatch|field|required|invalid/,
+          );
+        });
+      },
+    );
+  });
 });
 
 // Helper functions for type validation
