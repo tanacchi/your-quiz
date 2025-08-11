@@ -351,9 +351,21 @@ export class D1QuizRepository implements IQuizRepository {
     `);
 
     const dataResult = await dataStmt.bind(...params, limit, offset).all();
+
     const items = dataResult.results
       .filter(isQuizRow)
-      .map((row) => this.mapRowToQuizWithSolution(row));
+      .reduce<components["schemas"]["QuizWithSolution"][]>((acc, row) => {
+        try {
+          const quiz = this.mapRowToQuizWithSolution(row);
+          acc.push(quiz);
+        } catch (error) {
+          console.warn(`Skipping quiz due to data integrity issue:`, {
+            quizId: row.id,
+            error: error instanceof Error ? error.message : error,
+          });
+        }
+        return acc;
+      }, []);
 
     return {
       items,
@@ -505,7 +517,16 @@ export class D1QuizRepository implements IQuizRepository {
 
       case "free_text": {
         if (!row.correct_answer) {
-          throw new Error("Missing correct_answer for free_text solution");
+          console.error("Free text solution missing correct_answer:", {
+            quizId: row.id,
+            solutionId: row.solution_id,
+            answerType: row.answer_type,
+            correctAnswer: row.correct_answer,
+            rawRow: row,
+          });
+          throw new Error(
+            `Data integrity issue: Missing correct_answer for free_text solution. Quiz ID: ${row.id}, Solution ID: ${row.solution_id}`,
+          );
         }
 
         const matchingStrategy = row.matching_strategy || "exact";

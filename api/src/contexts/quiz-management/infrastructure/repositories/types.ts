@@ -78,16 +78,24 @@ export function isQuizRow(data: unknown): data is QuizRow {
   const row = data as Record<string, unknown>;
 
   return (
-    typeof getProperty(row, "id") === "string" &&
+    // D1では数値IDが返されるため、number | string両方を許可
+    (typeof getProperty(row, "id") === "string" ||
+      typeof getProperty(row, "id") === "number") &&
     typeof getProperty(row, "question") === "string" &&
     typeof getProperty(row, "answer_type") === "string" &&
-    typeof getProperty(row, "solution_id") === "string" &&
+    // D1では数値IDが返されるため、number | string両方を許可
+    (typeof getProperty(row, "solution_id") === "string" ||
+      typeof getProperty(row, "solution_id") === "number") &&
     typeof getProperty(row, "status") === "string" &&
-    typeof getProperty(row, "creator_id") === "string" &&
+    // D1では数値IDが返されるため、number | string両方を許可
+    (typeof getProperty(row, "creator_id") === "string" ||
+      typeof getProperty(row, "creator_id") === "number") &&
     typeof getProperty(row, "created_at") === "string" &&
-    (getProperty(row, "explanation") === undefined ||
+    (getProperty(row, "explanation") === null ||
+      getProperty(row, "explanation") === undefined ||
       typeof getProperty(row, "explanation") === "string") &&
-    (getProperty(row, "approved_at") === undefined ||
+    (getProperty(row, "approved_at") === null ||
+      getProperty(row, "approved_at") === undefined ||
       typeof getProperty(row, "approved_at") === "string")
   );
 }
@@ -188,22 +196,51 @@ export function isValidMatchingStrategy(
  * Record<string, unknown>からQuizRowに安全に変換
  */
 export function toQuizRow(data: Record<string, unknown>): QuizRow {
+  const baseRow = {
+    // D1では数値IDが返されるため、文字列に変換
+    id: String(getProperty(data, "id")),
+    question: String(getProperty(data, "question")),
+    answer_type: String(getProperty(data, "answer_type")),
+    solution_id: String(getProperty(data, "solution_id")),
+    status: String(getProperty(data, "status")),
+    creator_id: String(getProperty(data, "creator_id")),
+    created_at: String(getProperty(data, "created_at")),
+  };
+
   return {
-    id: data["id"] as string,
-    question: data["question"] as string,
-    answer_type: data["answer_type"] as string,
-    solution_id: data["solution_id"] as string,
-    explanation: data["explanation"] as string | undefined,
-    status: data["status"] as string,
-    creator_id: data["creator_id"] as string,
-    created_at: data["created_at"] as string,
-    approved_at: data["approved_at"] as string | undefined,
-    boolean_value: data["boolean_value"] as boolean | undefined,
-    correct_answer: data["correct_answer"] as string | undefined,
-    matching_strategy: data["matching_strategy"] as string | undefined,
-    case_sensitive: data["case_sensitive"] as boolean | undefined,
-    choices: data["choices"] as string | undefined,
-    min_correct_answers: data["min_correct_answers"] as number | undefined,
+    ...baseRow,
+    ...(getProperty(data, "explanation") !== null &&
+      getProperty(data, "explanation") !== undefined && {
+        explanation: String(getProperty(data, "explanation")),
+      }),
+    ...(getProperty(data, "approved_at") !== null &&
+      getProperty(data, "approved_at") !== undefined && {
+        approved_at: String(getProperty(data, "approved_at")),
+      }),
+    ...(getProperty(data, "boolean_value") !== null &&
+      getProperty(data, "boolean_value") !== undefined && {
+        boolean_value: Boolean(getProperty(data, "boolean_value")),
+      }),
+    ...(getProperty(data, "correct_answer") !== null &&
+      getProperty(data, "correct_answer") !== undefined && {
+        correct_answer: String(getProperty(data, "correct_answer")),
+      }),
+    ...(getProperty(data, "matching_strategy") !== null &&
+      getProperty(data, "matching_strategy") !== undefined && {
+        matching_strategy: String(getProperty(data, "matching_strategy")),
+      }),
+    ...(getProperty(data, "case_sensitive") !== null &&
+      getProperty(data, "case_sensitive") !== undefined && {
+        case_sensitive: Boolean(getProperty(data, "case_sensitive")),
+      }),
+    ...(getProperty(data, "choices") !== null &&
+      getProperty(data, "choices") !== undefined && {
+        choices: String(getProperty(data, "choices")),
+      }),
+    ...(getProperty(data, "min_correct_answers") !== null &&
+      getProperty(data, "min_correct_answers") !== undefined && {
+        min_correct_answers: Number(getProperty(data, "min_correct_answers")),
+      }),
   };
 }
 
@@ -223,8 +260,8 @@ export function toBasicQuizInfo(data: Record<string, unknown>): {
   answer_type: string;
 } {
   return {
-    id: data["id"] as string,
-    solution_id: data["solution_id"] as string,
-    answer_type: data["answer_type"] as string,
+    id: String(getProperty(data, "id")),
+    solution_id: String(getProperty(data, "solution_id")),
+    answer_type: String(getProperty(data, "answer_type")),
   };
 }
