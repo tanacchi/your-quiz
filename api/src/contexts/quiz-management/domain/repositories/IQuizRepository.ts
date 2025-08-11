@@ -29,14 +29,11 @@ export interface IQuizRepository {
    * IDでクイズを取得する
    *
    * @param id - 取得するクイズのID
-   * @returns クイズ（正解込み）、または null（見つからない場合）、またはRepositoryError
+   * @returns クイズ（正解込み）、またはRepositoryError（見つからない場合はNotFoundError）
    */
   findById(
     id: string,
-  ): ResultAsync<
-    components["schemas"]["QuizWithSolution"] | null,
-    RepositoryError
-  >;
+  ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError>;
 
   /**
    * 条件に基づいてクイズリストを取得する

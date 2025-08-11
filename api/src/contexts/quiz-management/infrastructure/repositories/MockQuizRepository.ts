@@ -3,6 +3,7 @@ import {
   type RepositoryError,
   RepositoryErrorFactory,
 } from "../../../../shared/errors";
+import { NotFoundError } from "../../../../shared/errors/base";
 import type { components } from "../../../../shared/types";
 import type { Quiz } from "../../domain/entities/Quiz";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
@@ -93,17 +94,21 @@ export class MockQuizRepository implements IQuizRepository {
 
   findById(
     id: string,
-  ): ResultAsync<
-    components["schemas"]["QuizWithSolution"] | null,
-    RepositoryError
-  > {
+  ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError> {
     return ResultAsync.fromPromise(
-      new Promise((resolve) => {
-        const quiz = this.mockData.find((q) => q.id === id) || null;
-        resolve(quiz);
+      new Promise((resolve, reject) => {
+        const quiz = this.mockData.find((q) => q.id === id);
+        if (quiz) {
+          resolve(quiz);
+        } else {
+          reject(new NotFoundError(`Quiz not found: ${id}`));
+        }
       }),
       (error) => {
         console.error("Failed to find quiz by ID:", error);
+        if (error instanceof NotFoundError) {
+          return error;
+        }
         return RepositoryErrorFactory.findFailed(
           "Quiz",
           error instanceof Error ? error : undefined,

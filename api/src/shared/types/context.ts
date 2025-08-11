@@ -9,6 +9,7 @@ import type { Context } from "hono";
 export type CloudflareBindings = {
   DB: D1Database;
   NODE_ENV: string;
+  USE_MOCK_DB?: string;
   ASSETS: Fetcher;
 };
 
