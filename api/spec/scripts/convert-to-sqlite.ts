@@ -252,12 +252,6 @@ class SQLiteConverter {
         refColumn: "id",
       },
       {
-        table: "SingleChoiceSolution",
-        column: "correct_choice_id",
-        refTable: "Choice",
-        refColumn: "id",
-      },
-      {
         table: "Tag",
         column: "created_by",
         refTable: "UserIdentity",
