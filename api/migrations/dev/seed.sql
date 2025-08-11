@@ -73,57 +73,56 @@ INSERT INTO "FreeTextSolution" ("correct_answer", "matching_strategy", "case_sen
   ('useState', 'exact', 1),              -- id: 9
   ('async/await', 'partial', 0);         -- id: 10
 
--- Single choice solutions - create choices first
-INSERT INTO "Choice" ("solution_id", "text", "order_index") VALUES 
+-- Single choice solutions - create choices with is_correct field
+INSERT INTO "Choice" ("solution_id", "text", "order_index", "is_correct") VALUES 
   -- For solution id 11 (JavaScript variable declaration)
-  (11, 'const', 0),
-  (11, 'let', 1), 
-  (11, 'var', 2),
-  (11, 'function', 3),
+  (11, 'const', 0, 0),
+  (11, 'let', 1, 1),  -- correct
+  (11, 'var', 2, 0),
+  (11, 'function', 3, 0),
   -- For solution id 12 (HTTP status codes)
-  (12, '200', 0),
-  (12, '404', 1),
-  (12, '500', 2),
-  (12, '301', 3),
+  (12, '200', 0, 1),  -- correct
+  (12, '404', 1, 0),
+  (12, '500', 2, 0),
+  (12, '301', 3, 0),
   -- For solution id 13 (React hooks)
-  (13, 'useState', 0),
-  (13, 'useEffect', 1),
-  (13, 'useContext', 2),
-  (13, 'useReducer', 3),
+  (13, 'useState', 0, 1),  -- correct
+  (13, 'useEffect', 1, 0),
+  (13, 'useContext', 2, 0),
+  (13, 'useReducer', 3, 0),
   -- For solution id 14 (SQL joins)
-  (14, 'INNER JOIN', 0),
-  (14, 'LEFT JOIN', 1),
-  (14, 'RIGHT JOIN', 2),
-  (14, 'FULL OUTER JOIN', 3),
+  (14, 'INNER JOIN', 0, 1),  -- correct
+  (14, 'LEFT JOIN', 1, 0),
+  (14, 'RIGHT JOIN', 2, 0),
+  (14, 'FULL OUTER JOIN', 3, 0),
   -- For solution id 15 (CSS display values)
-  (15, 'block', 0),
-  (15, 'inline', 1),
-  (15, 'flex', 2),
-  (15, 'grid', 3);
+  (15, 'block', 0, 0),
+  (15, 'inline', 1, 0),
+  (15, 'flex', 2, 1),  -- correct
+  (15, 'grid', 3, 0);
 
-INSERT INTO "SingleChoiceSolution" ("correct_choice_id") VALUES 
-  (2),  -- id: 11, "let" is correct for ES6 block scope
-  (1),  -- id: 12, "200" is correct for success
-  (1),  -- id: 13, "useState" is correct for state management
-  (1),  -- id: 14, "INNER JOIN" is most common
-  (3);  -- id: 15, "flex" is modern layout
+INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 11
+INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 12
+INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 13
+INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 14
+INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 15
 
 -- Multiple choice solutions
-INSERT INTO "Choice" ("solution_id", "text", "order_index") VALUES 
+INSERT INTO "Choice" ("solution_id", "text", "order_index", "is_correct") VALUES 
   -- For solution id 16 (JavaScript frameworks)
-  (16, 'React', 0),
-  (16, 'Vue.js', 1),
-  (16, 'Angular', 2),
-  (16, 'jQuery', 3),
+  (16, 'React', 0, 1),     -- correct
+  (16, 'Vue.js', 1, 1),    -- correct
+  (16, 'Angular', 2, 1),   -- correct
+  (16, 'jQuery', 3, 0),    -- not a framework
   -- For solution id 17 (HTTP methods)
-  (17, 'GET', 0),
-  (17, 'POST', 1),
-  (17, 'PUT', 2),
-  (17, 'DELETE', 3);
+  (17, 'GET', 0, 1),       -- correct
+  (17, 'POST', 1, 1),      -- correct
+  (17, 'PUT', 2, 1),       -- correct
+  (17, 'DELETE', 3, 1);    -- correct
 
-INSERT INTO "MultipleChoiceSolution" ("correct_choice_ids", "min_correct_answers") VALUES 
-  ('[5,6,7]', 2),   -- id: 16, React, Vue.js, Angular are frameworks (not jQuery)
-  ('[9,10,11,12]', 3); -- id: 17, all HTTP methods are correct
+INSERT INTO "MultipleChoiceSolution" ("min_correct_answers") VALUES 
+  (2),   -- id: 16, React, Vue.js, Angular are frameworks (minimum 2 required)
+  (3);   -- id: 17, all HTTP methods are correct (minimum 3 required)
 
 -- Insert diverse sample quizzes
 INSERT INTO "Quiz" ("question", "answer_type", "solution_id", "explanation", "status", "creator_id", "created_at") VALUES 
@@ -219,18 +218,18 @@ INSERT INTO "FreeTextAnswer" ("text") VALUES
   ('async/await');         -- id: 15
 
 INSERT INTO "SingleChoiceAnswer" ("selected_choice_id") VALUES 
-  (2),  -- id: 16, correct "let"
-  (1),  -- id: 17, correct "200"
-  (1),  -- id: 18, correct "useState"
-  (3),  -- id: 19, wrong choice
-  (1),  -- id: 20, correct "INNER JOIN"
-  (3);  -- id: 21, correct "flex"
+  (2),  -- id: 16, correct "let" (choice_id 2)
+  (5),  -- id: 17, correct "200" (choice_id 5)
+  (9),  -- id: 18, correct "useState" (choice_id 9)
+  (11), -- id: 19, wrong choice
+  (13), -- id: 20, correct "INNER JOIN" (choice_id 13)
+  (17); -- id: 21, correct "flex" (choice_id 17)
 
 INSERT INTO "MultipleChoiceAnswer" ("selected_choice_ids") VALUES 
-  ('[5,6,7]'),      -- id: 22, correct frameworks
-  ('[9,10,11,12]'), -- id: 23, correct HTTP methods
-  ('[5,8]'),        -- id: 24, partially correct
-  ('[9,10,11]');    -- id: 25, missing one method
+  ('[18,19,20]'),   -- id: 22, correct frameworks (React, Vue.js, Angular)
+  ('[22,23,24,25]'), -- id: 23, correct HTTP methods (GET, POST, PUT, DELETE)
+  ('[18,21]'),      -- id: 24, partially correct (React + jQuery)
+  ('[22,23,24]');   -- id: 25, missing one method (GET, POST, PUT without DELETE)
 
 -- Insert comprehensive attempts data
 INSERT INTO "Attempt" ("quiz_id", "session_id", "user_id", "answer_type", "answer_id", "is_correct", "answered_at") VALUES 
