@@ -2,7 +2,7 @@ PRAGMA foreign_keys = ON;
 
 -- SQL dump generated using DBML (dbml.dbdiagram.io)
 -- Database: PostgreSQL
--- Generated at: 2025-08-09T22:50:03.623Z
+-- Generated at: 2025-08-11T06:27:09.528Z
 
 CREATE TABLE "UserAccount" (
   "id" INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,14 +45,11 @@ CREATE TABLE "FreeTextSolution" (
 );
 
 CREATE TABLE "SingleChoiceSolution" (
-  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-  "correct_choice_id" INTEGER NOT NULL
-,
-  FOREIGN KEY ("correct_choice_id") REFERENCES "Choice" ("id"));
+  "id" INTEGER PRIMARY KEY AUTOINCREMENT
+);
 
 CREATE TABLE "MultipleChoiceSolution" (
   "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-  "correct_choice_ids" "TEXT" NOT NULL,
   "min_correct_answers" int NOT NULL DEFAULT 1
 );
 
@@ -60,7 +57,8 @@ CREATE TABLE "Choice" (
   "id" INTEGER PRIMARY KEY AUTOINCREMENT,
   "solution_id" INTEGER NOT NULL,
   "text" varchar(500) NOT NULL,
-  "order_index" int NOT NULL
+  "order_index" int NOT NULL,
+  "is_correct" boolean NOT NULL
 );
 
 CREATE TABLE "Tag" (
