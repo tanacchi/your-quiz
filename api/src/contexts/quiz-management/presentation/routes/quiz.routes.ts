@@ -15,6 +15,7 @@ export const quizRoutes = new Hono<{ Bindings: CloudflareBindings }>();
  * クイズコントローラーのファクトリー関数
  *
  * 環境に応じて適切なリポジトリを使用してコントローラーを作成します。
+ * FIXME: 起動時に一度だけ呼び出すようにする.
  *
  * @param env - Cloudflare Workersのバインディング環境変数
  * @returns 設定済みのQuizController
