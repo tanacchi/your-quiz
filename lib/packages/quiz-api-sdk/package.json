@@ -1,17 +1,27 @@
 {
-  "name": "quiz-api-sdk",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@tanacchi/quiz-api-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Quiz API SDK with type safety and MSW support",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p tsconfig.json && orval --config orval.config.ts && tsx scripts/gen-validators.ts",
+    "test": "vitest",
     "typecheck": "tsc --noEmit",
     "generate": "orval --config orval.config.ts",
     "gen:msw": "tsx scripts/gen-msw-handlers.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["quiz", "api", "sdk", "typescript"],
+  "author": "tanacchi",
+  "license": "MIT",
   "packageManager": "pnpm@10.14.0",
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",
