@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "QuizPocket",
@@ -66,8 +67,8 @@ export default function RootLayout({
           className="fixed bottom-0 left-0 w-full bg-white border-t border-base flex justify-around items-center h-16 z-20"
           style={{ maxWidth: "100vw", minWidth: 0 }}
         >
-          <button
-            type="button"
+          <Link
+            href="/create"
             className="flex flex-col items-center justify-center text-base focus:outline-none"
           >
             <svg
@@ -81,9 +82,9 @@ export default function RootLayout({
               <path d="M12 4v16m8-8H4" />
             </svg>
             <span className="text-xs font-semibold">作る</span>
-          </button>
-          <button
-            type="button"
+          </Link>
+          <Link
+            href="/"
             className="flex flex-col items-center justify-center text-base focus:outline-none"
           >
             <svg
@@ -97,9 +98,9 @@ export default function RootLayout({
               <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3" />
             </svg>
             <span className="text-xs font-semibold">解く</span>
-          </button>
-          <button
-            type="button"
+          </Link>
+          <Link
+            href="/mypage"
             className="flex flex-col items-center justify-center text-base focus:outline-none"
           >
             <svg
@@ -114,7 +115,7 @@ export default function RootLayout({
               <path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
             </svg>
             <span className="text-xs font-semibold">マイページ</span>
-          </button>
+          </Link>
         </nav>
 
         {/* Footer */}
