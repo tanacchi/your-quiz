@@ -1,53 +1,45 @@
-import { Result, ok, err } from "neverthrow";
-import { z } from "zod";
+import { err, ok, type Result } from "neverthrow";
+import type { z } from "zod";
 import {
-  QuizSummarySchema,
-  type QuizSummaryDTO,
-  type QuizSummaryInput,
-  type TagDetail,
-  type TagId,
-} from "./quiz-summary-schema";
-import {
-  type Issue,
-  type QuizSummaryPatch,
-  suggestQuizSummaryPatches,
   applyQuizSummaryPatch,
   applyQuizSummaryPatches,
+  type Issue,
   materializePatch,
+  type QuizSummaryPatch,
+  suggestQuizSummaryPatches,
 } from "./quiz-summary-patches";
+import {
+  type QuizSummaryDTO,
+  type QuizSummaryInput,
+  QuizSummarySchema,
+  type TagId,
+} from "./quiz-summary-schema";
 
+export type { Issue, QuizSummaryPatch } from "./quiz-summary-patches";
 // Re-export types for public API
 export type {
-  TagDetail,
+  CreatorId as CreatorIdType,
+  QuizId as QuizIdType,
   QuizSummaryDTO,
   QuizSummaryInput,
+  SolutionId as SolutionIdType,
+  TagDetail,
+  TagId as TagIdType,
 } from "./quiz-summary-schema";
-export type { QuizSummaryPatch, Issue } from "./quiz-summary-patches";
-
 // Re-export runtime brand schemas and their types
 export {
+  CreatorId,
   QuizId,
   SolutionId,
-  CreatorId,
   TagId,
-} from "./quiz-summary-schema";
-export type {
-  QuizId as QuizIdType,
-  SolutionId as SolutionIdType,
-  CreatorId as CreatorIdType,
-  TagId as TagIdType,
 } from "./quiz-summary-schema";
 
 // Re-export utilities
-export {
-  applyQuizSummaryPatch,
-  applyQuizSummaryPatches,
-  materializePatch,
-};
+export { applyQuizSummaryPatch, applyQuizSummaryPatches, materializePatch };
 
 /** ValidationError: Issue と Patch 候補のみ返す（採用判断は呼び出し側） */
 export type ValidationError = {
-  kind: 'validation';
+  kind: "validation";
   issues: Issue[];
   patches: QuizSummaryPatch[]; // 空配列可
 };
@@ -62,10 +54,13 @@ export type DeepPartial<T> = {
 
 /** ZodError → Issue[] への縮約（公開境界に Zod を出さない） */
 const toIssues = (e: z.ZodError): Issue[] =>
-  e.issues.map(i => ({
-    path: i.path.map(p => typeof p === 'symbol' ? p.toString() : p) as (string | number)[],
+  e.issues.map((i) => ({
+    path: i.path.map((p) => (typeof p === "symbol" ? p.toString() : p)) as (
+      | string
+      | number
+    )[],
     code: i.code,
-    message: i.message
+    message: i.message,
   }));
 
 /**
@@ -80,7 +75,7 @@ export function validateQuizSummary(input: unknown): ValidationResult {
 
   const issues = toIssues(parsed.error);
   const patches = suggestQuizSummaryPatches(input, issues);
-  return err({ kind: 'validation', issues, patches });
+  return err({ kind: "validation", issues, patches });
 }
 
 /**
@@ -195,9 +190,7 @@ export class QuizSummary {
    * @param mutator - Function that receives a mutable copy of the data
    * @returns ValidationResult containing new QuizSummary instance or ValidationError
    */
-  withMutator(
-    mutator: (draft: QuizSummaryInput) => void,
-  ): ValidationResult {
+  withMutator(mutator: (draft: QuizSummaryInput) => void): ValidationResult {
     const draftData = structuredClone(this.data);
     mutator(draftData);
     return validateQuizSummary(draftData);
