@@ -81,3 +81,14 @@ body {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }
+
+/* リンクスタイル */
+a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #0052a3;
+  text-decoration: underline;
+}
