@@ -1,7 +1,7 @@
 import type { ResultAsync } from "neverthrow";
 import type { RepositoryError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
-import type { Quiz } from "../entities/Quiz";
+import type { Quiz } from "../entities/quiz/Quiz";
 
 /**
  * クイズリポジトリインターフェース

@@ -1,7 +1,7 @@
 import { ok, type ResultAsync } from "neverthrow";
 import { CreateFailedError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
-import { Quiz } from "../../domain/entities/Quiz";
+import { Quiz } from "../../domain/entities/quiz/Quiz";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import {
   QuizCreationFailedError,
