@@ -14,6 +14,12 @@ export type CreatorId = z.infer<typeof CreatorId>;
 export const TagId = z.string().min(1).brand<"TagId">();
 export type TagId = z.infer<typeof TagId>;
 
+export const TagIds = z
+  .array(TagId)
+  .nullish()
+  .transform((val) => val ?? []);
+export type TagIds = z.infer<typeof TagIds>;
+
 // Tag interface for future QuizDetail use
 export interface TagDetail {
   id: TagId;
@@ -33,7 +39,7 @@ export const QuizSummarySchema = z
     ]),
     solutionId: SolutionId,
     explanation: z.string().optional(),
-    tagIds: z.array(TagId).default([]),
+    tagIds: TagIds,
     status: z.enum(["pending_approval", "approved", "rejected"]),
     creatorId: CreatorId,
     createdAt: dateStringOnlySchema,

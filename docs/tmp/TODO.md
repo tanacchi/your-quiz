@@ -14,6 +14,5 @@
 ## API の zod 周り
 
 - Quiz のフィールドに deleted at を入れるべき？state で入れるのは違和感があります。
-- api で pnpm build と pnpm test が通るまで修正し、完了したらコミット & プッシュして。
 - 現状の quiz-summary のファイル配置、構成、インターフェース、エラーハンドリング、バリデーションの構造、その他コーディングを総合的に理解し、何も知らない状態でもdocs/tmp/entity-implement-guide.mdを読めば、QuizSummaryと同じクオリティ、方針で他のエンティティを実装できるような、再現性を実現するドキュメントへdocs/tmp/entity-implement-guide.mdを改良してください。このドキュメントには古い記述があるため、基本的にゼロベースで考えてOKです
 

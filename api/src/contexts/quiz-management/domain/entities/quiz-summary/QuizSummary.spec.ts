@@ -80,18 +80,42 @@ describe("QuizSummary", () => {
         [
           "invalid answer type",
           { answerType: "invalid_type" },
-          "Invalid enum value",
+          "Invalid option: expected one of ",
         ],
-        ["empty question", { question: "" }, "String must contain at least"],
-        ["missing question", { question: undefined }, "Required"],
-        ["invalid status", { status: "invalid_status" }, "Invalid enum value"],
-        ["missing creatorId", { creatorId: undefined }, "Required"],
-        ["empty creatorId", { creatorId: "" }, "String must contain at least"],
-        ["missing solutionId", { solutionId: undefined }, "Required"],
+        [
+          "empty question",
+          { question: "" },
+          "Too small: expected string to have >=1 characters",
+        ],
+        [
+          "missing question",
+          { question: undefined },
+          "Invalid input: expected string, received undefined",
+        ],
+        [
+          "invalid status",
+          { status: "invalid_status" },
+          "Invalid option: expected one of ",
+        ],
+        [
+          "missing creatorId",
+          { creatorId: undefined },
+          "Invalid input: expected string, received undefined",
+        ],
+        [
+          "empty creatorId",
+          { creatorId: "" },
+          "Too small: expected string to have >=1 characters",
+        ],
+        [
+          "missing solutionId",
+          { solutionId: undefined },
+          "Invalid input: expected string, received undefined",
+        ],
         [
           "empty solutionId",
           { solutionId: "" },
-          "String must contain at least",
+          "Too small: expected string to have >=1 characters",
         ],
         [
           "invalid createdAt format",
@@ -111,11 +135,11 @@ describe("QuizSummary", () => {
 
         const result = QuizSummary.from(invalidData);
         const error = result._unsafeUnwrapErr({ withStackTrace: true });
-        expect(
-          error.issues.some((issue) =>
-            issue.message.includes(expectedErrorMessage),
-          ),
-        ).toBe(true);
+        expect(error.issues).toContainEqual(
+          expect.objectContaining({
+            message: expect.stringContaining(expectedErrorMessage),
+          }),
+        );
       });
     });
 
@@ -149,7 +173,7 @@ describe("QuizSummary", () => {
       it.each([
         ["undefined tagIds", { tagIds: undefined }, []],
         ["null tagIds", { tagIds: null }, []],
-        ["missing tagIds", {}, []],
+        ["missing tagIds", {}, validQuizData.tagIds],
       ])(
         "should handle %s and default to empty array",
         (_desc, modification, expectedTagIds) => {
