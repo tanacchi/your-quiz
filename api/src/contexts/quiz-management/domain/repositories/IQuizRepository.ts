@@ -38,13 +38,16 @@ export interface IQuizRepository {
   /**
    * 条件に基づいてクイズリストを取得する
    *
+   * パフォーマンス最適化のため、QuizSummaryエンティティを返します。
+   * solution情報が必要な場合は、個別にfindByIdを使用してください。
+   *
    * @param options - 検索オプション
    * @param options.status - フィルターするクイズステータス
    * @param options.creatorId - フィルターする作成者ID
    * @param options.tags - フィルターするタグ配列
    * @param options.limit - 取得件数の上限
    * @param options.offset - 取得開始位置のオフセット
-   * @returns ページング情報付きのクイズリスト、またはRepositoryError
+   * @returns ページング情報付きのクイズサマリリスト、またはRepositoryError
    */
   findMany(options?: {
     status?: components["schemas"]["QuizStatus"];
@@ -54,7 +57,7 @@ export interface IQuizRepository {
     offset?: number;
   }): ResultAsync<
     {
-      items: components["schemas"]["QuizWithSolution"][];
+      items: QuizSummary[];
       totalCount: number;
       hasMore: boolean;
     },
