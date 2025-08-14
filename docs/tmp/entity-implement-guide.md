@@ -1,256 +1,676 @@
-# TypeScript × Zod × Entity/Draft コーディングガイドライン
+# エンティティ実装ガイドライン（最小構成バリデーション設計）
 
-> 目的：境界での厳格なバリデーションと、アプリ内部の多態的・保守容易なドメイン実装を両立する。JSON/I-O、UI（Jotai）、テスト観点での実務最適化を含む。
-
----
-
-## 0. 適用範囲
-
-- 言語・環境: TypeScript 最新版
-- バリデーション: Zod
-- 状態管理（任意）: Jotai（他のライブラリでも方針は同様）
-- ドメイン層: Entity（常に妥当） / Draft（編集中・不完全を許容）
+> 目的：堅牢な型安全性とZod境界分離により、保守しやすいドメインエンティティを実装する再現可能なパターンを提供する
 
 ---
 
-## 1. 設計原則（要点）
+## 0. 設計哲学・原則
 
-1. **単一オブジェクトに集約**して状態を保持（Entity/Draft ともに）。
-2. \*\*浅いネスト（2 階層目安）\*\*で意味的まとまりを表現（例: `profile`, `contact`, `preferences`）。
-3. 更新は **パッチ API** に集約：`with(patch)`, `withSection(key, patch)`, 必要に応じて `withImmer(mutator)`。
-4. **境界で厳格**、内部は **多態的・不変**：Entity は不変、Draft で中間状態と部分検証。
-5. Zod の **brand** と ``** / **`` を使い分け、**名目型**と**生入力**を明確化。
-6. クロスフィールド制約は **schema 側（**``**）** に寄せる。業務ルールをコードの散逸から守る。
-7. JSON 往復で brand は落ちるため、**必ず parse を通して回復**する（I/O 境界で再検証）。
+### コア原則
+1. **最小構成バリデーション設計**: 自動修正しない、パッチ候補提案のみ
+2. **Zod境界分離**: エンティティAPIからZodを完全に隠蔽
+3. **完全Immutable**: 全更新操作で新インスタンス生成
+4. **Result型エラーハンドリング**: neverthrowによる型安全なエラー処理
+5. **Brand型活用**: ランタイムスキーマとしても機能する厳密な型システム
+
+### 基本思想
+- **検証は提案まで**: バリデーションエラー時はパッチ候補を提示、採用判断は呼び出し側
+- **境界で厳格**: 外部入力は厳密検証、内部はBrand型による型安全性
+- **状態と行動の分離**: データはDTO、ロジックはエンティティメソッド
 
 ---
 
-## 2. スキーマ設計
+## 1. ファイル配置規約
 
-- **小さなスキーマを合成**してトップレベルを構成：`ProfileSchema`, `ContactSchema` → `UserSchema`。
-- **brand による名目型化**：ID、Email、金額、日付など。
-- ``** と **``：
-  - `z.input<typeof Schema>` = 生入力（Draft 側）
-  - `z.output<typeof Schema>` = 変換/ブランド付与後（Entity 内部）
-- **クロスフィールド**：`.superRefine()` を最優先。局所バリデーションは `.shape[key]` を参照。
+エンティティごとにディレクトリを分離し、責務別にファイルを分割：
 
-### スニペット
+```
+src/contexts/{context-name}/domain/entities/
+└── {entity-name}/
+    ├── {EntityName}.ts          # メインエンティティクラス + バリデーション関数
+    ├── {EntityName}.spec.ts     # テストファイル
+    ├── {entity-name}-schema.ts  # Zodスキーマ + Brand型定義
+    └── {entity-name}-patches.ts # パッチシステム（フィールド別サジェスト）
+```
 
-```ts
-import { z } from 'zod';
-
-export const UserId = z.string().uuid().brand<'UserId'>();
-export type UserId = z.infer<typeof UserId>;
-
-export const Email = z.string().email().brand<'Email'>();
-export type Email = z.infer<typeof Email>;
-
-const ProfileSchema = z.object({
-  name: z.string().min(1),
-  age: z.number().int().min(0),
-});
-
-const ContactSchema = z.object({
-  email: Email,
-  phone: z.string().optional(),
-});
-
-export const UserSchema = z.object({
-  id: UserId,
-  profile: ProfileSchema,
-  contact: ContactSchema,
-}).strict().superRefine((u, ctx) => {
-  // 例: 年齢と電話の相関などをチェック
-});
-
-export type UserDTO   = z.output<typeof UserSchema>; // Entity 内部
-export type UserInput = z.input<typeof UserSchema>;  // Draft 生入力
+**例: QuizSummary**
+```
+quiz-summary/
+├── QuizSummary.ts
+├── QuizSummary.spec.ts
+├── quiz-summary-schema.ts
+└── quiz-summary-patches.ts
 ```
 
 ---
 
-## 3. Entity（常に妥当・不変）
+## 2. Schema File実装パターン
 
-- 内部は ``。
-- 生成・更新は **必ず **``** 経由**。
-- API：`from(input)`, `fromDraft(draft)`, `toDTO()`, `with(patch)`, `withSection(key, patch)`, 任意で `withImmer`。
+**ファイル名**: `{entity-name}-schema.ts`
 
-### スニペット
+### 2.1 Brand型定義
 
-```ts
-import { produce, Draft } from 'immer';
+```typescript
+import { z } from "zod";
 
-export class User {
-  private constructor(private readonly data: Readonly<UserDTO>) {}
+// Brand types for type safety
+export const QuizId = z.string().min(1).brand<"QuizId">();
+export type QuizId = z.infer<typeof QuizId>;
 
-  static from(input: unknown): User {
-    return new User(UserSchema.parse(input));
-  }
+export const SolutionId = z.string().min(1).brand<"SolutionId">();
+export type SolutionId = z.infer<typeof SolutionId>;
 
-  static fromDraft(d: User.Draft): User {
-    return User.from(d.state);
-  }
+export const CreatorId = z.string().min(1).brand<"CreatorId">();
+export type CreatorId = z.infer<typeof CreatorId>;
+```
 
-  toDTO(): UserDTO { return { ...this.data }; }
+### 2.2 メインスキーマ定義
 
-  with(patch: DeepPartial<UserInput>): User {
-    return User.from({ ...this.data, ...patch });
-  }
-
-  withSection<K extends 'profile' | 'contact'>(k: K, patch: DeepPartial<UserInput[K]>): User {
-    return User.from({ ...this.data, [k]: { ...this.data[k], ...patch } });
-  }
-
-  withImmer(mutator: (d: Draft<UserInput>) => void): User {
-    const next = produce(this.data, mutator);
-    return User.from(next);
-  }
-
-  // 読み取り
-  get id() { return this.data.id; }
-  get profile() { return this.data.profile; }
-  get contact() { return this.data.contact; }
-
-  // インナークラス: Draft
-  static Draft = class DraftImpl {
-    state: Partial<UserInput> = {};
-    errors: Record<string, string[]> = {};
-
-    /** セクション単位の部分更新 + 部分検証 */
-    setSection<K extends 'profile' | 'contact'>(k: K, patch: DeepPartial<UserInput[K]>): void {
-      this.state[k] = { ...(this.state[k] as any), ...patch };
-      const sectionSchema = (UserSchema.shape as any)[k];
-      const r = sectionSchema.safeParse(this.state[k]);
-      this.errors[k] = r.success ? [] : r.error.issues.map(i => i.message);
+```typescript
+// Entity schema with cross-field validation
+export const QuizSummarySchema = z
+  .object({
+    id: QuizId,
+    question: z.string().min(1),
+    answerType: z.enum([
+      "boolean",
+      "free_text",
+      "single_choice",
+      "multiple_choice",
+    ]),
+    solutionId: SolutionId,
+    explanation: z.string().optional(),
+    tagIds: z.array(TagId).default([]),
+    status: z.enum(["pending_approval", "approved", "rejected"]),
+    creatorId: CreatorId,
+    createdAt: z.string().datetime(),
+    approvedAt: z.string().datetime().optional(),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    // Cross-field constraints
+    if (data.status === "approved" && !data.approvedAt) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Approved quiz must have approvedAt timestamp",
+        path: ["approvedAt"],
+      });
     }
 
-    /** 保存: 全体検証して Entity に昇格 */
-    commit(): User {
-      const r = UserSchema.safeParse(this.state);
-      if (!r.success) {
-        this.errors = {};
-        for (const issue of r.error.issues) {
-          const path = issue.path.join('.');
-          (this.errors[path] ??= []).push(issue.message);
+    // Business rule validations
+    const uniqueTagIds = new Set(data.tagIds);
+    if (uniqueTagIds.size !== data.tagIds.length) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Duplicate tag IDs are not allowed",
+        path: ["tagIds"],
+      });
+    }
+  });
+```
+
+### 2.3 型エクスポート
+
+```typescript
+// DTO type for internal entity data
+export type QuizSummaryDTO = z.output<typeof QuizSummarySchema>;
+
+// Input type for external input/draft states
+export type QuizSummaryInput = z.input<typeof QuizSummarySchema>;
+```
+
+---
+
+## 3. Patches File実装パターン
+
+**ファイル名**: `{entity-name}-patches.ts`
+
+### 3.1 基本型定義
+
+```typescript
+import type { QuizSummaryInput } from "./quiz-summary-schema";
+
+export type Issue = {
+  path: (string | number)[];
+  code: string;
+  message: string;
+};
+
+/**
+ * Patch は「純データ」か「遅延計算関数」のどちらか
+ * - Partial<Input>: 直列化やバッチ処理向き
+ * - () => Partial<Input>: 入力に閉じた補正を遅延評価（プロセス内専用）
+ */
+export type QuizSummaryPatch =
+  | Partial<QuizSummaryInput>
+  | (() => Partial<QuizSummaryInput>);
+```
+
+### 3.2 パッチユーティリティ
+
+```typescript
+/** 型ガード：入力データがエンティティInputの形に近いかを判定 */
+const isQuizSummaryLike = (input: unknown): input is Partial<QuizSummaryInput> => {
+  return typeof input === "object" && input !== null;
+};
+
+/** Patch を「いま適用する」ために Partial<Input> に実体化 */
+export const materializePatch = (patch: QuizSummaryPatch): Partial<QuizSummaryInput> =>
+  typeof patch === "function" ? patch() : patch;
+
+/** 単一 Patch の適用 */
+export const applyQuizSummaryPatch = (input: unknown, patch: QuizSummaryPatch): unknown => {
+  const base = isQuizSummaryLike(input) ? { ...input } : {};
+  const p = materializePatch(patch);
+  return { ...base, ...p };
+};
+
+/** 複数 Patch を順に適用（後勝ち） */
+export const applyQuizSummaryPatches = (
+  input: unknown,
+  patches: QuizSummaryPatch[]
+): unknown => patches.reduce((acc, p) => applyQuizSummaryPatch(acc, p), input);
+```
+
+### 3.3 フィールド別サジェスト関数
+
+```typescript
+/** 各フィールド専用のサジェスト関数型 */
+type FieldSuggester = (value: unknown) => QuizSummaryPatch[];
+
+// question用：trim / 空文字列の場合はサンプル提案
+export const suggestQuestionPatches: FieldSuggester = (value) => {
+  if (typeof value !== "string") return [];
+
+  const patches: QuizSummaryPatch[] = [];
+  const trimmed = value.trim();
+
+  if (trimmed !== value && trimmed.length > 0) {
+    patches.push({ question: trimmed });
+  } else if (trimmed === "") {
+    patches.push({ question: "Sample question" });
+  }
+
+  return patches;
+};
+
+// ID fields用：trim whitespace
+export const suggestIdFieldPatches =
+  (fieldName: keyof QuizSummaryInput) =>
+  (value: unknown): QuizSummaryPatch[] => {
+    if (typeof value !== "string") return [];
+
+    const patches: QuizSummaryPatch[] = [];
+    const trimmed = value.trim();
+
+    if (trimmed !== value) {
+      patches.push({ [fieldName]: trimmed } as Partial<QuizSummaryInput>);
+    }
+
+    return patches;
+  };
+```
+
+### 3.4 集約サジェスト関数
+
+```typescript
+/** 集約：Issue に該当するフィールドだけを呼ぶ */
+export const suggestQuizSummaryPatches = (
+  input: unknown,
+  issues: Issue[],
+): QuizSummaryPatch[] => {
+  if (!isQuizSummaryLike(input)) {
+    return [];
+  }
+
+  const need = (field: string) =>
+    issues.some((is) => String(is.path[0]) === field);
+
+  const out: QuizSummaryPatch[] = [];
+
+  if (need("question")) out.push(...suggestQuestionPatches(input.question));
+  if (need("id")) out.push(...suggestIdFieldPatches("id")(input.id));
+  // ... 他フィールド
+
+  return out;
+};
+```
+
+---
+
+## 4. Main Entity File実装パターン
+
+**ファイル名**: `{EntityName}.ts`
+
+### 4.1 基本構造
+
+```typescript
+import { err, ok, type Result } from "neverthrow";
+import type { z } from "zod";
+import {
+  type Issue,
+  type QuizSummaryPatch,
+  suggestQuizSummaryPatches,
+  // ... other imports
+} from "./quiz-summary-patches";
+import {
+  type QuizSummaryDTO,
+  type QuizSummaryInput,
+  QuizSummarySchema,
+} from "./quiz-summary-schema";
+```
+
+### 4.2 バリデーション型とエラー処理
+
+```typescript
+/** ValidationError: Issue と Patch 候補のみ返す（採用判断は呼び出し側） */
+export type ValidationError = {
+  kind: "validation";
+  issues: Issue[];
+  patches: QuizSummaryPatch[]; // 空配列可
+};
+
+/** 成功: Entity, 失敗: ValidationError */
+export type ValidationResult = Result<QuizSummary, ValidationError>;
+
+/** ZodError → Issue[] への縮約（公開境界に Zod を出さない） */
+const toIssues = (e: z.ZodError): Issue[] =>
+  e.issues.map((i) => ({
+    path: i.path.map((p) => (typeof p === "symbol" ? p.toString() : p)) as (
+      | string
+      | number
+    )[],
+    code: i.code,
+    message: i.message,
+  }));
+
+/**
+ * validateQuizSummary:
+ * - 成功: ok(QuizSummary)
+ * - 失敗: err({ issues, patches })
+ *   - patches は「候補」であり、採用可否は呼び出し側が決める
+ */
+export function validateQuizSummary(input: unknown): ValidationResult {
+  const parsed = QuizSummarySchema.safeParse(input);
+  if (parsed.success) return ok(QuizSummary.build(parsed.data));
+
+  const issues = toIssues(parsed.error);
+  const patches = suggestQuizSummaryPatches(input, issues);
+  return err({ kind: "validation", issues, patches });
+}
+```
+
+### 4.3 メインエンティティクラス
+
+```typescript
+export class QuizSummary {
+  private constructor(private readonly data: Readonly<QuizSummaryDTO>) {
+    // Ensure complete immutability
+    Object.freeze(this.data);
+    Object.freeze(this);
+  }
+
+  /** Internal factory method for validated data */
+  static build(data: QuizSummaryDTO): QuizSummary {
+    return new QuizSummary(data);
+  }
+
+  /**
+   * Creates Entity instance from unknown input with validation
+   */
+  static from(input: unknown): ValidationResult {
+    return validateQuizSummary(input);
+  }
+
+  /**
+   * Creates Entity from Draft instance
+   */
+  static fromDraft(draft: QuizSummaryDraft): ValidationResult {
+    return validateQuizSummary(draft.state);
+  }
+
+  /**
+   * Returns a deep copy of the internal data
+   */
+  toDTO(): QuizSummaryDTO {
+    return structuredClone(this.data);
+  }
+
+  /**
+   * Generic getter method with full type safety
+   */
+  get<K extends keyof QuizSummaryDTO>(key: K): QuizSummaryDTO[K] {
+    return this.data[key];
+  }
+
+  /**
+   * Generic update method that returns new immutable instance
+   */
+  update<K extends keyof QuizSummaryInput>(
+    key: K,
+    value: QuizSummaryInput[K],
+  ): ValidationResult {
+    const newData = { ...this.data, [key]: value };
+    return validateQuizSummary(newData);
+  }
+
+  /**
+   * Updates multiple fields at once, returns new instance
+   */
+  with(patch: Partial<QuizSummaryInput>): ValidationResult {
+    const newData = { ...this.data, ...patch };
+    return validateQuizSummary(newData);
+  }
+
+  /**
+   * Updates using mutator function, returns new instance
+   */
+  withMutator(mutator: (draft: QuizSummaryInput) => void): ValidationResult {
+    const draftData = structuredClone(this.data);
+    mutator(draftData);
+    return validateQuizSummary(draftData);
+  }
+
+  // Business logic methods
+  canBeUpdated(): boolean {
+    return this.get("status") === "pending_approval";
+  }
+
+  canBeDeleted(): boolean {
+    return this.get("status") !== "approved";
+  }
+
+  approve(approvedAt: string): ValidationResult {
+    if (this.get("status") !== "pending_approval") {
+      const error: ValidationError = {
+        kind: "validation",
+        issues: [{
+          path: ["status"],
+          code: "custom",
+          message: `Quiz with status ${this.get("status")} cannot be approved`,
+        }],
+        patches: [],
+      };
+      return err(error);
+    }
+
+    return this.with({
+      status: "approved",
+      approvedAt,
+    });
+  }
+}
+```
+
+### 4.4 Draftクラス
+
+```typescript
+/**
+ * Draft class for mutable editing before committing to immutable entity
+ * Used for form editing and partial validation scenarios
+ */
+export class QuizSummaryDraft {
+  state: Partial<QuizSummaryInput> = {};
+  errors: Record<string, string[]> = {};
+
+  /**
+   * Generic getter for draft state
+   */
+  get<K extends keyof QuizSummaryInput>(
+    key: K,
+  ): QuizSummaryInput[K] | undefined {
+    return this.state[key];
+  }
+
+  /**
+   * Generic update method for draft state with validation
+   */
+  update<K extends keyof QuizSummaryInput>(
+    key: K,
+    value: QuizSummaryInput[K],
+  ): void {
+    this.state = { ...this.state, [key]: value };
+    this.validatePartial();
+  }
+
+  /**
+   * Updates multiple fields at once
+   */
+  updateMany(patch: Partial<QuizSummaryInput>): void {
+    this.state = { ...this.state, ...patch };
+    this.validatePartial();
+  }
+
+  /**
+   * Validates the current state and updates errors
+   */
+  private validatePartial(): void {
+    const result = QuizSummarySchema.safeParse(this.state);
+    if (!result.success) {
+      this.errors = {};
+      for (const issue of result.error.issues) {
+        const path = issue.path.join(".");
+        if (!this.errors[path]) {
+          this.errors[path] = [];
         }
-        throw r.error;
+        this.errors[path].push(issue.message);
       }
-      return User.from(r.data);
+    } else {
+      this.errors = {};
     }
   }
+
+  /**
+   * Commits the draft to Entity
+   */
+  commit(): ValidationResult {
+    return validateQuizSummary(this.state);
+  }
+
+  /**
+   * Checks if the draft has any validation errors
+   */
+  hasErrors(): boolean {
+    return Object.keys(this.errors).length > 0;
+  }
+
+  /**
+   * Gets errors for a specific field path
+   */
+  getErrors(path: string): string[] {
+    return this.errors[path] || [];
+  }
+}
+```
+
+---
+
+## 5. 実装チェックリスト
+
+### 5.1 ファイル配置確認
+- [ ] `{entity-name}/` ディレクトリ作成
+- [ ] `{EntityName}.ts` メインファイル
+- [ ] `{entity-name}-schema.ts` スキーマファイル
+- [ ] `{entity-name}-patches.ts` パッチファイル
+- [ ] `{EntityName}.spec.ts` テストファイル
+
+### 5.2 Schema File確認
+- [ ] Brand型定義（必要に応じて）
+- [ ] メインスキーマ定義
+- [ ] `.strict()` 適用
+- [ ] `.superRefine()` でクロスフィールド検証
+- [ ] DTO/Input型エクスポート
+
+### 5.3 Patches File確認
+- [ ] Issue型定義
+- [ ] Patch型定義（純データ | 遅延関数）
+- [ ] 型ガード関数実装
+- [ ] パッチ適用ユーティリティ
+- [ ] フィールド別サジェスト関数
+- [ ] 集約サジェスト関数
+
+### 5.4 Main Entity確認
+- [ ] ValidationError/ValidationResult型
+- [ ] validate関数実装
+- [ ] private constructor + static build
+- [ ] static from/fromDraft
+- [ ] get/toDTO/update/with/withMutator
+- [ ] ビジネスロジックメソッド
+- [ ] Draftクラス実装
+
+### 5.5 型安全性確認
+- [ ] Brand型の一貫した使用
+- [ ] Result型によるエラーハンドリング
+- [ ] Zod境界分離の徹底
+- [ ] 完全Immutableパターン
+
+---
+
+## 6. 使用例
+
+### 6.1 基本的な使用パターン
+
+```typescript
+// Entity作成
+const quizResult = QuizSummary.from({
+  id: "quiz-123",
+  question: "What is TypeScript?",
+  answerType: "single_choice",
+  solutionId: "solution-456",
+  // ... other fields
+});
+
+if (quizResult.isOk()) {
+  const quiz = quizResult.value;
+
+  // フィールド取得
+  const question = quiz.get("question");
+
+  // 更新
+  const updated = quiz.update('question', 'Updated question');
+
+  // 複数フィールド更新
+  const withPatch = quiz.with({
+    question: "New question",
+    explanation: "New explanation"
+  });
+} else {
+  // パッチ適用例
+  const { issues, patches } = quizResult.error;
+  console.log("Validation issues:", issues);
+
+  // 自動修正候補を適用
+  const recoveredInput = applyQuizSummaryPatches(input, patches);
+  const retryResult = QuizSummary.from(recoveredInput);
+}
+```
+
+### 6.2 Draft使用例
+
+```typescript
+// Draft作成・編集
+const draft = new QuizSummaryDraft();
+draft.update("question", "Draft question");
+draft.updateMany({
+  answerType: "boolean",
+  solutionId: "sol-123"
+});
+
+// エラー確認
+if (draft.hasErrors()) {
+  const questionErrors = draft.getErrors("question");
+  console.log("Question errors:", questionErrors);
 }
 
-// ユーティリティ
-export type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
+// Entity変換
+const entityResult = draft.commit();
+if (entityResult.isOk()) {
+  const quiz = entityResult.value;
+  // Entity as usual...
+}
 ```
 
 ---
 
-## 4. Draft（編集中・不完全を許容）
+## 7. ベストプラクティス
 
-- `state: Partial<UserInput>` と `errors: Record<string, string[]>`。
-- 項目/セクションごとの **局所 **``、保存時に **全体 **``。
-- エラーパスは `a.b.c` 形式（UI でのマッピング容易化）。
+### 7.1 型安全性
+- Brand型は必ずランタイムスキーマとしても定義
+- Input/DTO型を適切に使い分け
+- Result型で一貫したエラーハンドリング
 
-### 運用規約
+### 7.2 バリデーション
+- 自動修正しない、パッチ提案のみ
+- クロスフィールド制約は `.superRefine()` に集約
+- フィールド別サジェスト関数で保守性確保
 
-- Draft は **UI/フォーム専用**。**ビジネスロジックに渡さない**。
-- Entity への昇格は **I/O 境界・保存直前**で行い、**失敗時は Draft にエラー反映**。
+### 7.3 Immutability
+- 全更新操作で新インスタンス生成
+- 内部データのObject.freeze徹底
+- structuredCloneで深いコピー
 
----
-
-## 5. Jotai 連携（例）
-
-- **1 つの atom**に Draft を載せ、`focusAtom`/`selectAtom`/`splitAtom` で局所購読。
-- 保存: `const user = draft.commit()` → 以降は `User` のみをアプリ内部に通す。
-
-### スニペット（概念）
-
-```ts
-import { atom } from 'jotai';
-
-export const draftAtom = atom(new User.Draft());
-// 例: プロファイル名だけのフォーカス
-// const nameAtom = focusAtom(draftAtom, (o) => ({ get: d => d.state.profile?.name, set: (d, v) => d.setSection('profile', { name: v }) }));
-```
+### 7.4 境界分離
+- ZodをエンティティAPI外に露出させない
+- Issue型でバリデーションエラー抽象化
+- Brand型で内外境界を明確化
 
 ---
 
-## 6. I/O 境界ポリシー
+## 8. よくあるアンチパターン
 
-- **受信**: JSON → `UserSchema.parse` → `User`（brand 回復）
-- **送信/保存**: `User#toDTO()` を使用
-- **外部スレッド/Worker**越え: クラスはメソッドが落ちるため **DTO で渡す**。復帰時に `User.from(dto)`
+### 8.1 避けるべきパターン
+- ❌ Zodエラーを直接外部に返す
+- ❌ 自動修正を行う
+- ❌ mutateメソッドで破壊的変更
+- ❌ any型やas unknown多用
+- ❌ フィールドごとのsetterメソッド乱立
 
----
-
-## 7. 配列・ネスト・正規化
-
-- 2 階層超の深いネスト/可変配列編集が多い場合：
-  - **UI（Draft）だけ正規化（id-indexed Map）** → 保存時に配列へ戻す
-  - ドメイン（Entity）は原則配列のまま、または別エンティティに切り出し
-- `withImmer` 採用でネスト編集の ergonomics を確保
-
----
-
-## 8. パフォーマンスと DX
-
-- Entity は不変・小さな API で最小限のコスト。
-- UI 側の再レンダーは **局所購読**で抑制。
-- 重い派生値は **メモ化（**``**, **``**, selector）** へ分離。
+### 8.2 推奨パターン
+- ✅ Issue + Patch候補で問題提示
+- ✅ 呼び出し側がパッチ採用判断
+- ✅ 完全Immutableパターン
+- ✅ 型ガード関数による安全性確保
+- ✅ 汎用update/withメソッド
 
 ---
 
-## 9. テスト方針
+## 9. 最小テンプレート
 
-- **スキーマ単体テスト**：境界・ brand・`superRefine` の網羅。
-- **Entity 単体**：`from`, `with`, `withSection`, `withImmer`, `toDTO` の正常/異常。
-- **Draft**：部分更新・部分検証・`commit` 失敗時のエラー反映。
-- **I/O 統合**：JSON 往復で brand が消える→再 parse で回復すること。
+以下のテンプレートを基に新しいエンティティを実装：
 
----
-
-## 10. よくあるアンチパターン
-
-- フィールドごとにメンバ変数を直接保持（ドメインの整合が崩れやすい）。
-- 深すぎるネスト（3 階層以上）を Entity で直接扱う（更新 API が複雑化）。
-- クロスフィールド制約をコンポーネント内ロジックに分散（`superRefine` へ集約すべき）。
-- Draft をそのままビジネスロジックに渡す（必ず Entity に昇格させる）。
-
----
-
-## 11. 実装チェックリスト
-
--
-
----
-
-## 12. 拡張のヒント
-
-- **Value Object**（例: `Money`, `Percent`, `DateRange`）を brand + クラス/関数で共通化。
-- **ディスパッチ/Visitor** で利用側の分岐ゼロ化（必要時）。
-- **エラー多言語化**：Zod のエラーマップをカスタムし i18n と統合。
-
----
-
-### 付録：最小雛形（抜粋）
-
-```ts
+```typescript
 // schema.ts
-export const Schema = z.object({ /* ... */ }).strict();
-export type DTO = z.output<typeof Schema>;
-export type Input = z.input<typeof Schema>;
+export const EntitySchema = z.object({ /* ... */ }).strict();
+export type EntityDTO = z.output<typeof EntitySchema>;
+export type EntityInput = z.input<typeof EntitySchema>;
 
-// entity.ts
+// patches.ts
+export type Issue = { path: (string | number)[]; code: string; message: string; };
+export type EntityPatch = Partial<EntityInput> | (() => Partial<EntityInput>);
+export const suggestEntityPatches = (input: unknown, issues: Issue[]): EntityPatch[] => { /* ... */ };
+
+// Entity.ts
+export type ValidationError = { kind: "validation"; issues: Issue[]; patches: EntityPatch[]; };
+export type ValidationResult = Result<Entity, ValidationError>;
+export function validateEntity(input: unknown): ValidationResult { /* ... */ }
+
 export class Entity {
-  private constructor(private readonly data: Readonly<DTO>) {}
-  static from(input: unknown) { return new Entity(Schema.parse(input)); }
-  toDTO(): DTO { return { ...this.data }; }
-  with(patch: DeepPartial<Input>): Entity { return Entity.from({ ...this.data, ...patch }); }
-  withImmer(mut: (d: Draft<Input>) => void): Entity { return Entity.from(produce(this.data, mut)); }
-  static Draft = class { /* state, errors, setSection, commit */ }
+  private constructor(private readonly data: Readonly<EntityDTO>) {}
+  static build(data: EntityDTO): Entity { return new Entity(data); }
+  static from(input: unknown): ValidationResult { return validateEntity(input); }
+  get<K extends keyof EntityDTO>(key: K): EntityDTO[K] { return this.data[key]; }
+  update<K extends keyof EntityInput>(key: K, value: EntityInput[K]): ValidationResult { /* ... */ }
+  with(patch: Partial<EntityInput>): ValidationResult { /* ... */ }
+}
+
+export class EntityDraft {
+  state: Partial<EntityInput> = {};
+  errors: Record<string, string[]> = {};
+  update<K extends keyof EntityInput>(key: K, value: EntityInput[K]): void { /* ... */ }
+  commit(): ValidationResult { return validateEntity(this.state); }
 }
 ```
 
-> このガイドラインは「集約×浅いネスト×パッチ API」「境界厳密化×内部多態」を軸に、UI/テスト/パフォーマンスのバランスを最適化するための実装規約である。
+---
 
+このガイドラインに従うことで、QuizSummaryと同等のクオリティ・方針で堅牢なドメインエンティティを実装できます。
