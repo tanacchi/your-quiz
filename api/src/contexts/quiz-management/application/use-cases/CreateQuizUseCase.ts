@@ -1,7 +1,7 @@
-import { ok, type ResultAsync } from "neverthrow";
+import { err, ok, ResultAsync } from "neverthrow";
 import { CreateFailedError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
-import { Quiz } from "../../domain/entities/Quiz";
+import { parseQuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import {
   QuizCreationFailedError,
@@ -62,16 +62,35 @@ export class CreateQuizUseCase {
   execute(
     command: CreateQuizCommand,
   ): ResultAsync<components["schemas"]["Quiz"], UseCaseError> {
-    // ドメインエンティティの作成
-    const quiz = new Quiz(
-      Date.now().toString(), // 簡易ID生成
-      command.question,
-      command.answerType,
-      command.solution.id,
-      command.explanation,
-      "pending_approval",
-      command.creatorId,
-    );
+    // QuizSummaryエンティティの作成と検証
+    const quizData = {
+      id: Date.now().toString(), // 簡易ID生成
+      question: command.question,
+      answerType: command.answerType,
+      solutionId: command.solution.id,
+      explanation: command.explanation,
+      status: "pending_approval" as const,
+      creatorId: command.creatorId || "mock-user-id",
+      createdAt: new Date().toISOString(),
+      tagIds: [], // デフォルト値
+    };
+
+    const quizValidationResult = parseQuizSummary(quizData);
+
+    if (quizValidationResult.isErr()) {
+      return ResultAsync.fromSafePromise(Promise.resolve()).andThen(() => {
+        return err(
+          new QuizCreationFailedError(
+            quizData.id,
+            quizValidationResult.error.issues
+              .map((issue) => issue.message)
+              .join(", "),
+          ),
+        );
+      });
+    }
+
+    const quiz = quizValidationResult.value;
 
     // リポジトリを通じて永続化
     return this.quizRepository
@@ -79,7 +98,10 @@ export class CreateQuizUseCase {
       .mapErr((repositoryError) => {
         // リポジトリエラーをユースケースエラーにマッピング
         if (repositoryError instanceof CreateFailedError) {
-          return new QuizCreationFailedError(quiz.id, repositoryError.details);
+          return new QuizCreationFailedError(
+            quiz.get("id"),
+            repositoryError.details,
+          );
         }
         return new UseCaseInternalError(
           "Failed to create quiz",
@@ -88,21 +110,24 @@ export class CreateQuizUseCase {
       })
       .andThen((createdQuiz) => {
         const dtoQuiz: components["schemas"]["Quiz"] = {
-          id: createdQuiz.id,
-          question: createdQuiz.question,
-          answerType: createdQuiz.answerType,
-          solutionId: createdQuiz.solutionId,
-          status: createdQuiz.status,
-          creatorId: createdQuiz.creatorId,
-          createdAt: createdQuiz.createdAt,
+          id: createdQuiz.get("id"),
+          question: createdQuiz.get("question"),
+          answerType: createdQuiz.get("answerType"),
+          solutionId: createdQuiz.get("solutionId"),
+          status: createdQuiz.get("status"),
+          creatorId: createdQuiz.get("creatorId"),
+          createdAt: createdQuiz.get("createdAt"),
         };
 
         // オプショナルフィールドを個別に設定
-        if (createdQuiz.explanation) {
-          dtoQuiz.explanation = createdQuiz.explanation;
+        const explanation = createdQuiz.get("explanation");
+        const approvedAt = createdQuiz.get("approvedAt");
+
+        if (explanation) {
+          dtoQuiz.explanation = explanation;
         }
-        if (createdQuiz.approvedAt) {
-          dtoQuiz.approvedAt = createdQuiz.approvedAt;
+        if (approvedAt) {
+          dtoQuiz.approvedAt = approvedAt;
         }
         return ok(dtoQuiz);
       });

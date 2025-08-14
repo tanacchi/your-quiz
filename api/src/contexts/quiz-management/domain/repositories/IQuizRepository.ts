@@ -1,7 +1,7 @@
 import type { ResultAsync } from "neverthrow";
 import type { RepositoryError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
-import type { Quiz } from "../entities/Quiz";
+import type { QuizSummary } from "../entities/quiz-summary/QuizSummary";
 
 /**
  * クイズリポジトリインターフェース
@@ -21,9 +21,9 @@ export interface IQuizRepository {
    * @returns 作成されたクイズエンティティ、またはRepositoryError
    */
   create(
-    quiz: Quiz,
+    quiz: QuizSummary,
     solution: components["schemas"]["Solution"],
-  ): ResultAsync<Quiz, RepositoryError>;
+  ): ResultAsync<QuizSummary, RepositoryError>;
 
   /**
    * IDでクイズを取得する
@@ -71,7 +71,10 @@ export interface IQuizRepository {
    * @param quiz - 更新するフィールドの部分オブジェクト
    * @returns 更新されたクイズエンティティ、またはRepositoryError
    */
-  update(id: string, quiz: Partial<Quiz>): ResultAsync<Quiz, RepositoryError>;
+  update(
+    id: string,
+    quiz: Partial<QuizSummary>,
+  ): ResultAsync<QuizSummary, RepositoryError>;
 
   /**
    * クイズを削除する

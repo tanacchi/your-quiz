@@ -36,7 +36,7 @@ export const createQuizSchema = z
     // Check if answerType matches solution.type
     if (data.answerType !== data.solution.type) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: `answerType '${data.answerType}' does not match solution type '${data.solution.type}'`,
         path: ["solution", "type"],
       });
