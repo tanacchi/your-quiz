@@ -1,6 +1,7 @@
 import { createQuizSchema } from "../../../../shared/schemas";
 import type { AppContext } from "../../../../shared/types";
 import { parseJsonSafe, validateWithZod } from "../../../../shared/utils";
+import { transformHttpToQuery } from "../../application/schemas/list-quizzes-query.schema";
 import type {
   CreateQuizUseCase,
   GetQuizUseCase,
@@ -118,22 +119,24 @@ export class QuizController {
    */
   async listQuizzes(c: AppContext) {
     // クエリパラメータを取得
-    const httpParams = {
+    const parseResult = validateWithZod(transformHttpToQuery, {
       status: c.req.query("status"),
       creatorId: c.req.query("creatorId"),
       ids: c.req.queries("ids"),
       limit: c.req.query("limit"),
       offset: c.req.query("offset"),
-    };
-
-    const result = await this.listQuizzesUseCase.execute(httpParams);
-
-    if (result.isErr()) {
-      const error = result.error;
-      const errorResponse = ControllerErrorHandler.handleError(error);
-      return c.json(errorResponse.response, errorResponse.statusCode);
+    });
+    if (parseResult.isErr()) {
+      return c.json(parseResult.error, 400);
     }
 
-    return c.json(result.value);
+    const result = await this.listQuizzesUseCase.execute(parseResult.value);
+    return result.match(
+      (res) => c.json(res),
+      (error) => {
+        const errorResponse = ControllerErrorHandler.handleError(error);
+        return c.json(errorResponse.response, errorResponse.statusCode);
+      },
+    );
   }
 }

@@ -2,6 +2,7 @@ import {
   InternalServerError,
   ValidationError,
 } from "../../../../shared/errors";
+import type { Issue } from "../../../../shared/validation/entity/types";
 import type { QuizDomainError } from "../../domain/errors";
 
 /**
@@ -78,6 +79,24 @@ export class InvalidQuizIdError extends ValidationError {
 }
 
 /**
+ * 無効なクイズIDエラー
+ */
+export class InvalidQueryError extends ValidationError {
+  readonly issues: Issue[];
+
+  constructor(requestId?: string) {
+    const issues: Issue[] = [];
+    super(
+      "Invalid query format",
+      {},
+      `There are ${issues.length} issues.`,
+      requestId,
+    );
+    this.issues = issues;
+  }
+}
+
+/**
  * ユースケースエラーの統合型
  */
 export type UseCaseError =
@@ -86,4 +105,5 @@ export type UseCaseError =
   | QuizRetrievalFailedError
   | QuizListRetrievalFailedError
   | InvalidQuizIdError
+  | InvalidQueryError
   | QuizDomainError;

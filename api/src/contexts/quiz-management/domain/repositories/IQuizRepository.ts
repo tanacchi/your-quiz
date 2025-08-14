@@ -1,7 +1,10 @@
 import type { ResultAsync } from "neverthrow";
 import type { RepositoryError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
-import type { QuizSummary } from "../entities/quiz-summary/QuizSummary";
+import type {
+  QuizSummary,
+  QuizSummaryData,
+} from "../entities/quiz-summary/QuizSummary";
 
 /**
  * クイズリポジトリインターフェース
@@ -50,9 +53,9 @@ export interface IQuizRepository {
    * @returns ページング情報付きのクイズサマリリスト、またはRepositoryError
    */
   findMany(options?: {
-    status?: components["schemas"]["QuizStatus"];
-    creatorId?: string;
-    tags?: string[];
+    status?: QuizSummaryData["status"];
+    creatorId?: QuizSummaryData["creatorId"];
+    ids?: QuizSummaryData["id"][];
     limit?: number;
     offset?: number;
   }): ResultAsync<
