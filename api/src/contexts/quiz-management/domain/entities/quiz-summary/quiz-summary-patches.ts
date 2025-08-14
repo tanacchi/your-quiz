@@ -154,7 +154,7 @@ export const suggestApprovedAtPatches = (
 ): QuizSummaryPatch[] => {
   const patches: QuizSummaryPatch[] = [];
 
-  if (obj.status === "approved" && !obj["approvedAt"]) {
+  if (obj.status === "approved" && !obj.approvedAt) {
     patches.push({ approvedAt: new Date().toISOString() });
   }
 

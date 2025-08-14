@@ -38,7 +38,7 @@ export class EntityBase<
    *
    * @returns Deep copy of entity data
    */
-  toData(): z.output<TSchema> {
+  toData(): Readonly<z.output<TSchema>> {
     return structuredClone(this.data);
   }
 
@@ -87,13 +87,15 @@ export class EntityBase<
    * Updates using mutator function with deep cloning, returns new instance.
    * Provides imperative-style updates while maintaining immutability.
    *
-   * @param mutator - Function that receives a mutable copy of the data
+   * Uses z.output<TSchema> for editing since the user works with constructed entity state.
+   *
+   * @param mutator - Function that receives a mutable copy of the current entity data
    * @returns EntityParseResult containing new entity instance or parse error
    */
   withMutator(
-    mutator: (draft: z.input<TSchema>) => void,
+    mutator: (draft: z.output<TSchema>) => void,
   ): EntityParseResult<TEntity, z.input<TSchema>> {
-    const draftData = structuredClone(this.data);
+    const draftData = this.toData() as z.output<TSchema>;
     mutator(draftData);
     return this.parseFunction(draftData);
   }

@@ -2,50 +2,66 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { QuizId, QuizSummary, TagId } from "./QuizSummary";
 
 describe("QuizSummary", () => {
-  let validQuizData: unknown;
-  let validTagIds: TagId[];
+  const validTagIds = [TagId.parse("tag-1"), TagId.parse("tag-2")] as const;
 
-  beforeEach(() => {
-    validTagIds = [TagId.parse("tag-1"), TagId.parse("tag-2")];
+  const validQuizData = {
+    id: "quiz-1",
+    question: "What is TypeScript?",
+    answerType: "single_choice",
+    solutionId: "solution-1",
+    explanation: "TypeScript is a typed superset of JavaScript",
+    tagIds: validTagIds,
+    status: "pending_approval",
+    creatorId: "creator-1",
+    createdAt: "2023-12-01T10:00:00.000Z",
+    approvedAt: undefined,
+  } as const;
 
-    validQuizData = {
-      id: "quiz-1",
-      question: "What is TypeScript?",
-      answerType: "single_choice",
-      solutionId: "solution-1",
-      explanation: "TypeScript is a typed superset of JavaScript",
-      tagIds: validTagIds,
-      status: "pending_approval",
-      creatorId: "creator-1",
-      createdAt: "2023-12-01T10:00:00.000Z",
-      approvedAt: undefined,
-    };
-  });
+  beforeEach(() => {});
 
   describe("Brand Types", () => {
-    it("should create branded QuizId from valid string", () => {
-      const id = "quiz-1";
-      const result = QuizId.safeParse(id);
+    describe("QuizId validation", () => {
+      it.each([
+        ["valid alphanumeric", "quiz-1", true],
+        ["valid with numbers", "quiz123", true],
+        ["valid with underscore", "quiz_test", true],
+        ["valid with dash", "quiz-test", true],
+        ["valid single char", "q", true],
+        ["empty string", "", false],
+        ["only spaces", "   ", true], // min(1) では空でなければ有効
+        ["null value", null, false],
+        ["undefined value", undefined, false],
+      ])("should handle %s: %s", (_desc, input, isValid) => {
+        const result = QuizId.safeParse(input);
 
-      expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(result.data).toBe(id);
+        expect(result.success).toBe(isValid);
+        if (isValid && result.success) {
+          expect(result.data).toBeDefined();
+          expect(result.data).toBe(input);
+        }
+      });
     });
 
-    it("should reject empty string for QuizId", () => {
-      const invalidId = "";
-      const result = QuizId.safeParse(invalidId);
+    describe("TagId validation", () => {
+      it.each([
+        ["valid alphanumeric", "tag-1", true],
+        ["valid with numbers", "tag123", true],
+        ["valid with underscore", "tag_test", true],
+        ["valid with dash", "tag-test", true],
+        ["valid single char", "t", true],
+        ["empty string", "", false],
+        ["only spaces", "   ", true], // min(1) では空でなければ有効
+        ["null value", null, false],
+        ["undefined value", undefined, false],
+      ])("should handle %s: %s", (_desc, input, isValid) => {
+        const result = TagId.safeParse(input);
 
-      expect(result.success).toBe(false);
-    });
-
-    it("should create branded TagId from valid string", () => {
-      const tagId = "tag-3";
-      const result = TagId.safeParse(tagId);
-
-      expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(result.data).toBe(tagId);
+        expect(result.success).toBe(isValid);
+        if (isValid && result.success) {
+          expect(result.data).toBeDefined();
+          expect(result.data).toBe(input);
+        }
+      });
     });
   });
 
@@ -59,70 +75,93 @@ describe("QuizSummary", () => {
       expect(entity.get("status")).toBe("pending_approval");
     });
 
-    it("should reject invalid answer type", () => {
-      const invalidData = {
-        ...(validQuizData as Record<string, unknown>),
-        answerType: "invalid_type",
-      };
+    describe("Invalid field values", () => {
+      it.each([
+        [
+          "invalid answer type",
+          { answerType: "invalid_type" },
+          "Invalid enum value",
+        ],
+        ["empty question", { question: "" }, "String must contain at least"],
+        ["missing question", { question: undefined }, "Required"],
+        ["invalid status", { status: "invalid_status" }, "Invalid enum value"],
+        ["missing creatorId", { creatorId: undefined }, "Required"],
+        ["empty creatorId", { creatorId: "" }, "String must contain at least"],
+        ["missing solutionId", { solutionId: undefined }, "Required"],
+        [
+          "empty solutionId",
+          { solutionId: "" },
+          "String must contain at least",
+        ],
+        [
+          "invalid createdAt format",
+          { createdAt: "invalid-date" },
+          "Invalid ISO8601 datetime",
+        ],
+        [
+          "invalid approvedAt format",
+          { approvedAt: "invalid-date" },
+          "Invalid ISO8601 datetime",
+        ],
+      ])("should reject %s", (_desc, invalidFields, expectedErrorMessage) => {
+        const invalidData = {
+          ...(validQuizData as Record<string, unknown>),
+          ...invalidFields,
+        };
 
-      const result = QuizSummary.from(invalidData);
-      const error = result._unsafeUnwrapErr({ withStackTrace: true });
-      expect(error).toBeDefined();
+        const result = QuizSummary.from(invalidData);
+        const error = result._unsafeUnwrapErr({ withStackTrace: true });
+        expect(
+          error.issues.some((issue) =>
+            issue.message.includes(expectedErrorMessage),
+          ),
+        ).toBe(true);
+      });
     });
 
-    it("should reject empty question", () => {
-      const invalidData = {
-        ...(validQuizData as Record<string, unknown>),
-        question: "",
-      };
+    describe("Business rule validations", () => {
+      it.each([
+        [
+          "approved quiz must have approvedAt",
+          { status: "approved", approvedAt: undefined },
+          "Approved quiz must have approvedAt timestamp",
+        ],
+        [
+          "duplicate tag IDs",
+          { tagIds: [TagId.parse("tag-1"), TagId.parse("tag-1")] },
+          "Duplicate tag IDs are not allowed",
+        ],
+      ])("should enforce %s", (_desc, invalidFields, expectedErrorMessage) => {
+        const invalidData = {
+          ...(validQuizData as Record<string, unknown>),
+          ...invalidFields,
+        };
 
-      const result = QuizSummary.from(invalidData);
-      const error = result._unsafeUnwrapErr({ withStackTrace: true });
-      expect(error).toBeDefined();
+        const result = QuizSummary.from(invalidData);
+        const error = result._unsafeUnwrapErr({ withStackTrace: true });
+        expect(
+          error.issues.some((issue) => issue.message === expectedErrorMessage),
+        ).toBe(true);
+      });
     });
 
-    it("should enforce approved quiz must have approvedAt", () => {
-      const invalidData = {
-        ...(validQuizData as Record<string, unknown>),
-        status: "approved",
-        approvedAt: undefined,
-      };
-
-      const result = QuizSummary.from(invalidData);
-      const error = result._unsafeUnwrapErr({ withStackTrace: true });
-      expect(
-        error.issues.some(
-          (issue) =>
-            issue.message === "Approved quiz must have approvedAt timestamp",
-        ),
-      ).toBe(true);
-    });
-
-    it("should reject duplicate tag IDs", () => {
-      const duplicateTagId = TagId.parse("tag-1");
-      const invalidData = {
-        ...(validQuizData as Record<string, unknown>),
-        tagIds: [duplicateTagId, duplicateTagId],
-      };
-
-      const result = QuizSummary.from(invalidData);
-      const error = result._unsafeUnwrapErr({ withStackTrace: true });
-      expect(
-        error.issues.some(
-          (issue) => issue.message === "Duplicate tag IDs are not allowed",
-        ),
-      ).toBe(true);
-    });
-
-    it("should default empty tagIds array", () => {
-      const dataWithoutTags = {
-        ...(validQuizData as Record<string, unknown>),
-        tagIds: undefined,
-      };
-
-      const result = QuizSummary.from(dataWithoutTags);
-      const entity = result._unsafeUnwrap({ withStackTrace: true });
-      expect(entity.get("tagIds")).toEqual([]);
+    describe("Default value handling", () => {
+      it.each([
+        ["undefined tagIds", { tagIds: undefined }, []],
+        ["null tagIds", { tagIds: null }, []],
+        ["missing tagIds", {}, []],
+      ])(
+        "should handle %s and default to empty array",
+        (_desc, modification, expectedTagIds) => {
+          const testData = {
+            ...(validQuizData as Record<string, unknown>),
+            ...modification,
+          };
+          const result = QuizSummary.from(testData);
+          const entity = result._unsafeUnwrap({ withStackTrace: true });
+          expect(entity.get("tagIds")).toEqual(expectedTagIds);
+        },
+      );
     });
   });
 
@@ -251,172 +290,219 @@ describe("QuizSummary", () => {
   });
 
   describe("Business Logic", () => {
-    it("should check if quiz can be updated", () => {
-      const pendingResult = QuizSummary.from(validQuizData);
-      const pendingQuiz = pendingResult._unsafeUnwrap({ withStackTrace: true });
-      expect(pendingQuiz.canBeUpdated()).toBe(true);
+    describe("canBeUpdated status checks", () => {
+      it.each([
+        ["pending_approval", true],
+        ["approved", false],
+        ["rejected", false],
+      ])("should return %s for status %s", (status, expectedCanUpdate) => {
+        const testData = {
+          ...(validQuizData as Record<string, unknown>),
+          status,
+          ...(status === "approved" && {
+            approvedAt: "2023-12-01T12:00:00.000Z",
+          }),
+        };
 
-      const approvedData = {
-        ...(validQuizData as Record<string, unknown>),
-        status: "approved",
-        approvedAt: "2023-12-01T12:00:00.000Z",
-      };
-      const approvedResult = QuizSummary.from(approvedData);
-      const approvedQuiz = approvedResult._unsafeUnwrap({
-        withStackTrace: true,
+        const result = QuizSummary.from(testData);
+        const quiz = result._unsafeUnwrap({ withStackTrace: true });
+        expect(quiz.canBeUpdated()).toBe(expectedCanUpdate);
       });
-      expect(approvedQuiz.canBeUpdated()).toBe(false);
     });
 
-    it("should check if quiz can be deleted", () => {
-      const pendingResult = QuizSummary.from(validQuizData);
-      const pendingQuiz = pendingResult._unsafeUnwrap({ withStackTrace: true });
-      expect(pendingQuiz.canBeDeleted()).toBe(true);
+    describe("canBeDeleted status checks", () => {
+      it.each([
+        ["pending_approval", true],
+        ["approved", false],
+        ["rejected", true],
+      ])("should return %s for status %s", (status, expectedCanDelete) => {
+        const testData = {
+          ...(validQuizData as Record<string, unknown>),
+          status,
+          ...(status === "approved" && {
+            approvedAt: "2023-12-01T12:00:00.000Z",
+          }),
+        };
 
-      const rejectedData = {
-        ...(validQuizData as Record<string, unknown>),
-        status: "rejected",
-      };
-      const rejectedResult = QuizSummary.from(rejectedData);
-      const rejectedQuiz = rejectedResult._unsafeUnwrap({
-        withStackTrace: true,
+        const result = QuizSummary.from(testData);
+        const quiz = result._unsafeUnwrap({ withStackTrace: true });
+        expect(quiz.canBeDeleted()).toBe(expectedCanDelete);
       });
-      expect(rejectedQuiz.canBeDeleted()).toBe(true);
-
-      const approvedData = {
-        ...(validQuizData as Record<string, unknown>),
-        status: "approved",
-        approvedAt: "2023-12-01T12:00:00.000Z",
-      };
-      const approvedResult = QuizSummary.from(approvedData);
-      const approvedQuiz = approvedResult._unsafeUnwrap({
-        withStackTrace: true,
-      });
-      expect(approvedQuiz.canBeDeleted()).toBe(false);
     });
 
-    it("should approve pending quiz", () => {
-      const initialResult = QuizSummary.from(validQuizData);
-      const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
-      const approvedAt = "2023-12-01T12:00:00.000Z";
+    describe("approve method state transitions", () => {
+      it("should approve pending quiz successfully", () => {
+        const initialResult = QuizSummary.from(validQuizData);
+        const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+        const approvedAt = "2023-12-01T12:00:00.000Z";
 
-      const result = quiz.approve(approvedAt);
+        const result = quiz.approve(approvedAt);
 
-      const approvedQuiz = result._unsafeUnwrap({ withStackTrace: true });
-      expect(approvedQuiz.get("status")).toBe("approved");
-      expect(approvedQuiz.get("approvedAt")).toBe(approvedAt);
-    });
+        const approvedQuiz = result._unsafeUnwrap({ withStackTrace: true });
+        expect(approvedQuiz.get("status")).toBe("approved");
+        expect(approvedQuiz.get("approvedAt")).toBe(approvedAt);
+      });
 
-    it("should not approve already approved quiz", () => {
-      const approvedData = {
-        ...(validQuizData as Record<string, unknown>),
-        status: "approved",
-        approvedAt: "2023-12-01T12:00:00.000Z",
-      };
-      const initialResult = QuizSummary.from(approvedData);
-      const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+      it.each([
+        ["approved", "2023-12-01T12:00:00.000Z"],
+        ["rejected", undefined],
+      ])("should reject approval for %s status", (status, approvedAt) => {
+        const testData = {
+          ...(validQuizData as Record<string, unknown>),
+          status,
+          ...(approvedAt && { approvedAt }),
+        };
+        const initialResult = QuizSummary.from(testData);
+        const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
 
-      const result = quiz.approve("2023-12-02T12:00:00.000Z");
+        const result = quiz.approve("2023-12-02T12:00:00.000Z");
 
-      const error = result._unsafeUnwrapErr({ withStackTrace: true });
-      expect(
-        error.issues.some((issue) =>
-          issue.message.includes("approved cannot be approved"),
-        ),
-      ).toBe(true);
+        const error = result._unsafeUnwrapErr({ withStackTrace: true });
+        expect(
+          error.issues.some((issue) =>
+            issue.message.includes(`${status} cannot be approved`),
+          ),
+        ).toBe(true);
+      });
     });
   });
 
   describe("Tag Operations", () => {
-    it("should add tag to quiz", () => {
-      const initialResult = QuizSummary.from({
-        ...(validQuizData as Record<string, unknown>),
-        tagIds: [],
+    describe("Single tag operations", () => {
+      describe("addTag success scenarios", () => {
+        it.each([
+          ["empty tag list", []],
+          ["existing tags", [TagId.parse("tag-other")]],
+        ])("should add tag to quiz with %s", (_desc, initialTagIds) => {
+          const initialResult = QuizSummary.from({
+            ...(validQuizData as Record<string, unknown>),
+            tagIds: initialTagIds,
+          });
+          const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+          const newTagId = TagId.parse("tag-new");
+
+          const result = quiz.addTag(newTagId);
+
+          const updatedQuiz = result._unsafeUnwrap({ withStackTrace: true });
+          expect(updatedQuiz.get("tagIds")).toContain(newTagId);
+          expect(updatedQuiz.get("tagIds")).toHaveLength(
+            initialTagIds.length + 1,
+          );
+        });
       });
-      const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
-      const newTagId = TagId.parse("tag-3");
 
-      const result = quiz.addTag(newTagId);
+      it("should not add duplicate tag", () => {
+        const initialResult = QuizSummary.from(validQuizData);
+        const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+        const existingTagId = validTagIds[0] as TagId;
 
-      const updatedQuiz = result._unsafeUnwrap({ withStackTrace: true });
-      expect(updatedQuiz.get("tagIds")).toContain(newTagId);
-      expect(updatedQuiz.get("tagIds")).toHaveLength(1);
-    });
+        const result = quiz.addTag(existingTagId);
 
-    it("should not add duplicate tag", () => {
-      const initialResult = QuizSummary.from(validQuizData);
-      const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
-      const existingTagId = validTagIds[0] as TagId;
-
-      const result = quiz.addTag(existingTagId);
-
-      const error = result._unsafeUnwrapErr({ withStackTrace: true });
-      expect(
-        error.issues.some((issue) => issue.message.includes("already exists")),
-      ).toBe(true);
-    });
-
-    it("should remove tag from quiz", () => {
-      const initialResult = QuizSummary.from(validQuizData);
-      const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
-      const tagToRemove = validTagIds[0] as TagId;
-
-      const result = quiz.removeTag(tagToRemove);
-
-      const updatedQuiz = result._unsafeUnwrap({ withStackTrace: true });
-      expect(updatedQuiz.get("tagIds")).not.toContain(tagToRemove);
-      expect(updatedQuiz.get("tagIds")).toHaveLength(1);
-    });
-
-    it("should not remove non-existing tag", () => {
-      const initialResult = QuizSummary.from(validQuizData);
-      const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
-      const nonExistingTagId = TagId.parse("tag-999");
-
-      const result = quiz.removeTag(nonExistingTagId);
-
-      const error = result._unsafeUnwrapErr({ withStackTrace: true });
-      expect(
-        error.issues.some((issue) => issue.message.includes("not found")),
-      ).toBe(true);
-    });
-
-    it("should add multiple tags", () => {
-      const initialResult = QuizSummary.from({
-        ...(validQuizData as Record<string, unknown>),
-        tagIds: [],
+        const error = result._unsafeUnwrapErr({ withStackTrace: true });
+        expect(
+          error.issues.some((issue) =>
+            issue.message.includes("already exists"),
+          ),
+        ).toBe(true);
       });
-      const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
-      const newTagIds = [TagId.parse("tag-3"), TagId.parse("tag-4")];
 
-      const result = quiz.addTags(newTagIds);
+      describe("removeTag scenarios", () => {
+        it.each([
+          ["first tag", 0, 1],
+          ["second tag", 1, 1],
+        ])(
+          "should remove %s from quiz",
+          (_desc, tagIndex, expectedRemainingCount) => {
+            const initialResult = QuizSummary.from(validQuizData);
+            const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+            const tagToRemove = validTagIds[tagIndex] as TagId;
 
-      const updatedQuiz = result._unsafeUnwrap({ withStackTrace: true });
-      expect(updatedQuiz.get("tagIds")).toEqual(newTagIds);
+            const result = quiz.removeTag(tagToRemove);
+
+            const updatedQuiz = result._unsafeUnwrap({ withStackTrace: true });
+            expect(updatedQuiz.get("tagIds")).not.toContain(tagToRemove);
+            expect(updatedQuiz.get("tagIds")).toHaveLength(
+              expectedRemainingCount,
+            );
+          },
+        );
+
+        it("should not remove non-existing tag", () => {
+          const initialResult = QuizSummary.from(validQuizData);
+          const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+          const nonExistingTagId = TagId.parse("tag-999");
+
+          const result = quiz.removeTag(nonExistingTagId);
+
+          const error = result._unsafeUnwrapErr({ withStackTrace: true });
+          expect(
+            error.issues.some((issue) => issue.message.includes("not found")),
+          ).toBe(true);
+        });
+      });
     });
 
-    it("should not add multiple tags with duplicates", () => {
-      const initialResult = QuizSummary.from(validQuizData);
-      const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
-      const newTagIds = [
-        validTagIds[0] as TagId, // duplicate
-        TagId.parse("tag-3"),
-      ];
+    describe("Multiple tag operations", () => {
+      describe("addTags success scenarios", () => {
+        it.each([
+          ["empty list", [], [TagId.parse("tag-3"), TagId.parse("tag-4")]],
+          ["existing tags", [TagId.parse("tag-other")], [TagId.parse("tag-3")]],
+        ])(
+          "should add multiple tags to quiz with %s",
+          (_desc, initialTagIds, newTagIds) => {
+            const initialResult = QuizSummary.from({
+              ...(validQuizData as Record<string, unknown>),
+              tagIds: initialTagIds,
+            });
+            const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
 
-      const result = quiz.addTags(newTagIds);
+            const result = quiz.addTags(newTagIds);
 
-      const error = result._unsafeUnwrapErr({ withStackTrace: true });
-      expect(error).toBeDefined();
-    });
+            const updatedQuiz = result._unsafeUnwrap({ withStackTrace: true });
+            const finalTagIds = updatedQuiz.get("tagIds");
+            expect(finalTagIds).toEqual([...initialTagIds, ...newTagIds]);
+          },
+        );
+      });
 
-    it("should remove multiple tags", () => {
-      const initialResult = QuizSummary.from(validQuizData);
-      const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+      it("should not add multiple tags with duplicates", () => {
+        const initialResult = QuizSummary.from(validQuizData);
+        const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+        const newTagIds = [
+          validTagIds[0] as TagId, // duplicate
+          TagId.parse("tag-3"),
+        ];
 
-      const result = quiz.removeTags(validTagIds);
+        const result = quiz.addTags(newTagIds);
 
-      const updatedQuiz = result._unsafeUnwrap({ withStackTrace: true });
-      expect(updatedQuiz.get("tagIds")).toEqual([]);
+        const error = result._unsafeUnwrapErr({ withStackTrace: true });
+        expect(
+          error.issues.some((issue) => issue.message.includes("already exist")),
+        ).toBe(true);
+      });
+
+      describe("removeTags scenarios", () => {
+        it.each([
+          ["all tags", validTagIds, []],
+          [
+            "partial tags",
+            [TagId.parse(validTagIds[0])],
+            [TagId.parse(validTagIds[1])],
+          ],
+          ["non-existing tags", [TagId.parse("tag-999")], validTagIds],
+        ])(
+          "should remove %s from quiz",
+          (_desc, tagsToRemove, expectedRemaining) => {
+            const initialResult = QuizSummary.from(validQuizData);
+            const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+
+            const result = quiz.removeTags(tagsToRemove as TagId[]);
+
+            const updatedQuiz = result._unsafeUnwrap({ withStackTrace: true });
+            expect(updatedQuiz.get("tagIds")).toEqual(expectedRemaining);
+          },
+        );
+      });
     });
   });
 
@@ -431,79 +517,119 @@ describe("QuizSummary", () => {
       expect(draft.state).toEqual({});
     });
 
-    it("should set and get values", () => {
-      draft.update("question", "Draft question");
-      draft.update("answerType", "single_choice");
-
-      expect(draft.get("question")).toBe("Draft question");
-      expect(draft.get("answerType")).toBe("single_choice");
+    describe("Field operations", () => {
+      it.each([
+        ["question", "Draft question"],
+        ["answerType", "single_choice"],
+        ["explanation", "Draft explanation"],
+        ["creatorId", "draft-creator"],
+        ["solutionId", "draft-solution"],
+      ])("should set and get %s field", (field, value) => {
+        draft.update(field as keyof typeof validQuizData, value);
+        expect(draft.get(field as keyof typeof validQuizData)).toBe(value);
+      });
     });
 
     it("should set multiple values at once", () => {
-      draft.with({
+      const updates = {
         question: "Draft question",
         answerType: "single_choice",
         explanation: "Draft explanation",
-      });
+      } as const;
+
+      draft.with(updates);
 
       expect(draft.get("question")).toBe("Draft question");
       expect(draft.get("answerType")).toBe("single_choice");
       expect(draft.get("explanation")).toBe("Draft explanation");
     });
 
-    it("should validate and store errors", () => {
-      draft.update("question", ""); // invalid empty question
+    describe("Validation error handling", () => {
+      it.each([
+        ["empty question", { question: "" }, "question"],
+        ["invalid answerType", { answerType: "invalid" }, "answerType"],
+        ["empty creatorId", { creatorId: "" }, "creatorId"],
+        ["empty solutionId", { solutionId: "" }, "solutionId"],
+        ["invalid createdAt", { createdAt: "invalid-date" }, "createdAt"],
+      ])(
+        "should validate and store errors for %s",
+        (_desc, invalidData, errorField) => {
+          Object.entries(invalidData).forEach(([key, value]) => {
+            draft.update(key as keyof typeof validQuizData, value);
+          });
 
-      expect(draft.hasErrors()).toBe(true);
-      const questionErrors = draft.getErrors("question");
-      expect(questionErrors.length).toBeGreaterThan(0);
+          expect(draft.hasErrors()).toBe(true);
+          const fieldErrors = draft.getErrors(errorField);
+          expect(fieldErrors.length).toBeGreaterThan(0);
+        },
+      );
+
+      it("should clear errors when data becomes valid", () => {
+        // First set invalid data
+        draft.update("question", "");
+        expect(draft.hasErrors()).toBe(true);
+
+        // Then fix the data
+        draft.update("question", "Valid question");
+        draft.with(validQuizData as Record<string, unknown>);
+        expect(draft.hasErrors()).toBe(false);
+      });
     });
 
-    it("should clear errors when valid", () => {
-      // First set invalid data
-      draft.update("question", "");
-      expect(draft.hasErrors()).toBe(true);
+    describe("Commit operations", () => {
+      it("should commit to QuizSummary when valid", () => {
+        draft.with(validQuizData as Record<string, unknown>);
 
-      // Then fix the data
-      draft.update("question", "Valid question");
-      draft.with(validQuizData as Record<string, unknown>);
-      expect(draft.hasErrors()).toBe(false);
+        const result = draft.commit();
+
+        const quiz = result._unsafeUnwrap({ withStackTrace: true });
+        expect(quiz.get("question")).toBe("What is TypeScript?");
+      });
+
+      it.each([
+        ["empty question", { question: "" }],
+        ["invalid answerType", { answerType: "invalid" }],
+        ["missing creatorId", { creatorId: undefined }],
+        ["missing solutionId", { solutionId: undefined }],
+      ])("should fail to commit with %s", (_desc, invalidData) => {
+        draft.with({
+          ...(validQuizData as Record<string, unknown>),
+          ...invalidData,
+        } as Parameters<typeof draft.with>[0]);
+
+        const result = draft.commit();
+
+        const error = result._unsafeUnwrapErr({ withStackTrace: true });
+        expect(error).toBeDefined();
+        expect(error.issues.length).toBeGreaterThan(0);
+      });
     });
 
-    it("should commit to QuizSummary when valid", () => {
-      draft.with(validQuizData as Record<string, unknown>);
+    describe("Error management", () => {
+      it("should clear errors manually", () => {
+        draft.update("question", ""); // creates error
+        expect(draft.hasErrors()).toBe(true);
 
-      const result = draft.commit();
+        draft.clearErrors();
+        expect(draft.hasErrors()).toBe(false);
+      });
 
-      const quiz = result._unsafeUnwrap({ withStackTrace: true });
-      expect(quiz.get("question")).toBe("What is TypeScript?");
-    });
+      it.each([
+        ["existing field", "question", ""],
+        ["non-existent field", "nonexistent", ""],
+      ])("should get errors for %s", (_desc, field, invalidValue) => {
+        if (field === "question") {
+          draft.update("question", invalidValue);
+        }
 
-    it("should fail to commit when invalid", () => {
-      draft.update("question", ""); // invalid
+        const fieldErrors = draft.getErrors(field);
 
-      const result = draft.commit();
-
-      const error = result._unsafeUnwrapErr({ withStackTrace: true });
-      expect(error).toBeDefined();
-    });
-
-    it("should clear errors manually", () => {
-      draft.update("question", ""); // creates error
-      expect(draft.hasErrors()).toBe(true);
-
-      draft.clearErrors();
-      expect(draft.hasErrors()).toBe(false);
-    });
-
-    it("should get specific field errors", () => {
-      draft.update("question", "");
-
-      const questionErrors = draft.getErrors("question");
-      const nonExistentErrors = draft.getErrors("nonexistent");
-
-      expect(questionErrors.length).toBeGreaterThan(0);
-      expect(nonExistentErrors).toEqual([]);
+        if (field === "question") {
+          expect(fieldErrors.length).toBeGreaterThan(0);
+        } else {
+          expect(fieldErrors).toEqual([]);
+        }
+      });
     });
   });
 
