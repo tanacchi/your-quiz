@@ -70,7 +70,7 @@ export const solutionSchema = z
     if (data.type === "boolean") {
       if (!("value" in data)) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Solution type 'boolean' requires 'value' field",
           path: ["value"],
         });
@@ -82,7 +82,7 @@ export const solutionSchema = z
 
       if (invalidFields.length > 0 && invalidFields[0]) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: `Solution type 'boolean' should not contain '${invalidFields.join("', '")}' field${invalidFields.length > 1 ? "s" : ""}`,
           path: [invalidFields[0]],
         });
@@ -93,7 +93,7 @@ export const solutionSchema = z
     else if (data.type === "free_text") {
       if (!("correctAnswer" in data)) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Solution type 'free_text' requires 'correctAnswer' field",
           path: ["correctAnswer"],
         });
@@ -105,7 +105,7 @@ export const solutionSchema = z
 
       if (invalidFields.length > 0 && invalidFields[0]) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: `Solution type 'free_text' should not contain '${invalidFields.join("', '")}' field${invalidFields.length > 1 ? "s" : ""}`,
           path: [invalidFields[0]],
         });
@@ -116,7 +116,7 @@ export const solutionSchema = z
     else if (data.type === "single_choice") {
       if (!("choices" in data)) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Solution type 'single_choice' requires 'choices' array",
           path: ["choices"],
         });
@@ -129,7 +129,7 @@ export const solutionSchema = z
         );
         if (correctChoices.length !== 1) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message:
               "Single choice solution must have exactly one correct choice (isCorrect: true)",
             path: ["choices"],
@@ -143,7 +143,7 @@ export const solutionSchema = z
 
       if (invalidFields.length > 0 && invalidFields[0]) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: `Solution type 'single_choice' should not contain '${invalidFields.join("', '")}' field${invalidFields.length > 1 ? "s" : ""}`,
           path: [invalidFields[0]],
         });
@@ -154,7 +154,7 @@ export const solutionSchema = z
     else if (data.type === "multiple_choice") {
       if (!("choices" in data)) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Solution type 'multiple_choice' requires 'choices' array",
           path: ["choices"],
         });
@@ -173,7 +173,7 @@ export const solutionSchema = z
 
         if (correctChoices.length < minCorrect) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: `Multiple choice solution must have at least ${minCorrect} correct choices (isCorrect: true)`,
             path: ["choices"],
           });
@@ -181,7 +181,7 @@ export const solutionSchema = z
 
         if (correctChoices.length === 0) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message:
               "Multiple choice solution must have at least one correct choice (isCorrect: true)",
             path: ["choices"],
@@ -195,7 +195,7 @@ export const solutionSchema = z
 
       if (invalidFields.length > 0 && invalidFields[0]) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: `Solution type 'multiple_choice' should not contain '${invalidFields.join("', '")}' field${invalidFields.length > 1 ? "s" : ""}`,
           path: [invalidFields[0]],
         });
