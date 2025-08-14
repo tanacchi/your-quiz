@@ -5,8 +5,9 @@ import {
 } from "../../../../shared/errors";
 import { NotFoundError } from "../../../../shared/errors/base";
 import type { components } from "../../../../shared/types";
-import type { Quiz } from "../../domain/entities/Quiz";
+import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
+import { D1QuizSummaryMapper } from "../mappers/D1QuizSummaryMapper";
 import type { D1QueryParam, QuizRow } from "./types";
 import {
   isBasicQuizInfo,
@@ -31,9 +32,9 @@ export class D1QuizRepository implements IQuizRepository {
    * クイズとソリューションを作成
    */
   create(
-    quiz: Quiz,
+    quiz: QuizSummary,
     solution: components["schemas"]["Solution"],
-  ): ResultAsync<Quiz, RepositoryError> {
+  ): ResultAsync<QuizSummary, RepositoryError> {
     return ResultAsync.fromPromise(
       this.executeCreateTransaction(quiz, solution),
       (error) => {
@@ -110,7 +111,7 @@ export class D1QuizRepository implements IQuizRepository {
     } = {},
   ): ResultAsync<
     {
-      items: components["schemas"]["QuizWithSolution"][];
+      items: QuizSummary[];
       totalCount: number;
       hasMore: boolean;
     },
@@ -128,7 +129,10 @@ export class D1QuizRepository implements IQuizRepository {
   /**
    * クイズを更新
    */
-  update(id: string, quiz: Partial<Quiz>): ResultAsync<Quiz, RepositoryError> {
+  update(
+    id: string,
+    quiz: Partial<QuizSummary>,
+  ): ResultAsync<QuizSummary, RepositoryError> {
     return ResultAsync.fromPromise(this.executeUpdate(id, quiz), (error) => {
       console.error("Failed to update quiz:", error);
       return RepositoryErrorFactory.updateFailed(
@@ -154,9 +158,9 @@ export class D1QuizRepository implements IQuizRepository {
   // Private helper methods
 
   private async executeCreateTransaction(
-    quiz: Quiz,
+    quiz: QuizSummary,
     solution: components["schemas"]["Solution"],
-  ): Promise<Quiz> {
+  ): Promise<QuizSummary> {
     // ソリューションを先に作成
     const solutionId = await this.createSolution(solution);
 
@@ -168,15 +172,15 @@ export class D1QuizRepository implements IQuizRepository {
 
     await stmt
       .bind(
-        quiz.id,
-        quiz.question,
-        quiz.answerType,
+        quiz.get("id"),
+        quiz.get("question"),
+        quiz.get("answerType"),
         solutionId,
-        quiz.explanation || null,
-        quiz.status,
-        quiz.creatorId,
-        quiz.createdAt,
-        quiz.approvedAt || null,
+        quiz.get("explanation") || null,
+        quiz.get("status"),
+        quiz.get("creatorId"),
+        quiz.get("createdAt"),
+        quiz.get("approvedAt") || null,
       )
       .run();
 
@@ -283,7 +287,7 @@ export class D1QuizRepository implements IQuizRepository {
     limit?: number;
     offset?: number;
   }): Promise<{
-    items: components["schemas"]["QuizWithSolution"][];
+    items: QuizSummary[];
     totalCount: number;
     hasMore: boolean;
   }> {
@@ -319,53 +323,32 @@ export class D1QuizRepository implements IQuizRepository {
 
     const totalCount = (countResult as { total: number }).total;
 
-    // データを取得
+    // データを取得 (QuizSummaryの場合はシンプルなクエリで十分)
     const limit = options.limit || 10;
     const offset = options.offset || 0;
 
     const dataStmt = this.db.prepare(`
-      SELECT 
-        q.*,
-        bs.value as boolean_value,
-        fts.correct_answer, fts.matching_strategy, fts.case_sensitive,
-        GROUP_CONCAT(
-          json_object(
-            'id', c.id,
-            'solutionId', c.solution_id,
-            'text', c.text,
-            'orderIndex', c.order_index,
-            'isCorrect', c.is_correct
-          )
-        ) as choices,
-        mcs.min_correct_answers
+      SELECT q.id, q.question, q.answer_type, q.explanation, q.status, q.creator_id, q.created_at, q.approved_at
       FROM Quiz q
-      LEFT JOIN BooleanSolution bs ON q.solution_id = bs.id AND q.answer_type = 'boolean'
-      LEFT JOIN FreeTextSolution fts ON q.solution_id = fts.id AND q.answer_type = 'free_text'
-      LEFT JOIN SingleChoiceSolution scs ON q.solution_id = scs.id AND q.answer_type = 'single_choice'
-      LEFT JOIN MultipleChoiceSolution mcs ON q.solution_id = mcs.id AND q.answer_type = 'multiple_choice'
-      LEFT JOIN Choice c ON (scs.id = c.solution_id OR mcs.id = c.solution_id)
       ${whereClause}
-      GROUP BY q.id
       ORDER BY q.created_at DESC
       LIMIT ? OFFSET ?
     `);
 
     const dataResult = await dataStmt.bind(...params, limit, offset).all();
 
-    const items = dataResult.results
-      .filter(isQuizRow)
-      .reduce<components["schemas"]["QuizWithSolution"][]>((acc, row) => {
-        try {
-          const quiz = this.mapRowToQuizWithSolution(row);
-          acc.push(quiz);
-        } catch (error) {
-          console.warn(`Skipping quiz due to data integrity issue:`, {
-            quizId: row.id,
-            error: error instanceof Error ? error.message : error,
-          });
-        }
-        return acc;
-      }, []);
+    // D1QuizSummaryMapperを使用してQuizSummaryエンティティに変換
+    const mappingResult = await D1QuizSummaryMapper.fromRows(
+      dataResult.results.filter(isQuizRow) as unknown as QuizRow[],
+    );
+
+    if (mappingResult.isErr()) {
+      throw new Error(
+        `Failed to map quiz rows to QuizSummary entities: ${mappingResult.error.message}`,
+      );
+    }
+
+    const items = mappingResult.value;
 
     return {
       items,
@@ -374,26 +357,30 @@ export class D1QuizRepository implements IQuizRepository {
     };
   }
 
-  private async executeUpdate(id: string, quiz: Partial<Quiz>): Promise<Quiz> {
+  private async executeUpdate(
+    id: string,
+    quiz: Partial<QuizSummary>,
+  ): Promise<QuizSummary> {
     const fields: string[] = [];
     const params: D1QueryParam[] = [];
 
     // 更新可能なフィールドのマッピング
-    if (quiz.question !== undefined) {
+    // Partial<QuizSummary>の場合、getメソッドを使用できないため、単純なフィールドアクセスを使用
+    if ("question" in quiz && quiz.question !== undefined) {
       fields.push("question = ?");
-      params.push(quiz.question);
+      params.push(quiz.question as string);
     }
-    if (quiz.explanation !== undefined) {
+    if ("explanation" in quiz && quiz.explanation !== undefined) {
       fields.push("explanation = ?");
-      params.push(quiz.explanation);
+      params.push(quiz.explanation as string);
     }
-    if (quiz.status !== undefined) {
+    if ("status" in quiz && quiz.status !== undefined) {
       fields.push("status = ?");
-      params.push(quiz.status);
+      params.push(quiz.status as string);
     }
-    if (quiz.approvedAt !== undefined) {
+    if ("approvedAt" in quiz && quiz.approvedAt !== undefined) {
       fields.push("approved_at = ?");
-      params.push(quiz.approvedAt);
+      params.push(quiz.approvedAt as string);
     }
 
     if (fields.length === 0) {
@@ -410,19 +397,24 @@ export class D1QuizRepository implements IQuizRepository {
 
     await stmt.bind(...params).run();
 
-    // 更新されたクイズを取得
-    const updatedQuizResult = await this.findById(id);
-    if (updatedQuizResult.isErr()) {
+    // 更新されたクイズデータを再取得してQuizSummaryエンティティを作成
+    const updatedRowStmt = this.db.prepare(
+      "SELECT id, question, answer_type, explanation, status, creator_id, created_at, approved_at FROM Quiz WHERE id = ?",
+    );
+    const updatedRow = await updatedRowStmt.bind(id).first();
+
+    if (!updatedRow || !isQuizRow(updatedRow)) {
+      throw new Error(`Failed to fetch updated quiz: ${id}`);
+    }
+
+    const mappingResult = await D1QuizSummaryMapper.fromRow(updatedRow);
+    if (mappingResult.isErr()) {
       throw new Error(
-        `Failed to fetch updated quiz: ${updatedQuizResult.error}`,
+        `Failed to map updated quiz to QuizSummary: ${mappingResult.error.message}`,
       );
     }
 
-    const updatedQuiz = updatedQuizResult.value;
-
-    // QuizWithSolutionからQuizエンティティに変換
-    const { solution: _, ...quizFields } = updatedQuiz;
-    return quizFields as Quiz;
+    return mappingResult.value;
   }
 
   private async executeDelete(id: string): Promise<void> {
