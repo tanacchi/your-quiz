@@ -4,7 +4,7 @@ import {
   RepositoryErrorFactory,
 } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
-import type { Quiz } from "../../domain/entities/Quiz";
+import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 /**
  * モッククイズリポジトリ実装
@@ -61,22 +61,31 @@ export class MockQuizRepository implements IQuizRepository {
   ];
 
   create(
-    quiz: Quiz,
+    quiz: QuizSummary,
     solution: components["schemas"]["Solution"],
-  ): ResultAsync<Quiz, RepositoryError> {
+  ): ResultAsync<QuizSummary, RepositoryError> {
     // モックデータに追加（実際のD1では永続化）
+    const explanation = quiz.get("explanation");
+    const approvedAt = quiz.get("approvedAt");
+
     const newQuizWithSolution: components["schemas"]["QuizWithSolution"] = {
-      id: quiz.id,
-      question: quiz.question,
-      answerType: quiz.answerType,
-      solutionId: quiz.solutionId,
-      ...(quiz.explanation && { explanation: quiz.explanation }),
-      status: quiz.status,
-      creatorId: quiz.creatorId,
-      createdAt: quiz.createdAt,
-      ...(quiz.approvedAt && { approvedAt: quiz.approvedAt }),
+      id: quiz.get("id"),
+      question: quiz.get("question"),
+      answerType: quiz.get("answerType"),
+      solutionId: quiz.get("solutionId"),
+      status: quiz.get("status"),
+      creatorId: quiz.get("creatorId"),
+      createdAt: quiz.get("createdAt"),
       solution,
     };
+
+    // オプションフィールドを条件付きで追加
+    if (explanation) {
+      newQuizWithSolution.explanation = explanation;
+    }
+    if (approvedAt) {
+      newQuizWithSolution.approvedAt = approvedAt;
+    }
 
     this.mockData.push(newQuizWithSolution);
     return ResultAsync.fromPromise(
@@ -172,8 +181,8 @@ export class MockQuizRepository implements IQuizRepository {
 
   update(
     _id: string,
-    _quiz: Partial<Quiz>,
-  ): ResultAsync<Quiz, RepositoryError> {
+    _quiz: Partial<QuizSummary>,
+  ): ResultAsync<QuizSummary, RepositoryError> {
     // 今回は実装せず、将来追加
     return ResultAsync.fromPromise(
       Promise.reject(new Error("NOT_IMPLEMENTED")),
