@@ -5,90 +5,69 @@ import {
 } from "../../../../shared/errors";
 import { NotFoundError } from "../../../../shared/errors/base";
 import type { components } from "../../../../shared/types";
-import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
+import { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 /**
  * モッククイズリポジトリ実装
  * 本番環境ではCloudflare D1に置き換える
  */
 export class MockQuizRepository implements IQuizRepository {
-  private readonly mockData: components["schemas"]["QuizWithSolution"][] = [
-    {
-      id: "1",
-      question: "What is TypeScript?",
-      answerType: "single_choice",
-      solutionId: "sol-1",
-      explanation: "TypeScript is a typed superset of JavaScript",
-      status: "approved",
-      creatorId: "user-1",
-      createdAt: new Date().toISOString(),
-      approvedAt: new Date().toISOString(),
-      solution: {
-        type: "single_choice",
-        id: "sol-1",
-        choices: [
-          {
-            id: "choice-1",
-            solutionId: "sol-1",
-            text: "A typed superset",
-            orderIndex: 1,
-            isCorrect: true,
-          },
-          {
-            id: "choice-2",
-            solutionId: "sol-1",
-            text: "A framework",
-            orderIndex: 2,
-            isCorrect: false,
-          },
-        ],
+  private readonly mockData: QuizSummary[];
+
+  constructor() {
+    // QuizSummaryエンティティとしてモックデータを初期化
+    this.mockData = this.initializeMockData();
+  }
+
+  /**
+   * モックデータを初期化してQuizSummaryエンティティの配列を作成
+   */
+  private initializeMockData(): QuizSummary[] {
+    const mockDataRaw = [
+      {
+        id: "quiz-1",
+        question: "What is TypeScript?",
+        answerType: "single_choice",
+        solutionId: "sol-1",
+        explanation: "TypeScript is a typed superset of JavaScript",
+        status: "approved",
+        creatorId: "user-1",
+        createdAt: new Date().toISOString(),
+        approvedAt: new Date().toISOString(),
+        tagIds: ["tag-1", "tag-2"],
       },
-    },
-    {
-      id: "2",
-      question: "Is JavaScript strongly typed?",
-      answerType: "boolean",
-      solutionId: "sol-2",
-      status: "approved",
-      creatorId: "user-2",
-      createdAt: new Date().toISOString(),
-      approvedAt: new Date().toISOString(),
-      solution: {
-        type: "boolean",
-        id: "sol-2",
-        value: false,
+      {
+        id: "quiz-2",
+        question: "Is JavaScript strongly typed?",
+        answerType: "boolean",
+        solutionId: "sol-2",
+        status: "approved",
+        creatorId: "user-2",
+        createdAt: new Date().toISOString(),
+        approvedAt: new Date().toISOString(),
+        tagIds: ["tag-1"],
       },
-    },
-  ];
+    ];
+
+    return mockDataRaw.map((data) => {
+      const result = QuizSummary.from(data);
+      if (result.isErr()) {
+        throw new Error(
+          `Failed to create mock QuizSummary: ${JSON.stringify(result.error)}`,
+        );
+      }
+      return result.value;
+    });
+  }
 
   create(
     quiz: QuizSummary,
-    solution: components["schemas"]["Solution"],
+    _solution: components["schemas"]["Solution"],
   ): ResultAsync<QuizSummary, RepositoryError> {
     // モックデータに追加（実際のD1では永続化）
-    const explanation = quiz.get("explanation");
-    const approvedAt = quiz.get("approvedAt");
+    // Note: _solution は実際には使用しないが、インターフェースの互換性のため受け取る
+    (this.mockData as QuizSummary[]).push(quiz);
 
-    const newQuizWithSolution: components["schemas"]["QuizWithSolution"] = {
-      id: quiz.get("id"),
-      question: quiz.get("question"),
-      answerType: quiz.get("answerType"),
-      solutionId: quiz.get("solutionId"),
-      status: quiz.get("status"),
-      creatorId: quiz.get("creatorId"),
-      createdAt: quiz.get("createdAt"),
-      solution,
-    };
-
-    // オプションフィールドを条件付きで追加
-    if (explanation) {
-      newQuizWithSolution.explanation = explanation;
-    }
-    if (approvedAt) {
-      newQuizWithSolution.approvedAt = approvedAt;
-    }
-
-    this.mockData.push(newQuizWithSolution);
     return ResultAsync.fromPromise(
       new Promise((resolve) => resolve(quiz)),
       (error) => {
@@ -106,9 +85,35 @@ export class MockQuizRepository implements IQuizRepository {
   ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError> {
     return ResultAsync.fromPromise(
       new Promise((resolve, reject) => {
-        const quiz = this.mockData.find((q) => q.id === id);
+        const quiz = this.mockData.find((q) => q.get("id") === id);
         if (quiz) {
-          resolve(quiz);
+          // QuizSummaryからQuizWithSolution形式に変換（モック用）
+          const quizWithSolution: components["schemas"]["QuizWithSolution"] = {
+            id: quiz.get("id") as string,
+            question: quiz.get("question"),
+            answerType: quiz.get("answerType"),
+            solutionId: quiz.get("solutionId") as string,
+            status: quiz.get("status"),
+            creatorId: quiz.get("creatorId") as string,
+            createdAt: quiz.get("createdAt"),
+            // モック用の最小限のsolution
+            solution: this.createMockSolution(
+              quiz.get("answerType"),
+              quiz.get("solutionId") as string,
+            ),
+          };
+
+          // オプショナルフィールドを追加
+          const explanation = quiz.get("explanation");
+          const approvedAt = quiz.get("approvedAt");
+          if (explanation) {
+            quizWithSolution.explanation = explanation;
+          }
+          if (approvedAt) {
+            quizWithSolution.approvedAt = approvedAt;
+          }
+
+          resolve(quizWithSolution);
         } else {
           reject(new NotFoundError(`Quiz not found: ${id}`));
         }
@@ -116,7 +121,7 @@ export class MockQuizRepository implements IQuizRepository {
       (error) => {
         console.error("Failed to find quiz by ID:", error);
         if (error instanceof NotFoundError) {
-          return error;
+          return RepositoryErrorFactory.findFailed("Quiz", error);
         }
         return RepositoryErrorFactory.findFailed(
           "Quiz",
@@ -126,17 +131,73 @@ export class MockQuizRepository implements IQuizRepository {
     );
   }
 
+  /**
+   * モック用の最小限のSolutionオブジェクトを作成
+   */
+  private createMockSolution(
+    answerType: string,
+    solutionId: string,
+  ): components["schemas"]["Solution"] {
+    switch (answerType) {
+      case "boolean":
+        return {
+          type: "boolean",
+          id: solutionId,
+          value: false,
+        };
+      case "free_text":
+        return {
+          type: "free_text",
+          id: solutionId,
+          correctAnswer: "mock answer",
+          matchingStrategy: "exact",
+          caseSensitive: false,
+        };
+      case "single_choice":
+        return {
+          type: "single_choice",
+          id: solutionId,
+          choices: [
+            {
+              id: "choice-1",
+              solutionId,
+              text: "Mock choice",
+              orderIndex: 1,
+              isCorrect: true,
+            },
+          ],
+        };
+      case "multiple_choice":
+        return {
+          type: "multiple_choice",
+          id: solutionId,
+          minCorrectAnswers: 1,
+          choices: [
+            {
+              id: "choice-1",
+              solutionId,
+              text: "Mock choice",
+              orderIndex: 1,
+              isCorrect: true,
+            },
+          ],
+        };
+      default:
+        throw new Error(`Unsupported answer type: ${answerType}`);
+    }
+  }
+
   findMany(
     options: {
       status?: components["schemas"]["QuizStatus"];
       creatorId?: string;
-      ids?: string[];
+      tags?: string[];
       limit?: number;
       offset?: number;
     } = {},
   ): ResultAsync<
     {
-      items: components["schemas"]["QuizWithSolution"][];
+      items: QuizSummary[];
       totalCount: number;
       hasMore: boolean;
     },
@@ -147,18 +208,19 @@ export class MockQuizRepository implements IQuizRepository {
     // フィルタリング
     if (options.status) {
       filteredData = filteredData.filter(
-        (quiz) => quiz.status === options.status,
+        (quiz) => quiz.get("status") === options.status,
       );
     }
     if (options.creatorId) {
       filteredData = filteredData.filter(
-        (quiz) => quiz.creatorId === options.creatorId,
+        (quiz) => quiz.get("creatorId") === options.creatorId,
       );
     }
-    if (options.ids && options.ids.length > 0) {
-      filteredData = filteredData.filter((quiz) =>
-        options.ids?.includes(quiz.id),
-      );
+    if (options.tags && options.tags.length > 0) {
+      filteredData = filteredData.filter((quiz) => {
+        const quizTagIds = quiz.get("tagIds") as string[];
+        return options.tags?.some((tag) => quizTagIds.includes(tag));
+      });
     }
 
     const totalCount = filteredData.length;
