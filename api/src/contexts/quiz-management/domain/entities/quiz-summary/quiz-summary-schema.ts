@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { dateStringOnlySchema } from "../../../../../shared/schemas/datetime.schema";
 
 // Brand types for type safety
 export const QuizId = z.string().min(1).brand<"QuizId">();
@@ -35,8 +36,8 @@ export const QuizSummarySchema = z
     tagIds: z.array(TagId).default([]),
     status: z.enum(["pending_approval", "approved", "rejected"]),
     creatorId: CreatorId,
-    createdAt: z.string().datetime(),
-    approvedAt: z.string().datetime().optional(),
+    createdAt: dateStringOnlySchema,
+    approvedAt: dateStringOnlySchema.optional(),
   })
   .strict()
   .superRefine((quiz, ctx) => {
@@ -60,5 +61,5 @@ export const QuizSummarySchema = z
     }
   });
 
-export type QuizSummaryDTO = z.output<typeof QuizSummarySchema>;
+export type QuizSummaryData = z.output<typeof QuizSummarySchema>;
 export type QuizSummaryInput = z.input<typeof QuizSummarySchema>;

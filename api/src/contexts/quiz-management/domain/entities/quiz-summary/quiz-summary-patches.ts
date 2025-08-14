@@ -1,22 +1,18 @@
+import {
+  applyEntityPatch,
+  applyEntityPatches,
+  type EntityPatch,
+  type FieldSuggester,
+  type Issue,
+  materializeEntityPatch,
+} from "../../../../../shared/validation/entity";
 import type { QuizSummaryInput } from "./quiz-summary-schema";
 
-export type Issue = {
-  path: (string | number)[];
-  code: string;
-  message: string;
-};
+// Type alias for QuizSummary-specific patch
+export type QuizSummaryPatch = EntityPatch<QuizSummaryInput>;
 
-/**
- * QuizSummary Patch は「純データ」か「遅延計算関数」のどちらか。
- * - Partial<QuizSummaryInput>: 直列化やバッチ処理向き
- * - () => Partial<QuizSummaryInput>: 入力に閉じた補正を遅延評価（プロセス内専用）
- */
-export type QuizSummaryPatch =
-  | Partial<QuizSummaryInput>
-  | (() => Partial<QuizSummaryInput>);
-
-/** 各フィールド専用のサジェスト関数 */
-type FieldSuggestor = (value: unknown) => QuizSummaryPatch[];
+// Type alias for QuizSummary-specific field suggester
+type QuizSummaryFieldSuggester = FieldSuggester<QuizSummaryInput>;
 
 /** 入力データが QuizSummaryInput の形に近いかを判定 */
 const isQuizSummaryLike = (
@@ -25,29 +21,19 @@ const isQuizSummaryLike = (
   return typeof input === "object" && input !== null;
 };
 
-/** Patch を「いま適用する」ために Partial<QuizSummaryInput> に実体化 */
-export const materializePatch = (
-  patch: QuizSummaryPatch,
-): Partial<QuizSummaryInput> => (typeof patch === "function" ? patch() : patch);
-
-/** 単一 Patch の適用（平坦な QuizSummary なので浅いマージで十分） */
+// Re-export utilities with QuizSummary-specific names for backward compatibility
+export const materializePatch = materializeEntityPatch<QuizSummaryInput>;
 export const applyQuizSummaryPatch = (
   input: unknown,
   patch: QuizSummaryPatch,
-): unknown => {
-  const base = isQuizSummaryLike(input) ? { ...input } : {};
-  const p = materializePatch(patch);
-  return { ...base, ...p };
-};
-
-/** 複数 Patch を順に適用（後勝ち） */
+): unknown => applyEntityPatch(input, patch);
 export const applyQuizSummaryPatches = (
   input: unknown,
   patches: QuizSummaryPatch[],
-): unknown => patches.reduce((acc, p) => applyQuizSummaryPatch(acc, p), input);
+): unknown => applyEntityPatches(input, patches);
 
 // question 用：trim / 空文字列の場合はサンプル提案
-export const suggestQuestionPatches: FieldSuggestor = (value) => {
+export const suggestQuestionPatches: QuizSummaryFieldSuggester = (value) => {
   if (typeof value !== "string") return [];
 
   const patches: QuizSummaryPatch[] = [];
@@ -63,7 +49,7 @@ export const suggestQuestionPatches: FieldSuggestor = (value) => {
 };
 
 // explanation 用：trim
-export const suggestExplanationPatches: FieldSuggestor = (value) => {
+export const suggestExplanationPatches: QuizSummaryFieldSuggester = (value) => {
   if (typeof value !== "string") return [];
 
   const patches: QuizSummaryPatch[] = [];
@@ -93,7 +79,7 @@ export const suggestIdFieldPatches =
   };
 
 // answerType 用：typo修正
-export const suggestAnswerTypePatches: FieldSuggestor = (value) => {
+export const suggestAnswerTypePatches: QuizSummaryFieldSuggester = (value) => {
   if (typeof value !== "string") return [];
 
   const patches: QuizSummaryPatch[] = [];
@@ -118,7 +104,7 @@ export const suggestAnswerTypePatches: FieldSuggestor = (value) => {
 };
 
 // status 用：typo修正
-export const suggestStatusPatches: FieldSuggestor = (value) => {
+export const suggestStatusPatches: QuizSummaryFieldSuggester = (value) => {
   if (typeof value !== "string") return [];
 
   const patches: QuizSummaryPatch[] = [];
@@ -143,7 +129,7 @@ export const suggestStatusPatches: FieldSuggestor = (value) => {
 };
 
 // tagIds 用：未指定→[] / 非文字列の除去 / trim
-export const suggestTagIdsPatches: FieldSuggestor = (value) => {
+export const suggestTagIdsPatches: QuizSummaryFieldSuggester = (value) => {
   const patches: QuizSummaryPatch[] = [];
 
   if (value == null) {
@@ -168,7 +154,7 @@ export const suggestApprovedAtPatches = (
 ): QuizSummaryPatch[] => {
   const patches: QuizSummaryPatch[] = [];
 
-  if (obj.status === "approved" && !obj.approvedAt) {
+  if (obj.status === "approved" && !obj["approvedAt"]) {
     patches.push({ approvedAt: new Date().toISOString() });
   }
 
