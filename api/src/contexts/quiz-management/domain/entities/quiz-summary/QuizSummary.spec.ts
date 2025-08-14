@@ -185,17 +185,6 @@ describe("QuizSummary", () => {
   });
 
   describe("Immutability", () => {
-    it("should be completely immutable", () => {
-      const result = QuizSummary.from(validQuizData);
-      const quiz = result._unsafeUnwrap({ withStackTrace: true });
-
-      // Try to modify the quiz (should not affect original)
-      const dto = quiz.toData();
-      dto.question = "Modified question";
-
-      expect(quiz.get("question")).toBe("What is TypeScript?");
-    });
-
     it("should freeze the quiz instance", () => {
       const result = QuizSummary.from(validQuizData);
       const quiz = result._unsafeUnwrap({ withStackTrace: true });
@@ -659,10 +648,6 @@ describe("QuizSummary", () => {
 
       expect(dto.question).toBe("What is TypeScript?");
       expect(dto.tagIds).toEqual(validTagIds);
-
-      // Modify Data should not affect original
-      dto.question = "Modified";
-      expect(quiz.get("question")).toBe("What is TypeScript?");
     });
 
     it("should deep clone in toData", () => {

@@ -1,7 +1,7 @@
 import { err, ok, ResultAsync } from "neverthrow";
 import { CreateFailedError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
-import { validateQuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
+import { parseQuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import {
   QuizCreationFailedError,
@@ -75,7 +75,7 @@ export class CreateQuizUseCase {
       tagIds: [], // デフォルト値
     };
 
-    const quizValidationResult = validateQuizSummary(quizData);
+    const quizValidationResult = parseQuizSummary(quizData);
 
     if (quizValidationResult.isErr()) {
       return ResultAsync.fromSafePromise(Promise.resolve()).andThen(() => {
