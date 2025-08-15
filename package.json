@@ -20,6 +20,9 @@
     "format:md": "markdownlint-cli2 '**/*.md' --fix",
     "format": "run-p format:*",
     "format:biome": "biome check --write --unsafe",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "run-p test:*",
+    "test:api": "pnpm --filter api test",
+    "test:ui": "pnpm --filter ui test"
   }
 }
