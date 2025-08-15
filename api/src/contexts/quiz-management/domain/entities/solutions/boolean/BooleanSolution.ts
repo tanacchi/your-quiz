@@ -113,13 +113,6 @@ export class BooleanSolution extends EntityBase<
     return draft.commit();
   }
 
-  // Common methods inherited from EntityBase:
-  // - toData(): BooleanSolutionData
-  // - get<K>(key: K): BooleanSolutionData[K]
-  // - update<K>(key: K, value: BooleanSolutionInput[K]): BooleanSolutionParseResult
-  // - with(patch: Partial<BooleanSolutionInput>): BooleanSolutionParseResult
-  // - withMutator(mutator: (draft: BooleanSolutionInput) => void): BooleanSolutionParseResult
-
   // Business logic methods
 
   /**
@@ -178,19 +171,5 @@ export class BooleanSolution extends EntityBase<
     constructor() {
       super(parseBooleanSolution);
     }
-
-    // Common methods inherited from DraftBase:
-    // - commit(): BooleanSolutionParseResult
-    // - validate(): BooleanSolutionParseResult
-    // - getParseError(): BooleanSolutionParseError | null
-    // - getIssues(): Issue[]
-    // - getPatches(): BooleanSolutionPatch[]
-    // - applyPatches(patches: BooleanSolutionPatch[]): void
-    // - update<K>(key: K, value: BooleanSolutionInput[K]): void
-    // - with(patch: Partial<BooleanSolutionInput>): void
-    // - get<K>(key: K): BooleanSolutionInput[K] | undefined
-    // - clearErrors(): void
-    // - hasErrors(): boolean
-    // - getErrors(path: string): string[]
   };
 }

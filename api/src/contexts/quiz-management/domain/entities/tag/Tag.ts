@@ -120,13 +120,6 @@ export class Tag extends EntityBase<Tag, typeof TagSchema> {
     return draft.commit();
   }
 
-  // Common methods inherited from EntityBase:
-  // - toData(): TagData
-  // - get<K>(key: K): TagData[K]
-  // - update<K>(key: K, value: TagInput[K]): TagParseResult
-  // - with(patch: Partial<TagInput>): TagParseResult
-  // - withMutator(mutator: (draft: TagInput) => void): TagParseResult
-
   // Business logic methods (minimal for Tag entity)
 
   /**
@@ -166,19 +159,5 @@ export class Tag extends EntityBase<Tag, typeof TagSchema> {
     constructor() {
       super(parseTag);
     }
-
-    // Common methods inherited from DraftBase:
-    // - commit(): TagParseResult
-    // - validate(): TagParseResult
-    // - getParseError(): TagParseError | null
-    // - getIssues(): Issue[]
-    // - getPatches(): TagPatch[]
-    // - applyPatches(patches: TagPatch[]): void
-    // - update<K>(key: K, value: TagInput[K]): void
-    // - with(patch: Partial<TagInput>): void
-    // - get<K>(key: K): TagInput[K] | undefined
-    // - clearErrors(): void
-    // - hasErrors(): boolean
-    // - getErrors(path: string): string[]
   };
 }
