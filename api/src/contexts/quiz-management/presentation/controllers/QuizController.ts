@@ -119,24 +119,20 @@ export class QuizController {
    */
   async listQuizzes(c: AppContext) {
     // クエリパラメータを取得
-    const parseResult = validateWithZod(listQuizzesQuerySchema, {
+    return validateWithZod(listQuizzesQuerySchema, {
       status: c.req.query("status"),
       creatorId: c.req.query("creatorId"),
       ids: c.req.queries("ids"),
       limit: c.req.query("limit"),
       offset: c.req.query("offset"),
-    });
-    if (parseResult.isErr()) {
-      return c.json(parseResult.error, 400);
-    }
-
-    const result = await this.listQuizzesUseCase.execute(parseResult.value);
-    return result.match(
-      (res) => c.json(res),
-      (error) => {
-        const errorResponse = ControllerErrorHandler.handleError(error);
-        return c.json(errorResponse.response, errorResponse.statusCode);
-      },
-    );
+    })
+      .asyncAndThen((query) => this.listQuizzesUseCase.execute(query))
+      .match(
+        (res) => c.json(res),
+        (error) => {
+          const errorResponse = ControllerErrorHandler.handleError(error);
+          return c.json(errorResponse.response, errorResponse.statusCode);
+        },
+      );
   }
 }
