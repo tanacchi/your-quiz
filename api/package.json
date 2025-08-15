@@ -16,7 +16,6 @@
     "test": "run-p test:*",
     "test:bdd": "vitest run --coverage --config=vitest.bdd.config.ts",
     "test:bdd:watch": "vitest --config=vitest.bdd.config.ts --ui --open --watch --coverage",
-    "test:coverage": "vitest run --coverage",
     "test:tdd": "vitest run --coverage",
     "test:tdd:watch": "vitest --ui --open --watch --coverage",
     "typecheck": "tsc --noEmit"

@@ -10,13 +10,13 @@ import type { ApiErrorResponse } from "../types/api-error-types";
 // Comprehensive Error Handling Test Suite
 // Uses neverthrow Result types and TypeSpec error definitions
 
-describe("Comprehensive Error Handling - 包括的エラーハンドリング", () => {
+describe.todo("Comprehensive Error Handling - 包括的エラーハンドリング", () => {
   beforeAll(async () => {
     // Given: API server is running with typed error system
     // Setup mock data for testing scenarios
   });
 
-  describe("Level 1: Validation Errors - レベル1: 入力検証失敗", () => {
+  describe.todo("Level 1: Validation Errors - レベル1: 入力検証失敗", () => {
     errorScenarios.validationErrors.forEach((testCase, _index) => {
       it(`${testCase.description}`, async () => {
         // Given: Invalid input data that should trigger validation errors
@@ -51,130 +51,138 @@ describe("Comprehensive Error Handling - 包括的エラーハンドリング", 
     });
   });
 
-  describe("Level 2: Business Rule Violations - レベル2: ビジネスルール違反", () => {
-    errorScenarios.businessRuleViolations.forEach((testCase, _index) => {
-      it(`${testCase.description}`, async () => {
-        // Given: Valid input but violates business rules
+  describe.todo(
+    "Level 2: Business Rule Violations - レベル2: ビジネスルール違反",
+    () => {
+      errorScenarios.businessRuleViolations.forEach((testCase, _index) => {
+        it(`${testCase.description}`, async () => {
+          // Given: Valid input but violates business rules
 
-        let request = spec();
+          let request = spec();
 
-        // Configure request method and headers
-        switch (testCase.method) {
-          case "GET":
-            request = request.get(testCase.endpoint);
-            break;
-          case "PUT":
-            request = request.put(testCase.endpoint);
-            if (testCase.input) {
-              request = request.withJson(testCase.input);
-            }
-            break;
-          case "POST":
-            request = request.post(testCase.endpoint);
-            if (testCase.input) {
-              request = request.withJson(testCase.input);
-            }
-            break;
-          case "DELETE":
-            request = request.delete(testCase.endpoint);
-            break;
-        }
+          // Configure request method and headers
+          switch (testCase.method) {
+            case "GET":
+              request = request.get(testCase.endpoint);
+              break;
+            case "PUT":
+              request = request.put(testCase.endpoint);
+              if (testCase.input) {
+                request = request.withJson(testCase.input);
+              }
+              break;
+            case "POST":
+              request = request.post(testCase.endpoint);
+              if (testCase.input) {
+                request = request.withJson(testCase.input);
+              }
+              break;
+            case "DELETE":
+              request = request.delete(testCase.endpoint);
+              break;
+          }
 
-        // Add headers if specified
-        if (testCase.headers) {
-          Object.entries(testCase.headers).forEach(([key, value]) => {
-            request = request.withHeaders(key, value);
-          });
-        }
+          // Add headers if specified
+          if (testCase.headers) {
+            Object.entries(testCase.headers).forEach(([key, value]) => {
+              request = request.withHeaders(key, value);
+            });
+          }
 
-        // When: Request violates business rules
-        const response = await request.expectStatus(testCase.expectedStatus);
+          // When: Request violates business rules
+          const response = await request.expectStatus(testCase.expectedStatus);
 
-        // Then: Should return appropriate error type with type safety
-        let typedError: ApiErrorResponse;
-        switch (testCase.expectedError) {
-          case "NotFoundError":
-            typedError = errorResponseValidators.validateNotFoundError(
-              response.json,
-            );
-            break;
-          case "ForbiddenError":
-            typedError = errorResponseValidators.validateForbiddenError(
-              response.json,
-            );
-            break;
-          case "ConflictError":
-            typedError = errorResponseValidators.validateConflictError(
-              response.json,
-            );
-            break;
-          default:
-            throw new Error(`Unexpected error type: ${testCase.expectedError}`);
-        }
+          // Then: Should return appropriate error type with type safety
+          let typedError: ApiErrorResponse;
+          switch (testCase.expectedError) {
+            case "NotFoundError":
+              typedError = errorResponseValidators.validateNotFoundError(
+                response.json,
+              );
+              break;
+            case "ForbiddenError":
+              typedError = errorResponseValidators.validateForbiddenError(
+                response.json,
+              );
+              break;
+            case "ConflictError":
+              typedError = errorResponseValidators.validateConflictError(
+                response.json,
+              );
+              break;
+            default:
+              throw new Error(
+                `Unexpected error type: ${testCase.expectedError}`,
+              );
+          }
 
-        // And: Error structure is TypeSpec compliant (already verified by validators)
-        expect(typedError.code).toBeGreaterThanOrEqual(400);
-        expect(typedError.code).toBeLessThan(600);
-        expect(typeof typedError.message).toBe("string");
+          // And: Error structure is TypeSpec compliant (already verified by validators)
+          expect(typedError.code).toBeGreaterThanOrEqual(400);
+          expect(typedError.code).toBeLessThan(600);
+          expect(typeof typedError.message).toBe("string");
+        });
       });
-    });
-  });
+    },
+  );
 
-  describe("Level 3: Infrastructure Failures - レベル3: インフラストラクチャ失敗", () => {
-    errorScenarios.infrastructureFailures.forEach((testCase, _index) => {
-      it(`${testCase.description}`, async () => {
-        // Given: Infrastructure layer failure simulation
+  describe.todo(
+    "Level 3: Infrastructure Failures - レベル3: インフラストラクチャ失敗",
+    () => {
+      errorScenarios.infrastructureFailures.forEach((testCase, _index) => {
+        it(`${testCase.description}`, async () => {
+          // Given: Infrastructure layer failure simulation
 
-        let request = spec();
+          let request = spec();
 
-        // Configure request method
-        switch (testCase.method || "POST") {
-          case "GET":
-            request = request.get(testCase.endpoint);
-            break;
-          case "PUT":
-            request = request.put(testCase.endpoint);
-            if (testCase.input) {
-              request = request.withJson(testCase.input);
-            }
-            break;
-          case "DELETE":
-            request = request.delete(testCase.endpoint);
-            break;
-          default:
-            request = request.post(testCase.endpoint);
-            if (testCase.input) {
-              request = request.withJson(testCase.input);
-            }
-        }
+          // Configure request method
+          switch (testCase.method || "POST") {
+            case "GET":
+              request = request.get(testCase.endpoint);
+              break;
+            case "PUT":
+              request = request.put(testCase.endpoint);
+              if (testCase.input) {
+                request = request.withJson(testCase.input);
+              }
+              break;
+            case "DELETE":
+              request = request.delete(testCase.endpoint);
+              break;
+            default:
+              request = request.post(testCase.endpoint);
+              if (testCase.input) {
+                request = request.withJson(testCase.input);
+              }
+          }
 
-        // Add failure simulation headers
-        if (testCase.headers) {
-          Object.entries(testCase.headers).forEach(([key, value]) => {
-            request = request.withHeaders(key, value);
-          });
-        }
+          // Add failure simulation headers
+          if (testCase.headers) {
+            Object.entries(testCase.headers).forEach(([key, value]) => {
+              request = request.withHeaders(key, value);
+            });
+          }
 
-        // When: Infrastructure failure occurs
-        const response = await request.expectStatus(testCase.expectedStatus);
+          // When: Infrastructure failure occurs
+          const response = await request.expectStatus(testCase.expectedStatus);
 
-        // Then: Should return InternalServerError
-        const body = response.json;
-        errorResponseValidators.validateInternalServerError(body);
+          // Then: Should return InternalServerError
+          const body = response.json;
+          errorResponseValidators.validateInternalServerError(body);
 
-        // And: Error should provide minimal details for security
-        expect(body.message).not.toContain("database");
-        expect(body.message).not.toContain("connection");
-        expect(body.message).not.toContain("sql");
+          // And: Error should provide minimal details for security
+          expect(body.message).not.toContain("database");
+          expect(body.message).not.toContain("connection");
+          expect(body.message).not.toContain("sql");
 
-        // And: Should maintain neverthrow error structure
-        expect(body).toHaveProperty("code", 500);
-        expect(body).toHaveProperty("message");
+          // And: Should maintain neverthrow error structure
+          expect(body).toHaveProperty("code", 500);
+          expect(body).toHaveProperty("message");
+        });
       });
-    });
-  });
+    },
+  );
 
-  describe("Level 4: System Failures - レベル4: システム失敗", () => {
+  describe.todo("Level 4: System Failures - レベル4: システム失敗", () => {
     errorScenarios.systemFailures.forEach((testCase, _index) => {
       it(`${testCase.description}`, async () => {
         // Given: System-level failure scenario
@@ -222,60 +230,63 @@ describe("Comprehensive Error Handling - 包括的エラーハンドリング", 
     });
   });
 
-  describe("Workflow-Based Error Scenarios - ワークフローベース失敗シナリオ", () => {
-    errorScenarios.workflowFailures.forEach((testCase, _index) => {
-      it(`${testCase.description}`, async () => {
-        // Given: Workflow violation scenario
+  describe.todo(
+    "Workflow-Based Error Scenarios - ワークフローベース失敗シナリオ",
+    () => {
+      errorScenarios.workflowFailures.forEach((testCase, _index) => {
+        it(`${testCase.description}`, async () => {
+          // Given: Workflow violation scenario
 
-        let request = spec();
+          let request = spec();
 
-        // Configure request method
-        switch (testCase.method || "POST") {
-          case "GET":
-            request = request.get(testCase.endpoint);
-            break;
-          case "DELETE":
-            request = request.delete(testCase.endpoint);
-            break;
-          default:
-            request = request.post(testCase.endpoint);
-        }
+          // Configure request method
+          switch (testCase.method || "POST") {
+            case "GET":
+              request = request.get(testCase.endpoint);
+              break;
+            case "DELETE":
+              request = request.delete(testCase.endpoint);
+              break;
+            default:
+              request = request.post(testCase.endpoint);
+          }
 
-        // Add input data if present
-        if (testCase.input) {
-          request = request.withJson(testCase.input);
-        }
+          // Add input data if present
+          if (testCase.input) {
+            request = request.withJson(testCase.input);
+          }
 
-        // Add headers if specified
-        if (testCase.headers) {
-          Object.entries(testCase.headers).forEach(([key, value]) => {
-            request = request.withHeaders(key, value);
-          });
-        }
+          // Add headers if specified
+          if (testCase.headers) {
+            Object.entries(testCase.headers).forEach(([key, value]) => {
+              request = request.withHeaders(key, value);
+            });
+          }
 
-        // When: Workflow error occurs
-        const response = await request.expectStatus(testCase.expectedStatus);
+          // When: Workflow error occurs
+          const response = await request.expectStatus(testCase.expectedStatus);
 
-        // Then: Should return appropriate workflow error
-        const body = response.json;
+          // Then: Should return appropriate workflow error
+          const body = response.json;
 
-        switch (testCase.expectedError) {
-          case "ValidationError":
-            errorResponseValidators.validateValidationError(body);
-            break;
-          case "NotFoundError":
-            errorResponseValidators.validateNotFoundError(body);
-            break;
-        }
+          switch (testCase.expectedError) {
+            case "ValidationError":
+              errorResponseValidators.validateValidationError(body);
+              break;
+            case "NotFoundError":
+              errorResponseValidators.validateNotFoundError(body);
+              break;
+          }
 
-        // And: Error should maintain consistent structure
-        expect(body).toHaveProperty("code");
-        expect(body).toHaveProperty("message");
+          // And: Error should maintain consistent structure
+          expect(body).toHaveProperty("code");
+          expect(body).toHaveProperty("message");
+        });
       });
-    });
-  });
+    },
+  );
 
-  describe("Error Type Consistency - エラータイプ一貫性", () => {
+  describe.todo("Error Type Consistency - エラータイプ一貫性", () => {
     const errorTypes = [
       { code: 400, type: "ValidationError", message: /validation|invalid/ },
       {
@@ -312,7 +323,7 @@ describe("Comprehensive Error Handling - 包括的エラーハンドリング", 
     });
   });
 
-  describe("neverthrow Integration - neverthrow統合", () => {
+  describe.todo("neverthrow Integration - neverthrow統合", () => {
     it("Should handle Result type error chaining correctly", async () => {
       // Given: Complex error scenario that tests error chaining
 

@@ -14,12 +14,15 @@
     "dev": "run-p dev:*",
     "dev:api": "pnpm --filter api dev",
     "dev:ui": "pnpm --filter ui dev",
-    "lint": "run-p lint:*",
-    "lint:md": "sh ./scripts/lint-md.sh",
-    "lint:biome": "biome check",
-    "format:md": "markdownlint-cli2 '**/*.md' --fix",
     "format": "run-p format:*",
     "format:biome": "biome check --write --unsafe",
-    "prepare": "husky"
+    "format:md": "markdownlint-cli2 '**/*.md' --fix",
+    "lint": "run-p lint:*",
+    "lint:biome": "biome check",
+    "lint:md": "sh ./scripts/lint-md.sh",
+    "prepare": "husky",
+    "test": "run-p test:*",
+    "test:api": "pnpm --filter api test",
+    "test:ui": "pnpm --filter ui test"
   }
 }

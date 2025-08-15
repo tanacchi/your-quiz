@@ -1,0 +1,336 @@
+import { describe, expect, it } from "vitest";
+import {
+  type BooleanSolutionData,
+  type BooleanSolutionInput,
+  BooleanSolutionSchema,
+} from "./boolean-solution-schema";
+
+describe("BooleanSolution Schema", () => {
+  const validBooleanSolutionData: BooleanSolutionInput = {
+    id: "solution-123",
+    value: true,
+  };
+
+  describe("BooleanSolutionSchema Validation", () => {
+    describe("Required Fields", () => {
+      it("should accept valid boolean solution with true value", () => {
+        const result = BooleanSolutionSchema.safeParse(
+          validBooleanSolutionData,
+        );
+        expect(result.success).toBe(true);
+
+        if (result.success) {
+          const data = result.data as BooleanSolutionData;
+          expect(data.id).toBe(validBooleanSolutionData.id);
+          expect(data.value).toBe(true);
+        }
+      });
+
+      it("should accept valid boolean solution with false value", () => {
+        const falseValueData = {
+          ...validBooleanSolutionData,
+          value: false,
+        };
+        const result = BooleanSolutionSchema.safeParse(falseValueData);
+        expect(result.success).toBe(true);
+
+        if (result.success) {
+          expect(result.data.value).toBe(false);
+        }
+      });
+
+      it.each([
+        ["id", { ...validBooleanSolutionData, id: undefined }],
+        ["value", { ...validBooleanSolutionData, value: undefined }],
+      ])("should reject missing required field: %s", (_field, invalidData) => {
+        const result = BooleanSolutionSchema.safeParse(invalidData);
+        expect(result.success).toBe(false);
+      });
+    });
+
+    describe("ID Field Validation", () => {
+      it.each([
+        ["valid alphanumeric", "solution-123", true],
+        ["valid with underscore", "solution_test", true],
+        ["valid uuid format", "550e8400-e29b-41d4-a716-446655440000", true],
+        ["valid single char", "s", true],
+        [
+          "valid long id",
+          "solution-very-long-identifier-with-many-parts",
+          true,
+        ],
+        ["empty string", "", false],
+        ["only whitespace", "   ", true],
+        ["null value", null, false],
+        ["undefined value", undefined, false],
+        ["number", 123, false],
+        ["object", {}, false],
+        ["boolean", true, false],
+      ])("should validate id: %s -> %s", (_desc, id, isValid) => {
+        const data = { ...validBooleanSolutionData, id };
+        const result = BooleanSolutionSchema.safeParse(data);
+        expect(result.success).toBe(isValid);
+
+        if (isValid && result.success) {
+          expect(result.data.id).toBe(id);
+        }
+      });
+    });
+
+    describe("Value Field Validation", () => {
+      it.each([
+        ["true boolean", true, true],
+        ["false boolean", false, true],
+        ["string 'true'", "true", false],
+        ["string 'false'", "false", false],
+        ["number 1", 1, false],
+        ["number 0", 0, false],
+        ["null value", null, false],
+        ["undefined value", undefined, false],
+        ["empty string", "", false],
+        ["object", {}, false],
+        ["array", [], false],
+      ])("should validate value: %s -> %s", (_desc, value, isValid) => {
+        const data = { ...validBooleanSolutionData, value };
+        const result = BooleanSolutionSchema.safeParse(data);
+        expect(result.success).toBe(isValid);
+
+        if (isValid && result.success) {
+          expect(result.data.value).toBe(value);
+          expect(typeof result.data.value).toBe("boolean");
+        }
+      });
+    });
+
+    describe("Strict Mode", () => {
+      it("should reject data with extra fields", () => {
+        const dataWithExtraField = {
+          ...validBooleanSolutionData,
+          extraField: "not allowed",
+        };
+        const result = BooleanSolutionSchema.safeParse(dataWithExtraField);
+        expect(result.success).toBe(false);
+      });
+
+      it("should reject data with nested extra fields", () => {
+        const dataWithNestedExtra = {
+          ...validBooleanSolutionData,
+          metadata: {
+            extra: "field",
+          },
+        };
+        const result = BooleanSolutionSchema.safeParse(dataWithNestedExtra);
+        expect(result.success).toBe(false);
+      });
+    });
+  });
+
+  describe("Edge Cases and Boundary Values", () => {
+    describe("ID Special Cases", () => {
+      it.each([
+        ["special characters", "solution-!@#$%^&*()"],
+        ["unicode characters", "solution-プログラミング"],
+        ["emoji", "solution-🚀"],
+        ["very long id", `solution-${"a".repeat(100)}`],
+        ["mixed case", "Solution-MixedCase-123"],
+        ["numbers only", "123456789"],
+        ["dots and dashes", "solution.test-case.123"],
+      ])("should handle id with %s", (_desc, id) => {
+        const data = { ...validBooleanSolutionData, id };
+        const result = BooleanSolutionSchema.safeParse(data);
+        expect(result.success).toBe(true);
+
+        if (result.success) {
+          expect(result.data.id).toBe(id);
+        }
+      });
+    });
+
+    describe("Minimal Valid Data", () => {
+      it("should accept minimal valid data with single character id", () => {
+        const minimalData = {
+          id: "s",
+          value: true,
+        };
+        const result = BooleanSolutionSchema.safeParse(minimalData);
+        expect(result.success).toBe(true);
+
+        if (result.success) {
+          expect(result.data.id).toBe("s");
+          expect(result.data.value).toBe(true);
+        }
+      });
+
+      it("should accept minimal valid data with false value", () => {
+        const minimalData = {
+          id: "s",
+          value: false,
+        };
+        const result = BooleanSolutionSchema.safeParse(minimalData);
+        expect(result.success).toBe(true);
+
+        if (result.success) {
+          expect(result.data.id).toBe("s");
+          expect(result.data.value).toBe(false);
+        }
+      });
+    });
+
+    describe("Type Safety", () => {
+      it("should ensure value is exactly boolean type", () => {
+        const result = BooleanSolutionSchema.safeParse(
+          validBooleanSolutionData,
+        );
+        expect(result.success).toBe(true);
+
+        if (result.success) {
+          expect(typeof result.data.value).toBe("boolean");
+          expect(
+            result.data.value === true || result.data.value === false,
+          ).toBe(true);
+        }
+      });
+
+      it("should preserve boolean type across multiple validations", () => {
+        const trueData = { id: "test-true", value: true };
+        const falseData = { id: "test-false", value: false };
+
+        const trueResult = BooleanSolutionSchema.safeParse(trueData);
+        const falseResult = BooleanSolutionSchema.safeParse(falseData);
+
+        expect(trueResult.success).toBe(true);
+        expect(falseResult.success).toBe(true);
+
+        if (trueResult.success && falseResult.success) {
+          expect(trueResult.data.value).toBe(true);
+          expect(falseResult.data.value).toBe(false);
+          expect(typeof trueResult.data.value).toBe("boolean");
+          expect(typeof falseResult.data.value).toBe("boolean");
+        }
+      });
+    });
+  });
+
+  describe("Integration Scenarios", () => {
+    it("should handle typical quiz solution scenarios", () => {
+      const quizSolutions = [
+        { id: "solution-correct-answer", value: true },
+        { id: "solution-incorrect-answer", value: false },
+        { id: "solution-yes-no-yes", value: true },
+        { id: "solution-yes-no-no", value: false },
+        { id: "solution-true-false-true", value: true },
+        { id: "solution-true-false-false", value: false },
+      ];
+
+      quizSolutions.forEach((solution, _index) => {
+        const result = BooleanSolutionSchema.safeParse(solution);
+        expect(result.success).toBe(true);
+
+        if (result.success) {
+          expect(result.data.id).toBe(solution.id);
+          expect(result.data.value).toBe(solution.value);
+          expect(typeof result.data.value).toBe("boolean");
+        }
+      });
+    });
+
+    it("should handle solutions with complex IDs", () => {
+      const complexSolutions = [
+        {
+          id: "quiz-123-solution-456-boolean-true",
+          value: true,
+        },
+        {
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          value: false,
+        },
+        {
+          id: "solution_with_underscores_and_numbers_123",
+          value: true,
+        },
+      ];
+
+      complexSolutions.forEach((solution) => {
+        const result = BooleanSolutionSchema.safeParse(solution);
+        expect(result.success).toBe(true);
+
+        if (result.success) {
+          expect(result.data.id).toBe(solution.id);
+          expect(result.data.value).toBe(solution.value);
+        }
+      });
+    });
+
+    it("should work with JSON serialization/deserialization", () => {
+      const originalData = validBooleanSolutionData;
+      const jsonString = JSON.stringify(originalData);
+      const parsedData = JSON.parse(jsonString);
+
+      const result = BooleanSolutionSchema.safeParse(parsedData);
+      expect(result.success).toBe(true);
+
+      if (result.success) {
+        expect(result.data).toEqual(originalData);
+      }
+    });
+
+    it("should maintain data integrity through multiple validations", () => {
+      let currentData = validBooleanSolutionData;
+
+      // Validate multiple times to ensure consistency
+      for (let i = 0; i < 5; i++) {
+        const result = BooleanSolutionSchema.safeParse(currentData);
+        expect(result.success).toBe(true);
+
+        if (result.success) {
+          currentData = result.data;
+          expect(currentData.id).toBe(validBooleanSolutionData.id);
+          expect(currentData.value).toBe(validBooleanSolutionData.value);
+        }
+      }
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should provide clear error messages for invalid data", () => {
+      const invalidCases = [
+        { data: { id: "", value: true }, expectedPath: ["id"] },
+        { data: { id: "valid", value: "true" }, expectedPath: ["value"] },
+        { data: { id: "valid" }, expectedPath: ["value"] },
+        { data: { value: true }, expectedPath: ["id"] },
+        { data: {}, expectedPath: ["id"] },
+      ];
+
+      invalidCases.forEach(({ data, expectedPath }) => {
+        const result = BooleanSolutionSchema.safeParse(data);
+        expect(result.success).toBe(false);
+
+        if (!result.success) {
+          const hasExpectedError = result.error.issues.some((issue) =>
+            expectedPath.every(
+              (pathPart, index) => issue.path[index] === pathPart,
+            ),
+          );
+          expect(hasExpectedError).toBe(true);
+        }
+      });
+    });
+
+    it("should handle completely invalid input types", () => {
+      const invalidInputs = [
+        null,
+        undefined,
+        "string",
+        123,
+        true,
+        [],
+        () => {},
+      ];
+
+      invalidInputs.forEach((input) => {
+        const result = BooleanSolutionSchema.safeParse(input);
+        expect(result.success).toBe(false);
+      });
+    });
+  });
+});

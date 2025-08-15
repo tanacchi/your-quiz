@@ -1,10 +1,8 @@
-import {
-  applyEntityPatch,
-  applyEntityPatches,
-  type EntityPatch,
-  type FieldSuggester,
-  type Issue,
-  materializeEntityPatch,
+import { isObjectLike } from "../../../../../shared/utils/type-guard";
+import type {
+  EntityPatch,
+  FieldSuggester,
+  Issue,
 } from "../../../../../shared/validation/entity";
 import type { QuizSummaryInput } from "./quiz-summary-schema";
 
@@ -13,24 +11,6 @@ export type QuizSummaryPatch = EntityPatch<QuizSummaryInput>;
 
 // Type alias for QuizSummary-specific field suggester
 type QuizSummaryFieldSuggester = FieldSuggester<QuizSummaryInput>;
-
-/** 入力データが QuizSummaryInput の形に近いかを判定 */
-const isQuizSummaryLike = (
-  input: unknown,
-): input is Partial<QuizSummaryInput> => {
-  return typeof input === "object" && input !== null;
-};
-
-// Re-export utilities with QuizSummary-specific names for backward compatibility
-export const materializePatch = materializeEntityPatch<QuizSummaryInput>;
-export const applyQuizSummaryPatch = (
-  input: unknown,
-  patch: QuizSummaryPatch,
-): unknown => applyEntityPatch(input, patch);
-export const applyQuizSummaryPatches = (
-  input: unknown,
-  patches: QuizSummaryPatch[],
-): unknown => applyEntityPatches(input, patches);
 
 // question 用：trim / 空文字列の場合はサンプル提案
 export const suggestQuestionPatches: QuizSummaryFieldSuggester = (value) => {
@@ -166,7 +146,7 @@ export const suggestQuizSummaryPatches = (
   input: unknown,
   issues: Issue[],
 ): QuizSummaryPatch[] => {
-  if (!isQuizSummaryLike(input)) {
+  if (!isObjectLike<QuizSummaryInput>(input)) {
     return [];
   }
 

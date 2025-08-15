@@ -1,4 +1,4 @@
-name: PR Build Check
+name: PR test
 
 on:
   pull_request:
@@ -22,5 +22,5 @@ jobs:
           version: 10
       - name: Install dependencies
         run: pnpm install --recursive
-      - name: Run lint
-        run: pnpm build
+      - name: Run test
+        run: pnpm test

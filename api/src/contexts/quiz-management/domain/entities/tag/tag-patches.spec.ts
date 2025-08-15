@@ -1,0 +1,579 @@
+import { describe, expect, it } from "vitest";
+import type { Issue } from "../../../../../shared/validation/entity/types";
+import {
+  applyEntityPatch,
+  applyEntityPatches,
+} from "../../../../../shared/validation/entity/utils";
+import { suggestRelatedTagsPatches, suggestTagPatches } from "./tag-patches";
+import type { TagInput } from "./tag-schema";
+
+describe("Tag Patches", () => {
+  const validTagInput: TagInput = {
+    id: "tag-123",
+    name: "TypeScript",
+    createdBy: "user-456",
+    createdAt: "2023-12-01T10:00:00.000Z",
+    relatedTags: [
+      {
+        relationType: "category",
+        id: "tag-789",
+        name: "Programming Languages",
+      },
+    ],
+  };
+
+  describe("Individual Patch Suggesters", () => {
+    describe("suggestRelatedTagsPatches", () => {
+      it.each([
+        ["null relatedTags", null, [{ relatedTags: [] }]],
+        ["undefined relatedTags", undefined, [{ relatedTags: [] }]],
+        ["valid array", [], []],
+        [
+          "valid array with items",
+          [{ relationType: "category", id: "tag-1", name: "Test" }],
+          [],
+        ],
+        ["non-null non-undefined value", [], []],
+        ["empty string", "", []],
+        ["number", 123, []],
+        ["object", {}, []],
+      ])("should handle %s", (_desc, input, expected) => {
+        const result = suggestRelatedTagsPatches(input);
+        expect(result).toEqual(expected);
+      });
+
+      describe("Patch Application", () => {
+        it("should apply null relatedTags patch correctly", () => {
+          const input = { ...validTagInput, relatedTags: null };
+          const patches = suggestRelatedTagsPatches(input.relatedTags);
+          expect(patches).toHaveLength(1);
+          const patch = patches[0];
+          if (!patch) throw new Error("Expected patch to exist");
+          const patched = applyEntityPatch(input, patch);
+
+          expect(patched.relatedTags).toEqual([]);
+        });
+
+        it("should apply undefined relatedTags patch correctly", () => {
+          const input = { ...validTagInput, relatedTags: undefined };
+          const patches = suggestRelatedTagsPatches(input.relatedTags);
+          expect(patches).toHaveLength(1);
+          const patch = patches[0];
+          if (!patch) throw new Error("Expected patch to exist");
+          const patched = applyEntityPatch(input, patch);
+
+          expect(patched.relatedTags).toEqual([]);
+        });
+
+        it("should not modify valid relatedTags", () => {
+          const validRelatedTags = [
+            {
+              relationType: "synonym" as const,
+              id: "tag-syn",
+              name: "Synonym Tag",
+            },
+          ];
+          const input = { ...validTagInput, relatedTags: validRelatedTags };
+          const patches = suggestRelatedTagsPatches(input.relatedTags);
+
+          expect(patches).toEqual([]);
+        });
+      });
+    });
+  });
+
+  describe("Integrated Patch Suggester", () => {
+    describe("suggestTagPatches", () => {
+      it("should return empty array for non-object input", () => {
+        const issues: Issue[] = [
+          { path: ["relatedTags"], code: "invalid", message: "Invalid" },
+        ];
+
+        const nonObjectInputs = ["string", 123, true];
+
+        nonObjectInputs.forEach((input) => {
+          const result = suggestTagPatches(input, issues);
+          // Non-object inputs return empty since isObjectLike fails
+          expect(result).toEqual([]);
+        });
+      });
+
+      it("should handle array input", () => {
+        const issues: Issue[] = [
+          { path: ["relatedTags"], code: "invalid", message: "Invalid" },
+        ];
+        const result = suggestTagPatches([], issues);
+        // Array is object-like but doesn't have relatedTags property, so it gets undefined and patches are suggested
+        expect(result).toEqual([{ relatedTags: [] }]);
+      });
+
+      it("should handle null input", () => {
+        const issues: Issue[] = [
+          { path: ["relatedTags"], code: "invalid", message: "Invalid" },
+        ];
+        const result = suggestTagPatches(null, issues);
+        expect(result).toEqual([]);
+      });
+
+      it("should handle undefined input", () => {
+        const issues: Issue[] = [
+          { path: ["relatedTags"], code: "invalid", message: "Invalid" },
+        ];
+        const result = suggestTagPatches(undefined, issues);
+        expect(result).toEqual([]);
+      });
+
+      it("should only suggest patches for fields mentioned in issues", () => {
+        const input = {
+          id: "tag-123",
+          name: "Valid Tag",
+          createdBy: "user-456",
+          createdAt: "2023-12-01T10:00:00.000Z",
+          relatedTags: null,
+        };
+
+        const issues: Issue[] = [
+          {
+            path: ["relatedTags"],
+            code: "invalid",
+            message: "Invalid relatedTags",
+          },
+        ];
+
+        const result = suggestTagPatches(input, issues);
+
+        expect(result).toHaveLength(1);
+        expect(result).toContainEqual({ relatedTags: [] });
+      });
+
+      it("should not suggest patches when field is not in issues", () => {
+        const input = {
+          id: "tag-123",
+          name: "Valid Tag",
+          createdBy: "user-456",
+          createdAt: "2023-12-01T10:00:00.000Z",
+          relatedTags: null, // This would normally trigger a patch
+        };
+
+        const issues: Issue[] = [
+          { path: ["name"], code: "invalid", message: "Invalid name" }, // Different field
+        ];
+
+        const result = suggestTagPatches(input, issues);
+        expect(result).toEqual([]);
+      });
+
+      it("should handle multiple related tag issues", () => {
+        const input = {
+          id: "tag-123",
+          name: "Valid Tag",
+          createdBy: "user-456",
+          createdAt: "2023-12-01T10:00:00.000Z",
+          relatedTags: undefined,
+        };
+
+        const issues: Issue[] = [
+          {
+            path: ["relatedTags"],
+            code: "invalid",
+            message: "Invalid relatedTags",
+          },
+          {
+            path: ["relatedTags", 0],
+            code: "invalid",
+            message: "Invalid related tag",
+          },
+        ];
+
+        const result = suggestTagPatches(input, issues);
+
+        expect(result).toHaveLength(1);
+        expect(result).toContainEqual({ relatedTags: [] });
+      });
+
+      describe("Integration with applyEntityPatches", () => {
+        it("should apply relatedTags patch correctly", () => {
+          const input = {
+            id: "tag-123",
+            name: "TypeScript",
+            createdBy: "user-456",
+            createdAt: "2023-12-01T10:00:00.000Z",
+            relatedTags: null,
+          };
+
+          const issues: Issue[] = [
+            {
+              path: ["relatedTags"],
+              code: "invalid",
+              message: "Invalid relatedTags",
+            },
+          ];
+
+          const patches = suggestTagPatches(input, issues);
+          const patched: TagInput = applyEntityPatches<TagInput>(
+            input,
+            patches,
+          ) as TagInput;
+
+          expect(patched.relatedTags).toEqual([]);
+          expect(patched.id).toBe(input.id);
+          expect(patched.name).toBe(input.name);
+          expect(patched.createdBy).toBe(input.createdBy);
+          expect(patched.createdAt).toBe(input.createdAt);
+        });
+
+        it("should preserve other fields when applying patches", () => {
+          const input = {
+            id: "tag-typescript",
+            name: "TypeScript Programming",
+            createdBy: "user-expert",
+            createdAt: "2023-12-01T10:00:00.000Z",
+            relatedTags: undefined,
+            extraData: "should be preserved", // This would be removed by strict schema, but patch doesn't affect it
+          };
+
+          const issues: Issue[] = [
+            {
+              path: ["relatedTags"],
+              code: "required",
+              message: "RelatedTags is required",
+            },
+          ];
+
+          const patches = suggestTagPatches(input, issues);
+          const patched: TagInput = applyEntityPatches<TagInput>(
+            input,
+            patches,
+          ) as TagInput;
+
+          expect(patched.relatedTags).toEqual([]);
+          expect(patched.id).toBe(input.id);
+          expect(patched.name).toBe(input.name);
+          expect(patched.createdBy).toBe(input.createdBy);
+          expect(patched.createdAt).toBe(input.createdAt);
+          // biome-ignore lint/suspicious/noExplicitAny: 存在しないはずのフィールドのテスト用
+          expect((patched as any).extraData).toBe(input.extraData);
+        });
+      });
+    });
+  });
+
+  describe("Edge Cases and Error Handling", () => {
+    it("should handle empty issues array", () => {
+      const result = suggestTagPatches(validTagInput, []);
+      expect(result).toEqual([]);
+    });
+
+    it("should handle issues with non-string paths", () => {
+      const issues: Issue[] = [
+        { path: [0], code: "invalid", message: "Invalid" },
+        { path: ["relatedTags", 1], code: "invalid", message: "Invalid" },
+      ];
+
+      const result = suggestTagPatches(validTagInput, issues);
+      expect(result).toEqual([]);
+    });
+
+    it("should handle malformed input objects", () => {
+      const malformedInputs = [
+        { relatedTags: "string instead of array" },
+        { relatedTags: 123 },
+        { relatedTags: { invalidStructure: true } },
+      ];
+
+      const issues: Issue[] = [
+        {
+          path: ["relatedTags"],
+          code: "invalid",
+          message: "Invalid relatedTags",
+        },
+      ];
+
+      malformedInputs.forEach((input) => {
+        const result = suggestTagPatches(input, issues);
+        expect(Array.isArray(result)).toBe(true);
+        // Should suggest fixing to empty array
+        expect(result).toEqual([]);
+      });
+    });
+
+    it("should preserve original input when no patches are applicable", () => {
+      const input = { ...validTagInput };
+      const issues: Issue[] = [
+        { path: ["unknownField"], code: "invalid", message: "Invalid" },
+      ];
+
+      const patches = suggestTagPatches(input, issues);
+      const patched = applyEntityPatches<TagInput>(input, patches);
+
+      expect(patched).toEqual(input);
+    });
+
+    it("should handle input without relatedTags field", () => {
+      const inputWithoutRelatedTags = {
+        id: "tag-123",
+        name: "Test Tag",
+        createdBy: "user-456",
+        createdAt: "2023-12-01T10:00:00.000Z",
+        // No relatedTags field
+      };
+
+      const issues: Issue[] = [
+        {
+          path: ["relatedTags"],
+          code: "required",
+          message: "RelatedTags is required",
+        },
+      ];
+
+      const result = suggestTagPatches(inputWithoutRelatedTags, issues);
+      expect(result).toEqual([{ relatedTags: [] }]);
+    });
+  });
+
+  describe("Performance and Large Data Handling", () => {
+    it("should handle large number of issues efficiently", () => {
+      const largeIssues: Issue[] = Array.from({ length: 100 }, (_, i) => ({
+        path: ["relatedTags"],
+        code: `error-${i}`,
+        message: `Error ${i}`,
+      }));
+
+      const input = {
+        id: "tag-123",
+        name: "Test Tag",
+        createdBy: "user-456",
+        createdAt: "2023-12-01T10:00:00.000Z",
+        relatedTags: null,
+      };
+
+      const result = suggestTagPatches(input, largeIssues);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({ relatedTags: [] });
+    });
+
+    it("should handle repeated patch applications", () => {
+      let currentInput = {
+        id: "tag-123",
+        name: "Test Tag",
+        createdBy: "user-456",
+        createdAt: "2023-12-01T10:00:00.000Z",
+        relatedTags: null,
+      };
+
+      const issues: Issue[] = [
+        {
+          path: ["relatedTags"],
+          code: "invalid",
+          message: "Invalid relatedTags",
+        },
+      ];
+
+      // Apply patches multiple times to ensure stability
+      for (let i = 0; i < 5; i++) {
+        const patches = suggestTagPatches(currentInput, issues);
+        currentInput = applyEntityPatches<TagInput>(
+          currentInput,
+          patches,
+        ) as typeof currentInput;
+      }
+
+      expect(currentInput.relatedTags).toEqual([]);
+      expect(currentInput.id).toBe("tag-123");
+      expect(currentInput.name).toBe("Test Tag");
+    });
+  });
+
+  describe("Real-world Scenarios", () => {
+    it("should handle tag creation with missing relatedTags", () => {
+      const newTagInput = {
+        id: "tag-new-language",
+        name: "Rust",
+        createdBy: "user-rust-enthusiast",
+        createdAt: "2023-12-01T10:00:00.000Z",
+        // relatedTags not provided
+      };
+
+      const issues: Issue[] = [
+        {
+          path: ["relatedTags"],
+          code: "required",
+          message: "RelatedTags field is required",
+        },
+      ];
+
+      const patches = suggestTagPatches(newTagInput, issues);
+      const fixedInput: TagInput = applyEntityPatches<TagInput>(
+        newTagInput,
+        patches,
+      ) as TagInput;
+
+      expect(fixedInput.relatedTags).toEqual([]);
+      expect(fixedInput.name).toBe("Rust");
+    });
+
+    it("should handle tag with null relatedTags from database", () => {
+      const dbTagInput = {
+        id: "tag-from-db",
+        name: "Database Tag",
+        createdBy: "user-db",
+        createdAt: "2023-12-01T10:00:00.000Z",
+        relatedTags: null, // Common when field is nullable in database
+      };
+
+      const issues: Issue[] = [
+        {
+          path: ["relatedTags"],
+          code: "invalid_type",
+          message: "Expected array, received null",
+        },
+      ];
+
+      const patches = suggestTagPatches(dbTagInput, issues);
+      const fixedInput: TagInput = applyEntityPatches<TagInput>(
+        dbTagInput,
+        patches,
+      ) as TagInput;
+
+      expect(fixedInput.relatedTags).toEqual([]);
+    });
+
+    it("should handle tag import from external source", () => {
+      const importedTagInput = {
+        id: "tag-imported",
+        name: "Imported Tag",
+        createdBy: "user-importer",
+        createdAt: "2023-12-01T10:00:00.000Z",
+        relatedTags: undefined, // Common when importing from sources that don't have this field
+      };
+
+      const issues: Issue[] = [
+        {
+          path: ["relatedTags"],
+          code: "required",
+          message: "RelatedTags is required for imported tags",
+        },
+      ];
+
+      const patches = suggestTagPatches(importedTagInput, issues);
+      const fixedInput: TagInput = applyEntityPatches<TagInput>(
+        importedTagInput,
+        patches,
+      ) as TagInput;
+
+      expect(fixedInput.relatedTags).toEqual([]);
+      expect(fixedInput.id).toBe("tag-imported");
+      expect(fixedInput.name).toBe("Imported Tag");
+    });
+  });
+
+  describe("Consistency and Reliability", () => {
+    it("should be idempotent - applying patches multiple times should give same result", () => {
+      const input = {
+        id: "tag-consistency",
+        name: "Consistency Test",
+        createdBy: "user-tester",
+        createdAt: "2023-12-01T10:00:00.000Z",
+        relatedTags: null,
+      };
+
+      const issues: Issue[] = [
+        {
+          path: ["relatedTags"],
+          code: "invalid",
+          message: "Invalid relatedTags",
+        },
+      ];
+
+      const firstApplication: TagInput = applyEntityPatches<TagInput>(
+        input,
+        suggestTagPatches(input, issues),
+      ) as TagInput;
+      const secondApplication: TagInput = applyEntityPatches<TagInput>(
+        firstApplication,
+        suggestTagPatches(firstApplication, issues),
+      ) as TagInput;
+      const thirdApplication: TagInput = applyEntityPatches<TagInput>(
+        secondApplication,
+        suggestTagPatches(secondApplication, issues),
+      ) as TagInput;
+
+      expect(firstApplication).toEqual(secondApplication);
+      expect(secondApplication).toEqual(thirdApplication);
+      expect(firstApplication.relatedTags).toEqual([]);
+    });
+
+    it("should maintain referential integrity of non-patched fields", () => {
+      const originalInput = {
+        id: "tag-integrity",
+        name: "Integrity Test",
+        createdBy: "user-integrity",
+        createdAt: "2023-12-01T10:00:00.000Z",
+        relatedTags: null,
+      };
+
+      const issues: Issue[] = [
+        {
+          path: ["relatedTags"],
+          code: "invalid",
+          message: "Invalid relatedTags",
+        },
+      ];
+
+      const patches = suggestTagPatches(originalInput, issues);
+      const patchedInput: TagInput = applyEntityPatches<TagInput>(
+        originalInput,
+        patches,
+      ) as TagInput;
+
+      // All non-patched fields should remain exactly the same
+      expect(patchedInput.id).toBe(originalInput.id);
+      expect(patchedInput.name).toBe(originalInput.name);
+      expect(patchedInput.createdBy).toBe(originalInput.createdBy);
+      expect(patchedInput.createdAt).toBe(originalInput.createdAt);
+
+      // Only relatedTags should be patched
+      expect(patchedInput.relatedTags).toEqual([]);
+      expect(patchedInput.relatedTags).not.toBe(originalInput.relatedTags);
+    });
+
+    it("should handle concurrent issue types gracefully", () => {
+      const input = {
+        id: "tag-concurrent",
+        name: "Concurrent Test",
+        createdBy: "user-concurrent",
+        createdAt: "2023-12-01T10:00:00.000Z",
+        relatedTags: null,
+      };
+
+      const mixedIssues: Issue[] = [
+        {
+          path: ["relatedTags"],
+          code: "required",
+          message: "RelatedTags is required",
+        },
+        {
+          path: ["relatedTags"],
+          code: "invalid_type",
+          message: "Expected array",
+        },
+        {
+          path: ["relatedTags"],
+          code: "custom",
+          message: "Custom validation failed",
+        },
+        { path: ["name"], code: "invalid", message: "Invalid name" }, // Should be ignored
+      ];
+
+      const patches = suggestTagPatches(input, mixedIssues);
+      const patchedInput: TagInput = applyEntityPatches<TagInput>(
+        input,
+        patches,
+      ) as TagInput;
+
+      expect(patches).toHaveLength(1);
+      expect(patchedInput.relatedTags).toEqual([]);
+    });
+  });
+});
