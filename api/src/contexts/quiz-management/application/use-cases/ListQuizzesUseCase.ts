@@ -1,94 +1,22 @@
-import type { ResultAsync } from "neverthrow";
+import { Result, type ResultAsync } from "neverthrow";
+import { fromZodErrorToAppError } from "../../../../shared";
 import { FindFailedError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
 import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
+import {
+  CreatorId,
+  QuizId,
+} from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import {
   QuizListRetrievalFailedError,
   type UseCaseError,
   UseCaseInternalError,
 } from "../errors";
-
-export type ListQuizzesQuery = {
-  status?: components["schemas"]["QuizStatus"];
-  creatorId?: string;
-  ids?: string[];
-  limit?: number;
-  offset?: number;
-};
-
-export type HttpQueryParams = {
-  status?: string | undefined;
-  creatorId?: string | undefined;
-  ids?: string | string[] | undefined;
-  limit?: string | undefined;
-  offset?: string | undefined;
-};
+import type { ListQuizzesQuery } from "../schemas/list-quizzes-query.schema";
 
 export class ListQuizzesUseCase {
   constructor(private readonly quizRepository: IQuizRepository) {}
-
-  /**
-   * HTTPクエリパラメータからドメインクエリオブジェクトを構築する
-   *
-   * @param httpParams - HTTPリクエストのクエリパラメータ
-   * @returns 構築されたListQuizzesQuery
-   */
-  private buildQueryFromHttpParams(
-    httpParams: HttpQueryParams,
-  ): ListQuizzesQuery {
-    const query: ListQuizzesQuery = {};
-
-    // statusパラメータの処理
-    if (httpParams.status) {
-      query.status = httpParams.status as components["schemas"]["QuizStatus"];
-    }
-
-    // creatorIdパラメータの処理
-    if (httpParams.creatorId) {
-      query.creatorId = httpParams.creatorId;
-    }
-
-    // idsパラメータの処理（配列形式に対応）
-    if (httpParams.ids) {
-      if (Array.isArray(httpParams.ids)) {
-        query.ids = httpParams.ids;
-      } else {
-        query.ids = [httpParams.ids];
-      }
-    }
-
-    // limitパラメータの処理
-    if (httpParams.limit) {
-      query.limit = Number(httpParams.limit);
-    }
-
-    // offsetパラメータの処理
-    if (httpParams.offset) {
-      query.offset = Number(httpParams.offset);
-    }
-
-    return query;
-  }
-
-  /**
-   * パラメータがHTTPクエリパラメータかドメインクエリかを判定する
-   *
-   * @param params - 判定対象のパラメータ
-   * @returns HTTPクエリパラメータの場合true
-   */
-  private isHttpQueryParams(
-    params: ListQuizzesQuery | HttpQueryParams,
-  ): params is HttpQueryParams {
-    // HTTPパラメータは全てstring型、ドメインクエリはlimit/offsetがnumber型という差異を利用
-    return (
-      typeof (params as HttpQueryParams).limit === "string" ||
-      typeof (params as HttpQueryParams).offset === "string" ||
-      typeof (params as HttpQueryParams).status === "string" ||
-      typeof (params as HttpQueryParams).creatorId === "string" ||
-      (params as HttpQueryParams).ids !== undefined
-    );
-  }
 
   /**
    * QuizSummaryエンティティをAPIレスポンス用のアイテムに変換
@@ -100,16 +28,16 @@ export class ListQuizzesUseCase {
     quizSummary: QuizSummary,
   ): components["schemas"]["QuizListResponse"]["items"][number] {
     // EntityBaseのget()メソッドで各フィールドにアクセス
-    const id = quizSummary.get("id") as string;
+    const id = quizSummary.get("id");
     const question = quizSummary.get("question");
     const answerType = quizSummary.get("answerType");
-    const solutionId = quizSummary.get("solutionId") as string;
+    const solutionId = quizSummary.get("solutionId");
     const status = quizSummary.get("status");
-    const creatorId = quizSummary.get("creatorId") as string;
+    const creatorId = quizSummary.get("creatorId");
     const createdAt = quizSummary.get("createdAt");
     const explanation = quizSummary.get("explanation");
     const approvedAt = quizSummary.get("approvedAt");
-    const tagIds = quizSummary.get("tagIds") as string[];
+    const tagIds = quizSummary.get("tagIds");
 
     const baseItem = {
       id,
@@ -201,15 +129,24 @@ export class ListQuizzesUseCase {
    * @returns クイズリストまたはエラー
    */
   execute(
-    queryOrHttpParams: ListQuizzesQuery | HttpQueryParams = {},
+    query: ListQuizzesQuery,
   ): ResultAsync<components["schemas"]["QuizListResponse"], UseCaseError> {
-    // HTTPパラメータかドメインクエリかを判定
-    const query = this.isHttpQueryParams(queryOrHttpParams)
-      ? this.buildQueryFromHttpParams(queryOrHttpParams)
-      : queryOrHttpParams;
+    return Result.fromThrowable(
+      () => {
+        const creatorId = CreatorId.optional().parse(query.creatorId);
+        const ids = query.ids?.map((id) => QuizId.parse(id)) ?? [];
 
-    return this.quizRepository
-      .findMany(query)
+        return {
+          status: query.status,
+          creatorId,
+          ids,
+          limit: query.limit,
+          offset: query.offset,
+        };
+      },
+      (e) => fromZodErrorToAppError(e, "Query validation failed"),
+    )()
+      .asyncAndThen((q) => this.quizRepository.findMany(q))
       .mapErr((repositoryError) => {
         if (repositoryError instanceof FindFailedError) {
           return new QuizListRetrievalFailedError(
@@ -223,11 +160,10 @@ export class ListQuizzesUseCase {
         );
       })
       .map((result) => ({
+        ...result,
         items: result.items.map((quizSummary) =>
           this.toQuizListItem(quizSummary),
         ),
-        totalCount: result.totalCount,
-        hasMore: result.hasMore,
       }));
   }
 }

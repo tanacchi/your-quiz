@@ -70,15 +70,6 @@ export class DeleteFailedError extends RepositoryError {
 }
 
 /**
- * 未実装操作エラー
- */
-export class NotImplementedError extends InternalServerError {
-  constructor(operation: string, requestId?: string) {
-    super(`${operation} operation is not implemented`, requestId);
-  }
-}
-
-/**
  * データベース接続エラー
  */
 export class DatabaseConnectionError extends InternalServerError {
@@ -104,6 +95,5 @@ export type InfrastructureError =
   | FindFailedError
   | UpdateFailedError
   | DeleteFailedError
-  | NotImplementedError
   | DatabaseConnectionError
   | JsonParseError;

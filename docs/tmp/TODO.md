@@ -110,4 +110,6 @@
 - [ ] 包括的テストカバレッジ95%達成
 - [ ] QuizSummary実装と同等の品質確保
 
-**合計チェック項目数: 67項目**
+- Manage コンテキストの List Quiz では Solution, Tag の実体は返さず QuizSummary を返すように TypeSpec の仕様を変更してください。
+- Manage コンテキストの List Quiz では status, creator_id を複数受け入れるようにします。また、 ids としていた名前を quiz_id としたいです。
+- バリデーションエラーから接続エラーまである程度細かい粒度でエラーを定義し、全てに対して API のレスポンスを定義する。

@@ -1,6 +1,7 @@
 import { createQuizSchema } from "../../../../shared/schemas";
 import type { AppContext } from "../../../../shared/types";
 import { parseJsonSafe, validateWithZod } from "../../../../shared/utils";
+import { listQuizzesQuerySchema } from "../../application/schemas/list-quizzes-query.schema";
 import type {
   CreateQuizUseCase,
   GetQuizUseCase,
@@ -118,22 +119,20 @@ export class QuizController {
    */
   async listQuizzes(c: AppContext) {
     // クエリパラメータを取得
-    const httpParams = {
+    return validateWithZod(listQuizzesQuerySchema, {
       status: c.req.query("status"),
       creatorId: c.req.query("creatorId"),
       ids: c.req.queries("ids"),
       limit: c.req.query("limit"),
       offset: c.req.query("offset"),
-    };
-
-    const result = await this.listQuizzesUseCase.execute(httpParams);
-
-    if (result.isErr()) {
-      const error = result.error;
-      const errorResponse = ControllerErrorHandler.handleError(error);
-      return c.json(errorResponse.response, errorResponse.statusCode);
-    }
-
-    return c.json(result.value);
+    })
+      .asyncAndThen((query) => this.listQuizzesUseCase.execute(query))
+      .match(
+        (res) => c.json(res),
+        (error) => {
+          const errorResponse = ControllerErrorHandler.handleError(error);
+          return c.json(errorResponse.response, errorResponse.statusCode);
+        },
+      );
   }
 }
