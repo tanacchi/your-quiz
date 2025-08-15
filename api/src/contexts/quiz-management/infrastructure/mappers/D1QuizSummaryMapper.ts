@@ -1,4 +1,4 @@
-import { err, type Result, ResultAsync } from "neverthrow";
+import { err, ok, type Result } from "neverthrow";
 import { type AppError, InternalServerError } from "../../../../shared/errors";
 import { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { QuizRow } from "../repositories/types";
@@ -72,33 +72,29 @@ export class D1QuizSummaryMapper {
    * @param rows - D1データベースから取得したクイズ行データの配列
    * @returns QuizSummaryエンティティ配列、またはマッピングエラー
    */
-  static fromRows(rows: QuizRow[]): ResultAsync<QuizSummary[], AppError> {
-    return ResultAsync.fromSafePromise(
-      Promise.resolve().then(async () => {
-        const results: QuizSummary[] = [];
-        const errors: Error[] = [];
+  static fromRows(rows: QuizRow[]): Result<QuizSummary[], AppError> {
+    const results: QuizSummary[] = [];
+    const errors: Error[] = [];
 
-        for (const [index, row] of rows.entries()) {
-          const mappingResult = D1QuizSummaryMapper.fromRow(row);
+    for (const [index, row] of rows.entries()) {
+      const mappingResult = D1QuizSummaryMapper.fromRow(row);
 
-          if (mappingResult.isErr()) {
-            errors.push(
-              new Error(`Row ${index}: ${mappingResult.error.message}`),
-            );
-            continue;
-          }
+      if (mappingResult.isErr()) {
+        errors.push(new Error(`Row ${index}: ${mappingResult.error.message}`));
+        continue;
+      }
 
-          results.push(mappingResult.value);
-        }
+      results.push(mappingResult.value);
+    }
 
-        if (errors.length > 0) {
-          throw new InternalServerError(
-            `Failed to map ${errors.length}/${rows.length} rows: ${errors.map((e) => e.message).join("; ")}`,
-          );
-        }
+    if (errors.length > 0) {
+      return err(
+        new InternalServerError(
+          `Failed to map ${errors.length}/${rows.length} rows: ${errors.map((e) => e.message).join("; ")}`,
+        ),
+      );
+    }
 
-        return results;
-      }),
-    );
+    return ok(results);
   }
 }

@@ -132,13 +132,18 @@ export class ListQuizzesUseCase {
     query: ListQuizzesQuery,
   ): ResultAsync<components["schemas"]["QuizListResponse"], UseCaseError> {
     return Result.fromThrowable(
-      () => ({
-        status: query.status,
-        creatorId: CreatorId.parse(query.creatorId),
-        ids: query.ids?.map((id) => QuizId.parse(id)) ?? [],
-        limit: query.limit,
-        offset: query.offset,
-      }),
+      () => {
+        const creatorId = CreatorId.parse(query.creatorId);
+        const ids = query.ids?.map((id) => QuizId.parse(id)) ?? [];
+
+        return {
+          status: query.status,
+          creatorId,
+          ids,
+          limit: query.limit,
+          offset: query.offset,
+        };
+      },
       (e) => toAppError(e, "Query validation failed"),
     )()
       .asyncAndThen((q) => this.quizRepository.findMany(q))
