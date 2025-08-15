@@ -1,5 +1,5 @@
 import { Result, type ResultAsync } from "neverthrow";
-import { toAppError } from "../../../../shared";
+import { fromZodErrorToAppError } from "../../../../shared";
 import { FindFailedError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
 import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
@@ -144,7 +144,7 @@ export class ListQuizzesUseCase {
           offset: query.offset,
         };
       },
-      (e) => toAppError(e, "Query validation failed"),
+      (e) => fromZodErrorToAppError(e, "Query validation failed"),
     )()
       .asyncAndThen((q) => this.quizRepository.findMany(q))
       .mapErr((repositoryError) => {

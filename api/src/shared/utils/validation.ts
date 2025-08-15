@@ -77,7 +77,7 @@ export function validateWithZod<T, E = ValidationError>(
  * @param context - エラーコンテキスト（ログ用）
  * @returns ValidationError または InternalServerError
  */
-export const toAppError = (
+export const fromZodErrorToAppError = (
   error: unknown,
   context: string = "Operation failed",
 ): ValidationError | InternalServerError => {

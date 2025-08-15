@@ -147,6 +147,21 @@ export class InternalServerError extends AppError {
 }
 
 /**
+ * 未実装エラー (501)
+ */
+export class NotImplementedError extends AppError {
+  readonly code = 501 as const;
+  readonly message = "Not implemented" as const;
+
+  constructor(operation?: string, details?: string, requestId?: string) {
+    const message = operation
+      ? `${operation} operation is not implemented`
+      : "Not implemented";
+    super(message, details, requestId);
+  }
+}
+
+/**
  * TypeSpecで定義されたエラーの統合型
  */
 export type TypeSpecError =
@@ -156,4 +171,5 @@ export type TypeSpecError =
   | NotFoundError
   | ConflictError
   | RateLimitError
-  | InternalServerError;
+  | InternalServerError
+  | NotImplementedError;
