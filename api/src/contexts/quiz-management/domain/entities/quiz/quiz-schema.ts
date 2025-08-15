@@ -10,7 +10,7 @@ import { BooleanSolutionSchema } from "../solutions/boolean/boolean-solution-sch
 export const QuizSchema = z
   .object({
     id: QuizIdSchema,
-    question: z.string().min(1).max(500),
+    question: z.string().trim().min(1).max(500),
     answerType: z.literal("boolean"), // BooleanSolution only
     solution: BooleanSolutionSchema,
     explanation: z.string().max(1000).optional(),
