@@ -5,8 +5,9 @@ import {
 } from "../../../../shared/errors";
 import { NotFoundError } from "../../../../shared/errors/base";
 import type { components } from "../../../../shared/types";
-import type { Quiz } from "../../domain/entities/Quiz";
+import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
+import { D1QuizSummaryMapper } from "../mappers/D1QuizSummaryMapper";
 import type { D1QueryParam, QuizRow } from "./types";
 import {
   isBasicQuizInfo,
@@ -31,19 +32,13 @@ export class D1QuizRepository implements IQuizRepository {
    * クイズとソリューションを作成
    */
   create(
-    quiz: Quiz,
+    quiz: QuizSummary,
     solution: components["schemas"]["Solution"],
-  ): ResultAsync<Quiz, RepositoryError> {
-    return ResultAsync.fromPromise(
-      this.executeCreateTransaction(quiz, solution),
-      (error) => {
-        console.error("Failed to create quiz:", error);
-        return RepositoryErrorFactory.createFailed(
-          "Quiz",
-          error instanceof Error ? error : new Error("Unknown create error"),
-        );
-      },
-    );
+  ): ResultAsync<QuizSummary, RepositoryError> {
+    return this.executeCreateTransaction(quiz, solution).mapErr((error) => {
+      console.error("Failed to create quiz:", error);
+      return error;
+    });
   }
 
   /**
@@ -53,47 +48,43 @@ export class D1QuizRepository implements IQuizRepository {
   findById(
     id: string,
   ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError> {
-    return ResultAsync.fromPromise(
-      this.executeQueryWithSolution(
-        `SELECT 
-          q.*,
-          bs.value as boolean_value,
-          fts.correct_answer, fts.matching_strategy, fts.case_sensitive,
-          GROUP_CONCAT(
-            json_object(
-              'id', c.id,
-              'solutionId', c.solution_id,
-              'text', c.text,
-              'orderIndex', c.order_index,
-              'isCorrect', c.is_correct
-            )
-          ) as choices,
-          mcs.min_correct_answers
-        FROM Quiz q
-        LEFT JOIN BooleanSolution bs ON q.solution_id = bs.id AND q.answer_type = 'boolean'
-        LEFT JOIN FreeTextSolution fts ON q.solution_id = fts.id AND q.answer_type = 'free_text'
-        LEFT JOIN SingleChoiceSolution scs ON q.solution_id = scs.id AND q.answer_type = 'single_choice'
-        LEFT JOIN MultipleChoiceSolution mcs ON q.solution_id = mcs.id AND q.answer_type = 'multiple_choice'
-        LEFT JOIN Choice c ON (scs.id = c.solution_id OR mcs.id = c.solution_id)
-        WHERE q.id = ?
-        GROUP BY q.id`,
-        [id],
-      ),
-      (error) => {
+    return this.executeQueryWithSolution(
+      `SELECT
+        q.*,
+        bs.value as boolean_value,
+        fts.correct_answer, fts.matching_strategy, fts.case_sensitive,
+        GROUP_CONCAT(
+          json_object(
+            'id', c.id,
+            'solutionId', c.solution_id,
+            'text', c.text,
+            'orderIndex', c.order_index,
+            'isCorrect', c.is_correct
+          )
+        ) as choices,
+        mcs.min_correct_answers
+      FROM Quiz q
+      LEFT JOIN BooleanSolution bs ON q.solution_id = bs.id AND q.answer_type = 'boolean'
+      LEFT JOIN FreeTextSolution fts ON q.solution_id = fts.id AND q.answer_type = 'free_text'
+      LEFT JOIN SingleChoiceSolution scs ON q.solution_id = scs.id AND q.answer_type = 'single_choice'
+      LEFT JOIN MultipleChoiceSolution mcs ON q.solution_id = mcs.id AND q.answer_type = 'multiple_choice'
+      LEFT JOIN Choice c ON (scs.id = c.solution_id OR mcs.id = c.solution_id)
+      WHERE q.id = ?
+      GROUP BY q.id`,
+      [id],
+    )
+      .andThen((result) => {
+        if (result === null) {
+          return ResultAsync.fromSafePromise(
+            Promise.reject(new NotFoundError(`Quiz not found: ${id}`)),
+          );
+        }
+        return ResultAsync.fromSafePromise(Promise.resolve(result));
+      })
+      .mapErr((error) => {
         console.error("Failed to find quiz by ID:", error);
-        return RepositoryErrorFactory.findFailed(
-          "Quiz",
-          error instanceof Error ? error : new Error("Unknown find error"),
-        );
-      },
-    ).andThen((result) => {
-      if (result === null) {
-        return ResultAsync.fromSafePromise(
-          Promise.reject(new NotFoundError(`Quiz not found: ${id}`)),
-        );
-      }
-      return ResultAsync.fromSafePromise(Promise.resolve(result));
-    });
+        return error;
+      });
   }
 
   /**
@@ -103,38 +94,35 @@ export class D1QuizRepository implements IQuizRepository {
   findMany(
     options: {
       status?: components["schemas"]["QuizStatus"];
-      creatorId?: string;
+      creatorId?: string | undefined;
       ids?: string[];
       limit?: number;
       offset?: number;
     } = {},
   ): ResultAsync<
     {
-      items: components["schemas"]["QuizWithSolution"][];
+      items: QuizSummary[];
       totalCount: number;
       hasMore: boolean;
     },
     RepositoryError
   > {
-    return ResultAsync.fromPromise(this.executeFindMany(options), (error) => {
+    return this.executeFindMany(options).mapErr((error) => {
       console.error("Failed to find quizzes:", error);
-      return RepositoryErrorFactory.findFailed(
-        "Quiz",
-        error instanceof Error ? error : new Error("Unknown find many error"),
-      );
+      return error;
     });
   }
 
   /**
    * クイズを更新
    */
-  update(id: string, quiz: Partial<Quiz>): ResultAsync<Quiz, RepositoryError> {
-    return ResultAsync.fromPromise(this.executeUpdate(id, quiz), (error) => {
+  update(
+    id: string,
+    quiz: Partial<QuizSummary>,
+  ): ResultAsync<QuizSummary, RepositoryError> {
+    return this.executeUpdate(id, quiz).mapErr((error) => {
       console.error("Failed to update quiz:", error);
-      return RepositoryErrorFactory.updateFailed(
-        "Quiz",
-        error instanceof Error ? error : new Error("Unknown update error"),
-      );
+      return error;
     });
   }
 
@@ -142,151 +130,241 @@ export class D1QuizRepository implements IQuizRepository {
    * クイズを削除
    */
   delete(id: string): ResultAsync<void, RepositoryError> {
-    return ResultAsync.fromPromise(this.executeDelete(id), (error) => {
+    return this.executeDelete(id).mapErr((error) => {
       console.error("Failed to delete quiz:", error);
-      return RepositoryErrorFactory.deleteFailed(
-        "Quiz",
-        error instanceof Error ? error : new Error("Unknown delete error"),
-      );
+      return error;
     });
   }
 
   // Private helper methods
 
-  private async executeCreateTransaction(
-    quiz: Quiz,
+  private executeCreateTransaction(
+    quiz: QuizSummary,
     solution: components["schemas"]["Solution"],
-  ): Promise<Quiz> {
-    // ソリューションを先に作成
-    const solutionId = await this.createSolution(solution);
-
-    // クイズを作成
-    const stmt = this.db.prepare(`
-      INSERT INTO Quiz (id, question, answer_type, solution_id, explanation, status, creator_id, created_at, approved_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    await stmt
-      .bind(
-        quiz.id,
-        quiz.question,
-        quiz.answerType,
-        solutionId,
-        quiz.explanation || null,
-        quiz.status,
-        quiz.creatorId,
-        quiz.createdAt,
-        quiz.approvedAt || null,
-      )
-      .run();
-
-    return quiz;
+  ): ResultAsync<QuizSummary, RepositoryError> {
+    return this.createSolution(solution).andThen((solutionId) =>
+      ResultAsync.fromPromise(
+        this.db
+          .prepare(`
+          INSERT INTO Quiz (id, question, answer_type, solution_id, explanation, status, creator_id, created_at, approved_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+          .bind(
+            quiz.get("id"),
+            quiz.get("question"),
+            quiz.get("answerType"),
+            solutionId,
+            quiz.get("explanation") || null,
+            quiz.get("status"),
+            quiz.get("creatorId"),
+            quiz.get("createdAt"),
+            quiz.get("approvedAt") || null,
+          )
+          .run(),
+        (error) =>
+          RepositoryErrorFactory.createFailed(
+            "Quiz",
+            error instanceof Error
+              ? error
+              : new Error("Unknown quiz creation error"),
+          ),
+      ).map(() => quiz),
+    );
   }
 
-  private async createSolution(
+  private createSolution(
     solution: components["schemas"]["Solution"],
-  ): Promise<string> {
+  ): ResultAsync<string, RepositoryError> {
     switch (solution.type) {
       case "boolean": {
-        const stmt = this.db.prepare(
-          "INSERT INTO BooleanSolution (value) VALUES (?)",
-        );
-        const result = await stmt.bind(solution.value).run();
-        return result.meta.last_row_id?.toString() || "";
+        return ResultAsync.fromPromise(
+          this.db
+            .prepare("INSERT INTO BooleanSolution (value) VALUES (?)")
+            .bind(solution.value)
+            .run(),
+          (error) =>
+            RepositoryErrorFactory.createFailed(
+              "BooleanSolution",
+              error instanceof Error
+                ? error
+                : new Error("Unknown boolean solution creation error"),
+            ),
+        ).map((result) => result.meta.last_row_id?.toString() || "");
       }
 
       case "free_text": {
-        const stmt = this.db.prepare(`
-          INSERT INTO FreeTextSolution (correct_answer, matching_strategy, case_sensitive)
-          VALUES (?, ?, ?)
-        `);
-        const result = await stmt
-          .bind(
-            solution.correctAnswer,
-            solution.matchingStrategy || "exact",
-            solution.caseSensitive || false,
-          )
-          .run();
-        return result.meta.last_row_id?.toString() || "";
+        return ResultAsync.fromPromise(
+          this.db
+            .prepare(`
+            INSERT INTO FreeTextSolution (correct_answer, matching_strategy, case_sensitive)
+            VALUES (?, ?, ?)
+          `)
+            .bind(
+              solution.correctAnswer,
+              solution.matchingStrategy || "exact",
+              solution.caseSensitive || false,
+            )
+            .run(),
+          (error) =>
+            RepositoryErrorFactory.createFailed(
+              "FreeTextSolution",
+              error instanceof Error
+                ? error
+                : new Error("Unknown free text solution creation error"),
+            ),
+        ).map((result) => result.meta.last_row_id?.toString() || "");
       }
 
       case "single_choice": {
-        const stmt = this.db.prepare(
-          "INSERT INTO SingleChoiceSolution () VALUES ()",
-        );
-        const result = await stmt.run();
-        const solutionId = result.meta.last_row_id?.toString() || "";
-
-        // 選択肢を作成
-        await this.createChoices(solutionId, solution.choices);
-        return solutionId;
+        return ResultAsync.fromPromise(
+          this.db
+            .prepare("INSERT INTO SingleChoiceSolution () VALUES ()")
+            .run(),
+          (error) =>
+            RepositoryErrorFactory.createFailed(
+              "SingleChoiceSolution",
+              error instanceof Error
+                ? error
+                : new Error("Unknown single choice solution creation error"),
+            ),
+        ).andThen((result) => {
+          const solutionId = result.meta.last_row_id?.toString() || "";
+          return this.createChoices(solutionId, solution.choices).map(
+            () => solutionId,
+          );
+        });
       }
 
       case "multiple_choice": {
-        const stmt = this.db.prepare(`
-          INSERT INTO MultipleChoiceSolution (min_correct_answers)
-          VALUES (?)
-        `);
-        const result = await stmt.bind(solution.minCorrectAnswers || 1).run();
-        const solutionId = result.meta.last_row_id?.toString() || "";
-
-        // 選択肢を作成
-        await this.createChoices(solutionId, solution.choices);
-        return solutionId;
+        return ResultAsync.fromPromise(
+          this.db
+            .prepare(`
+            INSERT INTO MultipleChoiceSolution (min_correct_answers)
+            VALUES (?)
+          `)
+            .bind(solution.minCorrectAnswers || 1)
+            .run(),
+          (error) =>
+            RepositoryErrorFactory.createFailed(
+              "MultipleChoiceSolution",
+              error instanceof Error
+                ? error
+                : new Error("Unknown multiple choice solution creation error"),
+            ),
+        ).andThen((result) => {
+          const solutionId = result.meta.last_row_id?.toString() || "";
+          return this.createChoices(solutionId, solution.choices).map(
+            () => solutionId,
+          );
+        });
       }
 
       default:
-        throw new Error(
-          `Unsupported solution type: ${(solution as { type: string }).type}`,
+        return ResultAsync.fromSafePromise(
+          Promise.reject(
+            RepositoryErrorFactory.createFailed(
+              "Solution",
+              new Error(
+                `Unsupported solution type: ${(solution as { type: string }).type}`,
+              ),
+            ),
+          ),
         );
     }
   }
 
-  private async createChoices(
+  private createChoices(
     solutionId: string,
     choices: components["schemas"]["Choice"][],
-  ): Promise<void> {
-    const stmt = this.db.prepare(`
-      INSERT INTO Choice (solution_id, text, order_index, is_correct)
-      VALUES (?, ?, ?, ?)
-    `);
+  ): ResultAsync<void, RepositoryError> {
+    return ResultAsync.fromPromise(
+      (async () => {
+        const stmt = this.db.prepare(`
+          INSERT INTO Choice (solution_id, text, order_index, is_correct)
+          VALUES (?, ?, ?, ?)
+        `);
 
-    for (const choice of choices) {
-      await stmt
-        .bind(solutionId, choice.text, choice.orderIndex, choice.isCorrect)
-        .run();
-    }
+        for (const choice of choices) {
+          await stmt
+            .bind(solutionId, choice.text, choice.orderIndex, choice.isCorrect)
+            .run();
+        }
+      })(),
+      (error) =>
+        RepositoryErrorFactory.createFailed(
+          "Choice",
+          error instanceof Error
+            ? error
+            : new Error("Unknown choice creation error"),
+        ),
+    );
   }
 
-  private async executeQueryWithSolution(
+  private executeQueryWithSolution(
     sql: string,
     params: D1QueryParam[],
-  ): Promise<components["schemas"]["QuizWithSolution"] | null> {
-    const stmt = this.db.prepare(sql);
-    const result = await stmt.bind(...params).first();
+  ): ResultAsync<
+    components["schemas"]["QuizWithSolution"] | null,
+    RepositoryError
+  > {
+    return ResultAsync.fromPromise(
+      this.db
+        .prepare(sql)
+        .bind(...params)
+        .first(),
+      (error) =>
+        RepositoryErrorFactory.findFailed(
+          "Quiz",
+          error instanceof Error ? error : new Error("Unknown query error"),
+        ),
+    ).andThen((result) => {
+      if (!result) {
+        return ResultAsync.fromSafePromise(Promise.resolve(null));
+      }
 
-    if (!result) {
-      return null;
-    }
+      if (!isQuizRow(result)) {
+        return ResultAsync.fromSafePromise(
+          Promise.reject(
+            RepositoryErrorFactory.findFailed(
+              "Quiz",
+              new Error("Invalid quiz row data from database"),
+            ),
+          ),
+        );
+      }
 
-    if (!isQuizRow(result)) {
-      throw new Error("Invalid quiz row data from database");
-    }
-
-    return this.mapRowToQuizWithSolution(result);
+      try {
+        const quizWithSolution = this.mapRowToQuizWithSolution(result);
+        return ResultAsync.fromSafePromise(Promise.resolve(quizWithSolution));
+      } catch (error) {
+        return ResultAsync.fromSafePromise(
+          Promise.reject(
+            RepositoryErrorFactory.findFailed(
+              "Quiz",
+              error instanceof Error
+                ? error
+                : new Error("Failed to map quiz with solution"),
+            ),
+          ),
+        );
+      }
+    });
   }
 
-  private async executeFindMany(options: {
+  private executeFindMany(options: {
     status?: components["schemas"]["QuizStatus"];
-    creatorId?: string;
+    creatorId?: string | undefined;
     ids?: string[];
     limit?: number;
     offset?: number;
-  }): Promise<{
-    items: components["schemas"]["QuizWithSolution"][];
-    totalCount: number;
-    hasMore: boolean;
-  }> {
+  }): ResultAsync<
+    {
+      items: QuizSummary[];
+      totalCount: number;
+      hasMore: boolean;
+    },
+    RepositoryError
+  > {
     const conditions: string[] = [];
     const params: D1QueryParam[] = [];
 
@@ -308,189 +386,344 @@ export class D1QuizRepository implements IQuizRepository {
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
     // 総数を取得
-    const countStmt = this.db.prepare(
-      `SELECT COUNT(*) as total FROM Quiz q ${whereClause}`,
+    const countQuery = ResultAsync.fromPromise(
+      this.db
+        .prepare(`SELECT COUNT(*) as total FROM Quiz q ${whereClause}`)
+        .bind(...params)
+        .first(),
+      (error) =>
+        RepositoryErrorFactory.findFailed(
+          "Quiz",
+          error instanceof Error ? error : new Error("Failed to count quizzes"),
+        ),
     );
-    const countResult = await countStmt.bind(...params).first();
 
-    if (!isCountResult(countResult)) {
-      throw new Error("Invalid count result from database");
-    }
-
-    const totalCount = (countResult as { total: number }).total;
-
-    // データを取得
     const limit = options.limit || 10;
     const offset = options.offset || 0;
 
-    const dataStmt = this.db.prepare(`
-      SELECT 
-        q.*,
-        bs.value as boolean_value,
-        fts.correct_answer, fts.matching_strategy, fts.case_sensitive,
-        GROUP_CONCAT(
-          json_object(
-            'id', c.id,
-            'solutionId', c.solution_id,
-            'text', c.text,
-            'orderIndex', c.order_index,
-            'isCorrect', c.is_correct
-          )
-        ) as choices,
-        mcs.min_correct_answers
-      FROM Quiz q
-      LEFT JOIN BooleanSolution bs ON q.solution_id = bs.id AND q.answer_type = 'boolean'
-      LEFT JOIN FreeTextSolution fts ON q.solution_id = fts.id AND q.answer_type = 'free_text'
-      LEFT JOIN SingleChoiceSolution scs ON q.solution_id = scs.id AND q.answer_type = 'single_choice'
-      LEFT JOIN MultipleChoiceSolution mcs ON q.solution_id = mcs.id AND q.answer_type = 'multiple_choice'
-      LEFT JOIN Choice c ON (scs.id = c.solution_id OR mcs.id = c.solution_id)
-      ${whereClause}
-      GROUP BY q.id
-      ORDER BY q.created_at DESC
-      LIMIT ? OFFSET ?
-    `);
+    // データを取得
+    const dataQuery = ResultAsync.fromPromise(
+      this.db
+        .prepare(`
+        SELECT q.id, q.question, q.answer_type, q.explanation, q.status, q.creator_id, q.created_at, q.approved_at
+        FROM Quiz q
+        ${whereClause}
+        ORDER BY q.created_at DESC
+        LIMIT ? OFFSET ?
+      `)
+        .bind(...params, limit, offset)
+        .all<QuizRow>(),
+      (error) =>
+        RepositoryErrorFactory.findFailed(
+          "Quiz",
+          error instanceof Error ? error : new Error("Failed to fetch quizzes"),
+        ),
+    );
 
-    const dataResult = await dataStmt.bind(...params, limit, offset).all();
-
-    const items = dataResult.results
-      .filter(isQuizRow)
-      .reduce<components["schemas"]["QuizWithSolution"][]>((acc, row) => {
-        try {
-          const quiz = this.mapRowToQuizWithSolution(row);
-          acc.push(quiz);
-        } catch (error) {
-          console.warn(`Skipping quiz due to data integrity issue:`, {
-            quizId: row.id,
-            error: error instanceof Error ? error.message : error,
-          });
+    return ResultAsync.combine([countQuery, dataQuery]).andThen(
+      ([countResult, dataResult]) => {
+        // Count結果の検証
+        if (!isCountResult(countResult)) {
+          return ResultAsync.fromSafePromise(
+            Promise.reject(
+              RepositoryErrorFactory.findFailed(
+                "Quiz",
+                new Error("Invalid count result from database"),
+              ),
+            ),
+          );
         }
-        return acc;
-      }, []);
 
-    return {
-      items,
-      totalCount,
-      hasMore: offset + limit < totalCount,
-    };
+        const totalCount = (countResult as { total: number }).total;
+
+        // QuizSummaryエンティティへの変換
+        const mappingResult = D1QuizSummaryMapper.fromRows(
+          dataResult.results.filter(isQuizRow),
+        );
+
+        if (mappingResult.isErr()) {
+          return ResultAsync.fromSafePromise(
+            Promise.reject(
+              RepositoryErrorFactory.findFailed(
+                "Quiz",
+                new Error(
+                  `Failed to map quiz rows to QuizSummary entities: ${mappingResult.error.message}`,
+                ),
+              ),
+            ),
+          );
+        }
+
+        return ResultAsync.fromSafePromise(
+          Promise.resolve({
+            items: mappingResult.value,
+            totalCount,
+            hasMore: offset + limit < totalCount,
+          }),
+        );
+      },
+    );
   }
 
-  private async executeUpdate(id: string, quiz: Partial<Quiz>): Promise<Quiz> {
+  private executeUpdate(
+    id: string,
+    quiz: Partial<QuizSummary>,
+  ): ResultAsync<QuizSummary, RepositoryError> {
     const fields: string[] = [];
     const params: D1QueryParam[] = [];
 
     // 更新可能なフィールドのマッピング
-    if (quiz.question !== undefined) {
+    // Partial<QuizSummary>の場合、getメソッドを使用できないため、単純なフィールドアクセスを使用
+    // QuizSummaryData の Partial でも良いかも.
+    if ("question" in quiz && quiz.question !== undefined) {
       fields.push("question = ?");
-      params.push(quiz.question);
+      params.push(quiz.question as string);
     }
-    if (quiz.explanation !== undefined) {
+    if ("explanation" in quiz && quiz.explanation !== undefined) {
       fields.push("explanation = ?");
-      params.push(quiz.explanation);
+      params.push(quiz.explanation as string);
     }
-    if (quiz.status !== undefined) {
+    if ("status" in quiz && quiz.status !== undefined) {
       fields.push("status = ?");
-      params.push(quiz.status);
+      params.push(quiz.status as string);
     }
-    if (quiz.approvedAt !== undefined) {
+    if ("approvedAt" in quiz && quiz.approvedAt !== undefined) {
       fields.push("approved_at = ?");
-      params.push(quiz.approvedAt);
+      params.push(quiz.approvedAt as string);
     }
 
     if (fields.length === 0) {
-      throw new Error("No fields to update");
+      return ResultAsync.fromSafePromise(
+        Promise.reject(
+          RepositoryErrorFactory.updateFailed(
+            "Quiz",
+            new Error("No fields to update"),
+          ),
+        ),
+      );
     }
 
     params.push(id);
 
-    const stmt = this.db.prepare(`
-      UPDATE Quiz 
-      SET ${fields.join(", ")}
-      WHERE id = ?
-    `);
+    // 更新実行
+    const updateQuery = ResultAsync.fromPromise(
+      this.db
+        .prepare(`
+        UPDATE Quiz
+        SET ${fields.join(", ")}
+        WHERE id = ?
+      `)
+        .bind(...params)
+        .run(),
+      (error) =>
+        RepositoryErrorFactory.updateFailed(
+          "Quiz",
+          error instanceof Error ? error : new Error("Unknown update error"),
+        ),
+    );
 
-    await stmt.bind(...params).run();
+    // 更新されたデータを再取得
+    return updateQuery.andThen(() =>
+      ResultAsync.fromPromise(
+        this.db
+          .prepare(
+            "SELECT id, question, answer_type, explanation, status, creator_id, created_at, approved_at FROM Quiz WHERE id = ?",
+          )
+          .bind(id)
+          .first(),
+        (error) =>
+          RepositoryErrorFactory.findFailed(
+            "Quiz",
+            error instanceof Error
+              ? error
+              : new Error("Failed to fetch updated quiz"),
+          ),
+      ).andThen((updatedRow) => {
+        if (!updatedRow || !isQuizRow(updatedRow)) {
+          return ResultAsync.fromSafePromise(
+            Promise.reject(
+              RepositoryErrorFactory.findFailed(
+                "Quiz",
+                new Error(`Failed to fetch updated quiz: ${id}`),
+              ),
+            ),
+          );
+        }
 
-    // 更新されたクイズを取得
-    const updatedQuizResult = await this.findById(id);
-    if (updatedQuizResult.isErr()) {
-      throw new Error(
-        `Failed to fetch updated quiz: ${updatedQuizResult.error}`,
+        const mappingResult = D1QuizSummaryMapper.fromRow(updatedRow);
+        if (mappingResult.isErr()) {
+          return ResultAsync.fromSafePromise(
+            Promise.reject(
+              RepositoryErrorFactory.updateFailed(
+                "Quiz",
+                new Error(
+                  `Failed to map updated quiz to QuizSummary: ${mappingResult.error.message}`,
+                ),
+              ),
+            ),
+          );
+        }
+
+        return ResultAsync.fromSafePromise(
+          Promise.resolve(mappingResult.value),
+        );
+      }),
+    );
+  }
+
+  private executeDelete(id: string): ResultAsync<void, RepositoryError> {
+    return ResultAsync.fromPromise(
+      this.db
+        .prepare("SELECT id, solution_id, answer_type FROM Quiz WHERE id = ?")
+        .bind(id)
+        .first(),
+      (error) =>
+        RepositoryErrorFactory.findFailed(
+          "Quiz",
+          error instanceof Error
+            ? error
+            : new Error("Failed to check quiz existence"),
+        ),
+    ).andThen((existingQuiz) => {
+      if (!existingQuiz) {
+        return ResultAsync.fromSafePromise(
+          Promise.reject(new NotFoundError(`Quiz not found: ${id}`)),
+        );
+      }
+
+      if (!isBasicQuizInfo(existingQuiz)) {
+        return ResultAsync.fromSafePromise(
+          Promise.reject(
+            RepositoryErrorFactory.deleteFailed(
+              "Quiz",
+              new Error("Invalid quiz info from database"),
+            ),
+          ),
+        );
+      }
+
+      const info = existingQuiz as {
+        id: string;
+        solution_id: string;
+        answer_type: string;
+      };
+
+      // ソリューションと関連データを削除
+      return this.deleteSolution(info.solution_id, info.answer_type).andThen(
+        () =>
+          // クイズを削除
+          ResultAsync.fromPromise(
+            this.db.prepare("DELETE FROM Quiz WHERE id = ?").bind(id).run(),
+            (error) =>
+              RepositoryErrorFactory.deleteFailed(
+                "Quiz",
+                error instanceof Error
+                  ? error
+                  : new Error("Failed to delete quiz"),
+              ),
+          ).map(() => undefined),
       );
-    }
-
-    const updatedQuiz = updatedQuizResult.value;
-
-    // QuizWithSolutionからQuizエンティティに変換
-    const { solution: _, ...quizFields } = updatedQuiz;
-    return quizFields as Quiz;
+    });
   }
 
-  private async executeDelete(id: string): Promise<void> {
-    // まずクイズが存在するかチェック
-    const existingQuiz = await this.db
-      .prepare("SELECT id, solution_id, answer_type FROM Quiz WHERE id = ?")
-      .bind(id)
-      .first();
-
-    if (!existingQuiz) {
-      throw new NotFoundError(`Quiz not found: ${id}`);
-    }
-
-    if (!isBasicQuizInfo(existingQuiz)) {
-      throw new Error("Invalid quiz info from database");
-    }
-
-    // ソリューションと関連データを削除
-    const info = existingQuiz as {
-      id: string;
-      solution_id: string;
-      answer_type: string;
-    };
-    await this.deleteSolution(info.solution_id, info.answer_type);
-
-    // クイズを削除
-    await this.db.prepare("DELETE FROM Quiz WHERE id = ?").bind(id).run();
-  }
-
-  private async deleteSolution(
+  private deleteSolution(
     solutionId: string,
     answerType: string,
-  ): Promise<void> {
-    // 選択肢がある場合は先に削除
-    if (answerType === "single_choice" || answerType === "multiple_choice") {
-      await this.db
-        .prepare("DELETE FROM Choice WHERE solution_id = ?")
-        .bind(solutionId)
-        .run();
-    }
+  ): ResultAsync<void, RepositoryError> {
+    const deleteChoices =
+      answerType === "single_choice" || answerType === "multiple_choice"
+        ? ResultAsync.fromPromise(
+            this.db
+              .prepare("DELETE FROM Choice WHERE solution_id = ?")
+              .bind(solutionId)
+              .run(),
+            (error) =>
+              RepositoryErrorFactory.deleteFailed(
+                "Choice",
+                error instanceof Error
+                  ? error
+                  : new Error("Failed to delete choices"),
+              ),
+          ).map(() => undefined)
+        : ResultAsync.fromSafePromise(Promise.resolve(undefined));
 
-    // ソリューションテーブルから削除
-    switch (answerType) {
-      case "boolean":
-        await this.db
-          .prepare("DELETE FROM BooleanSolution WHERE id = ?")
-          .bind(solutionId)
-          .run();
-        break;
-      case "free_text":
-        await this.db
-          .prepare("DELETE FROM FreeTextSolution WHERE id = ?")
-          .bind(solutionId)
-          .run();
-        break;
-      case "single_choice":
-        await this.db
-          .prepare("DELETE FROM SingleChoiceSolution WHERE id = ?")
-          .bind(solutionId)
-          .run();
-        break;
-      case "multiple_choice":
-        await this.db
-          .prepare("DELETE FROM MultipleChoiceSolution WHERE id = ?")
-          .bind(solutionId)
-          .run();
-        break;
-    }
+    return deleteChoices.andThen(() => {
+      let solutionDeleteQuery: ResultAsync<unknown, RepositoryError>;
+
+      switch (answerType) {
+        case "boolean":
+          solutionDeleteQuery = ResultAsync.fromPromise(
+            this.db
+              .prepare("DELETE FROM BooleanSolution WHERE id = ?")
+              .bind(solutionId)
+              .run(),
+            (error) =>
+              RepositoryErrorFactory.deleteFailed(
+                "BooleanSolution",
+                error instanceof Error
+                  ? error
+                  : new Error("Failed to delete boolean solution"),
+              ),
+          );
+          break;
+        case "free_text":
+          solutionDeleteQuery = ResultAsync.fromPromise(
+            this.db
+              .prepare("DELETE FROM FreeTextSolution WHERE id = ?")
+              .bind(solutionId)
+              .run(),
+            (error) =>
+              RepositoryErrorFactory.deleteFailed(
+                "FreeTextSolution",
+                error instanceof Error
+                  ? error
+                  : new Error("Failed to delete free text solution"),
+              ),
+          );
+          break;
+        case "single_choice":
+          solutionDeleteQuery = ResultAsync.fromPromise(
+            this.db
+              .prepare("DELETE FROM SingleChoiceSolution WHERE id = ?")
+              .bind(solutionId)
+              .run(),
+            (error) =>
+              RepositoryErrorFactory.deleteFailed(
+                "SingleChoiceSolution",
+                error instanceof Error
+                  ? error
+                  : new Error("Failed to delete single choice solution"),
+              ),
+          );
+          break;
+        case "multiple_choice":
+          solutionDeleteQuery = ResultAsync.fromPromise(
+            this.db
+              .prepare("DELETE FROM MultipleChoiceSolution WHERE id = ?")
+              .bind(solutionId)
+              .run(),
+            (error) =>
+              RepositoryErrorFactory.deleteFailed(
+                "MultipleChoiceSolution",
+                error instanceof Error
+                  ? error
+                  : new Error("Failed to delete multiple choice solution"),
+              ),
+          );
+          break;
+        default:
+          solutionDeleteQuery = ResultAsync.fromSafePromise(
+            Promise.reject(
+              RepositoryErrorFactory.deleteFailed(
+                "Solution",
+                new Error(`Unknown answer type: ${answerType}`),
+              ),
+            ),
+          );
+      }
+
+      return solutionDeleteQuery.map(() => undefined);
+    });
   }
 
   private mapRowToQuizWithSolution(

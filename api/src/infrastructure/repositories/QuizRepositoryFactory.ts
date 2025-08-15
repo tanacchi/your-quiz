@@ -23,21 +23,10 @@ import type { CloudflareBindings } from "../../shared/types";
  * @returns 適切なリポジトリ実装
  */
 export function createQuizRepository(env: CloudflareBindings): IQuizRepository {
-  // テスト環境または明示的にモック使用が指定されている場合
-  if (env.NODE_ENV === "test" || env.USE_MOCK_DB === "true") {
+  if (shouldUseMock(env)) {
     return new MockQuizRepository();
   }
 
-  // 開発環境でもデフォルトはモック使用（D1セットアップ不要）
-  if (env.NODE_ENV === "development") {
-    // USE_MOCK_DBが明示的にfalseの場合のみD1使用
-    if (env.USE_MOCK_DB === "false") {
-      return new D1QuizRepository(env.DB);
-    }
-    return new MockQuizRepository();
-  }
-
-  // 本番環境では必ずD1使用
   return new D1QuizRepository(env.DB);
 }
 
