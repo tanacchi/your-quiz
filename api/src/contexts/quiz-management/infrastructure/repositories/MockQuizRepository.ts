@@ -5,60 +5,45 @@ import {
 } from "../../../../shared/errors";
 import { NotFoundError } from "../../../../shared/errors/base";
 import type { components } from "../../../../shared/types";
-import { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
+import {
+  CreatorId,
+  QuizId,
+  QuizSummary,
+  SolutionId,
+  TagId,
+} from "../../domain/entities/quiz-summary/QuizSummary";
+import { TagIds } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 /**
  * モッククイズリポジトリ実装
  * 本番環境ではCloudflare D1に置き換える
  */
 export class MockQuizRepository implements IQuizRepository {
-  private readonly mockData: QuizSummary[];
-
-  constructor() {
-    // QuizSummaryエンティティとしてモックデータを初期化
-    this.mockData = this.initializeMockData();
-  }
-
-  /**
-   * モックデータを初期化してQuizSummaryエンティティの配列を作成
-   */
-  private initializeMockData(): QuizSummary[] {
-    const mockDataRaw = [
-      {
-        id: "quiz-1",
-        question: "What is TypeScript?",
-        answerType: "single_choice",
-        solutionId: "sol-1",
-        explanation: "TypeScript is a typed superset of JavaScript",
-        status: "approved",
-        creatorId: "user-1",
-        createdAt: new Date().toISOString(),
-        approvedAt: new Date().toISOString(),
-        tagIds: ["tag-1", "tag-2"],
-      },
-      {
-        id: "quiz-2",
-        question: "Is JavaScript strongly typed?",
-        answerType: "boolean",
-        solutionId: "sol-2",
-        status: "approved",
-        creatorId: "user-2",
-        createdAt: new Date().toISOString(),
-        approvedAt: new Date().toISOString(),
-        tagIds: ["tag-1"],
-      },
-    ];
-
-    return mockDataRaw.map((data) => {
-      const result = QuizSummary.from(data);
-      if (result.isErr()) {
-        throw new Error(
-          `Failed to create mock QuizSummary: ${JSON.stringify(result.error)}`,
-        );
-      }
-      return result.value;
-    });
-  }
+  private readonly mockData = [
+    QuizSummary.build({
+      id: QuizId.parse("quiz-1"),
+      question: "What is TypeScript?",
+      answerType: "single_choice",
+      solutionId: SolutionId.parse("sol-1"),
+      explanation: "TypeScript is a typed superset of JavaScript",
+      status: "approved",
+      creatorId: CreatorId.parse("user-1"),
+      createdAt: new Date().toISOString(),
+      approvedAt: new Date().toISOString(),
+      tagIds: TagIds.parse(["tag-1", "tag-2"]),
+    }),
+    QuizSummary.build({
+      id: QuizId.parse("quiz-2"),
+      question: "Is JavaScript strongly typed?",
+      answerType: "boolean",
+      solutionId: SolutionId.parse("sol-2"),
+      status: "approved",
+      creatorId: CreatorId.parse("user-2"),
+      createdAt: new Date().toISOString(),
+      approvedAt: new Date().toISOString(),
+      tagIds: TagIds.parse(["tag-1"]),
+    }),
+  ];
 
   create(
     quiz: QuizSummary,
@@ -66,7 +51,7 @@ export class MockQuizRepository implements IQuizRepository {
   ): ResultAsync<QuizSummary, RepositoryError> {
     // モックデータに追加（実際のD1では永続化）
     // Note: _solution は実際には使用しないが、インターフェースの互換性のため受け取る
-    (this.mockData as QuizSummary[]).push(quiz);
+    this.mockData.push(quiz);
 
     return ResultAsync.fromPromise(
       new Promise((resolve) => resolve(quiz)),
@@ -89,17 +74,17 @@ export class MockQuizRepository implements IQuizRepository {
         if (quiz) {
           // QuizSummaryからQuizWithSolution形式に変換（モック用）
           const quizWithSolution: components["schemas"]["QuizWithSolution"] = {
-            id: quiz.get("id") as string,
+            id: quiz.get("id"),
             question: quiz.get("question"),
             answerType: quiz.get("answerType"),
-            solutionId: quiz.get("solutionId") as string,
+            solutionId: quiz.get("solutionId"),
             status: quiz.get("status"),
-            creatorId: quiz.get("creatorId") as string,
+            creatorId: quiz.get("creatorId"),
             createdAt: quiz.get("createdAt"),
             // モック用の最小限のsolution
             solution: this.createMockSolution(
               quiz.get("answerType"),
-              quiz.get("solutionId") as string,
+              quiz.get("solutionId"),
             ),
           };
 
@@ -218,7 +203,7 @@ export class MockQuizRepository implements IQuizRepository {
     }
     if (options.tags && options.tags.length > 0) {
       filteredData = filteredData.filter((quiz) => {
-        const quizTagIds = quiz.get("tagIds") as string[];
+        const quizTagIds = TagId.parse(quiz.get("tagIds"));
         return options.tags?.some((tag) => quizTagIds.includes(tag));
       });
     }
