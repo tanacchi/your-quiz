@@ -12,7 +12,7 @@ export const QuizSchema = z
     id: QuizIdSchema,
     question: z.string().trim().min(1).max(500),
     answerType: z.literal("boolean"), // BooleanSolution only
-    solution: BooleanSolutionSchema,
+    solution: z.union([BooleanSolutionSchema]),
     explanation: z.string().max(1000).optional(),
     status: z.enum(["pending_approval", "approved", "rejected"]),
     creatorId: CreatorIdSchema,

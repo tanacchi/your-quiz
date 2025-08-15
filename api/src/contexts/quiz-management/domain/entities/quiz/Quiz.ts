@@ -134,7 +134,7 @@ export class Quiz extends EntityBase<Quiz, typeof QuizSchema> {
   approve(approvedAt: string): QuizParseResult {
     if (this.get("status") !== "pending_approval") {
       const error: QuizParseError = {
-        kind: "parse",
+        kind: "invalid_state",
         issues: [
           {
             path: ["status"],
@@ -178,8 +178,6 @@ export class Quiz extends EntityBase<Quiz, typeof QuizSchema> {
     return this.update("status", "rejected");
   }
 
-  // Solution integration methods
-
   /**
    * Gets the integrated BooleanSolution
    *
@@ -188,86 +186,6 @@ export class Quiz extends EntityBase<Quiz, typeof QuizSchema> {
   getSolution(): BooleanSolution {
     const solutionData = this.get("solution");
     return BooleanSolution.build(solutionData);
-  }
-
-  // Quiz validation methods
-
-  /**
-   * Checks if all required fields are set
-   *
-   * @returns true if quiz is complete, false otherwise
-   */
-  isComplete(): boolean {
-    const data = this.toData();
-    return Boolean(
-      data.id &&
-        data.question.trim() &&
-        data.answerType &&
-        data.solution &&
-        data.status &&
-        data.creatorId &&
-        data.createdAt,
-    );
-  }
-
-  /**
-   * Checks if quiz is ready for approval
-   *
-   * @returns true if ready for approval, false otherwise
-   */
-  isReadyForApproval(): boolean {
-    return (
-      this.isComplete() &&
-      this.get("status") === "pending_approval" &&
-      this.get("question").length >= 5 // Minimum question length
-    );
-  }
-
-  /**
-   * Validates content consistency between question, solution, and explanation
-   *
-   * @returns validation result with issues
-   */
-  validateContentConsistency(): {
-    isValid: boolean;
-    issues: string[];
-  } {
-    const issues: string[] = [];
-    const question = this.get("question");
-    const explanation = this.get("explanation");
-    const answerType = this.get("answerType");
-
-    // Check answerType consistency
-    if (answerType !== "boolean") {
-      issues.push(`Answer type must be 'boolean', got '${answerType}'`);
-    }
-
-    // Check question quality
-    if (question.length < 5) {
-      issues.push("Question is too short (minimum 5 characters)");
-    }
-
-    if (
-      !question.includes("?") &&
-      !question.toLowerCase().includes("true") &&
-      !question.toLowerCase().includes("false")
-    ) {
-      issues.push(
-        "Boolean question should be a question or contain true/false reference",
-      );
-    }
-
-    // Check explanation quality if provided
-    if (explanation && explanation.length < 10) {
-      issues.push(
-        "Explanation is too short (minimum 10 characters when provided)",
-      );
-    }
-
-    return {
-      isValid: issues.length === 0,
-      issues,
-    };
   }
 
   /**

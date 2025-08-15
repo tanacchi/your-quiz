@@ -240,10 +240,6 @@ describe("Quiz", () => {
     });
 
     describe("Validation Methods", () => {
-      it("should identify complete quiz", () => {
-        expect(quiz.isComplete()).toBe(true);
-      });
-
       it("should identify incomplete quiz", () => {
         const incompleteResult = Quiz.from({
           ...validQuizData,
@@ -251,33 +247,6 @@ describe("Quiz", () => {
         });
 
         expect(incompleteResult.isErr()).toBe(true);
-      });
-
-      it("should identify quiz ready for approval", () => {
-        expect(quiz.isReadyForApproval()).toBe(true);
-      });
-
-      it("should validate content consistency", () => {
-        const validation = quiz.validateContentConsistency();
-        expect(validation.isValid).toBe(true);
-        expect(validation.issues).toHaveLength(0);
-      });
-
-      it("should identify content consistency issues", () => {
-        const shortQuestionResult = Quiz.from({
-          ...validQuizData,
-          question: "No?",
-          explanation: "Short",
-        });
-
-        expect(shortQuestionResult.isOk()).toBe(true);
-
-        if (shortQuestionResult.isOk()) {
-          const shortQuestionQuiz = shortQuestionResult.value;
-          const validation = shortQuestionQuiz.validateContentConsistency();
-          expect(validation.isValid).toBe(false);
-          expect(validation.issues.length).toBeGreaterThan(0);
-        }
       });
     });
   });
