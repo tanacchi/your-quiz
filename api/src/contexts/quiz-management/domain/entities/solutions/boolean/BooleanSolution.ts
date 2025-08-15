@@ -4,7 +4,6 @@ import {
   EntityBase,
   type EntityParseError,
   type EntityParseResult,
-  type EntityPatch,
   toIssues,
 } from "../../../../../../shared/validation/entity";
 import {
@@ -14,7 +13,6 @@ import {
 } from "./boolean-solution-schema";
 
 // Type aliases for BooleanSolution-specific types
-export type BooleanSolutionPatch = EntityPatch<BooleanSolutionInput>;
 export type BooleanSolutionParseError = EntityParseError<BooleanSolutionInput>;
 export type BooleanSolutionParseResult = EntityParseResult<
   BooleanSolution,
@@ -26,11 +24,6 @@ export type BooleanSolutionDraft = InstanceType<typeof BooleanSolution.Draft>;
 
 // Re-export shared types and utilities
 export type { Issue } from "../../../../../../shared/validation/entity";
-export {
-  applyEntityPatch,
-  applyEntityPatches,
-  materializeEntityPatch,
-} from "../../../../../../shared/validation/entity";
 // Re-export runtime brand schemas
 export { SolutionId } from "../../quiz-summary/quiz-summary-schema";
 // Re-export types for public API

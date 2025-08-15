@@ -4,7 +4,6 @@ import {
   EntityBase,
   type EntityParseError,
   type EntityParseResult,
-  type EntityPatch,
   toIssues,
 } from "../../../../../shared/validation/entity";
 import { suggestTagPatches } from "./tag-patches";
@@ -17,20 +16,11 @@ import {
 } from "./tag-schema";
 
 // Type aliases for Tag-specific types
-export type TagPatch = EntityPatch<TagInput>;
 export type TagParseError = EntityParseError<TagInput>;
 export type TagParseResult = EntityParseResult<Tag, TagInput>;
 
 // Backward compatibility alias (will be removed after test migration)
 export type TagDraft = InstanceType<typeof Tag.Draft>;
-
-// Re-export shared types and utilities
-export type { Issue } from "../../../../../shared/validation/entity";
-export {
-  applyEntityPatch,
-  applyEntityPatches,
-  materializeEntityPatch,
-} from "../../../../../shared/validation/entity";
 
 // Re-export types for public API
 export type {

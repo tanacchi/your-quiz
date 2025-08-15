@@ -4,7 +4,6 @@ import {
   EntityBase,
   type EntityParseError,
   type EntityParseResult,
-  type EntityPatch,
   toIssues,
 } from "../../../../../shared/validation/entity";
 import { BooleanSolution } from "../solutions/boolean/BooleanSolution";
@@ -12,20 +11,11 @@ import { suggestQuizPatches } from "./quiz-patches";
 import { type QuizData, type QuizInput, QuizSchema } from "./quiz-schema";
 
 // Type aliases for Quiz-specific types
-export type QuizPatch = EntityPatch<QuizInput>;
 export type QuizParseError = EntityParseError<QuizInput>;
 export type QuizParseResult = EntityParseResult<Quiz, QuizInput>;
 
 // Backward compatibility alias (will be removed after test migration)
 export type QuizDraft = InstanceType<typeof Quiz.Draft>;
-
-// Re-export shared types and utilities
-export type { Issue } from "../../../../../shared/validation/entity";
-export {
-  applyEntityPatch,
-  applyEntityPatches,
-  materializeEntityPatch,
-} from "../../../../../shared/validation/entity";
 
 // Re-export types for public API
 export type {

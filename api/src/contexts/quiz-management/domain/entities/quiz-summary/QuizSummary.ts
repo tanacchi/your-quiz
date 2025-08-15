@@ -4,7 +4,6 @@ import {
   EntityBase,
   type EntityParseError,
   type EntityParseResult,
-  type EntityPatch,
   toIssues,
 } from "../../../../../shared/validation/entity";
 import { suggestQuizSummaryPatches } from "./quiz-summary-patches";
@@ -16,7 +15,6 @@ import {
 } from "./quiz-summary-schema";
 
 // Type aliases for QuizSummary-specific types
-export type QuizSummaryPatch = EntityPatch<QuizSummaryInput>;
 export type QuizSummaryParseError = EntityParseError<QuizSummaryInput>;
 export type QuizSummaryParseResult = EntityParseResult<
   QuizSummary,

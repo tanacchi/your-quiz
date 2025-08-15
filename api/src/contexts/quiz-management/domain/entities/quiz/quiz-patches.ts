@@ -1,10 +1,8 @@
-import {
-  applyEntityPatch,
-  applyEntityPatches,
-  type EntityPatch,
-  type FieldSuggester,
-  type Issue,
-  materializeEntityPatch,
+import { isObjectLike } from "../../../../../shared/utils/type-guard";
+import type {
+  EntityPatch,
+  FieldSuggester,
+  Issue,
 } from "../../../../../shared/validation/entity";
 import { BooleanSolutionSchema } from "../solutions/boolean/boolean-solution-schema";
 import type { QuizInput } from "./quiz-schema";
@@ -14,20 +12,6 @@ export type QuizPatch = EntityPatch<QuizInput>;
 
 // Type alias for Quiz-specific field suggester
 type QuizFieldSuggester = FieldSuggester<QuizInput>;
-
-/** 入力データが QuizInput の形に近いかを判定 */
-const isQuizLike = (input: unknown): input is Partial<QuizInput> => {
-  return typeof input === "object" && input !== null;
-};
-
-// Re-export utilities with Quiz-specific names
-export const materializePatch = materializeEntityPatch<QuizInput>;
-export const applyQuizPatch = (input: unknown, patch: QuizPatch): unknown =>
-  applyEntityPatch(input, patch);
-export const applyQuizPatches = (
-  input: unknown,
-  patches: QuizPatch[],
-): unknown => applyEntityPatches(input, patches);
 
 // question用：trim + 文字数制限 + 空文字列対応
 export const suggestQuestionPatches: QuizFieldSuggester = (value) => {
@@ -205,7 +189,7 @@ export const suggestQuizPatches = (
   input: unknown,
   issues: Issue[],
 ): QuizPatch[] => {
-  if (!isQuizLike(input)) {
+  if (!isObjectLike<QuizInput>(input)) {
     return [];
   }
 

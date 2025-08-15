@@ -394,11 +394,7 @@ describe("Quiz", () => {
             typeof patch === "object" && patch !== null && "status" in patch,
         );
         expect(statusPatch).toBeDefined();
-        if (
-          statusPatch &&
-          typeof statusPatch === "object" &&
-          "status" in statusPatch
-        ) {
+        if (statusPatch && "status" in statusPatch) {
           expect(statusPatch.status).toBe("pending_approval");
         }
       }

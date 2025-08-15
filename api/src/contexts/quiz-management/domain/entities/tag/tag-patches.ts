@@ -1,10 +1,8 @@
-import {
-  applyEntityPatch,
-  applyEntityPatches,
-  type EntityPatch,
-  type FieldSuggester,
-  type Issue,
-  materializeEntityPatch,
+import { isObjectLike } from "../../../../../shared/utils/type-guard";
+import type {
+  EntityPatch,
+  FieldSuggester,
+  Issue,
 } from "../../../../../shared/validation/entity";
 import type { TagInput } from "./tag-schema";
 
@@ -13,18 +11,6 @@ export type TagPatch = EntityPatch<TagInput>;
 
 // Type alias for Tag-specific field suggester
 type TagFieldSuggester = FieldSuggester<TagInput>;
-
-/** 入力データが TagInput の形に近いかを判定 */
-const isTagLike = (input: unknown): input is Partial<TagInput> => {
-  return typeof input === "object" && input !== null;
-};
-
-// Re-export utilities with Tag-specific names
-export const materializePatch = materializeEntityPatch<TagInput>;
-export const applyTagPatch = (input: unknown, patch: TagPatch): unknown =>
-  applyEntityPatch(input, patch);
-export const applyTagPatches = (input: unknown, patches: TagPatch[]): unknown =>
-  applyEntityPatches(input, patches);
 
 // relatedTags 用：null/undefinedハンドリング
 export const suggestRelatedTagsPatches: TagFieldSuggester = (value) => {
@@ -42,7 +28,7 @@ export const suggestTagPatches = (
   input: unknown,
   issues: Issue[],
 ): TagPatch[] => {
-  if (!isTagLike(input)) {
+  if (!isObjectLike<TagInput>(input)) {
     return [];
   }
 
