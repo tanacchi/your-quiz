@@ -17,26 +17,6 @@
 
 ## quiz-managementコンテキスト エンティティ実装タスク
 
-### 1. Tag エンティティ実装
-- [ ] ディレクトリ作成: `api/src/contexts/quiz-management/domain/entities/tag/`
-- [ ] tag-schema.ts実装（Brand型・バリデーション・階層構造対応）
-- [ ] tag-patches.ts実装（自動修正候補・typo修正）
-- [ ] Tag.ts実装（EntityBase継承・Self-type pattern）
-- [ ] Tag.spec.ts実装（包括的テストスイート95%カバレッジ）
-- [ ] 個別テスト実行・成功確認: `pnpm test tag`
-- [ ] 個別ビルド確認: `pnpm build`
-- [ ] 型チェック確認: `pnpm typecheck`
-
-### 2. BooleanSolution 値オブジェクト実装
-- [ ] ディレクトリ作成: `api/src/contexts/quiz-management/domain/entities/solutions/boolean/`
-- [ ] boolean-solution-schema.ts実装（Brand型・true/false制約）
-- [ ] boolean-solution-patches.ts実装（自動修正候補）
-- [ ] BooleanSolution.ts実装（EntityBase継承・不変性保証）
-- [ ] BooleanSolution.spec.ts実装（包括的テストスイート）
-- [ ] 個別テスト実行・成功確認
-- [ ] 個別ビルド確認
-- [ ] 型チェック確認
-
 ### 3. FreeTextSolution 値オブジェクト実装
 - [ ] ディレクトリ作成: `api/src/contexts/quiz-management/domain/entities/solutions/free-text/`
 - [ ] free-text-solution-schema.ts実装（マッチング戦略・大文字小文字区別）
@@ -73,16 +53,6 @@
 - [ ] single-choice-solution-patches.ts実装（選択肢修正・正解数チェック）
 - [ ] SingleChoiceSolution.ts実装（EntityBase継承・Choice依存）
 - [ ] SingleChoiceSolution.spec.ts実装（単一正解・4択対応テスト）
-- [ ] 個別テスト実行・成功確認
-- [ ] 個別ビルド確認
-- [ ] 型チェック確認
-
-### 7. Question エンティティ実装（単体集約）
-- [ ] ディレクトリ作成: `api/src/contexts/quiz-management/domain/entities/question/`
-- [ ] question-schema.ts実装（全Solutionタイプ・Explanation統合）
-- [ ] question-patches.ts実装（問題文修正・Solution型修正）
-- [ ] Question.ts実装（EntityBase継承・集約ルート・Explanation統合）
-- [ ] Question.spec.ts実装（4種類Solution対応・集約動作テスト）
 - [ ] 個別テスト実行・成功確認
 - [ ] 個別ビルド確認
 - [ ] 型チェック確認
