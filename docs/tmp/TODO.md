@@ -83,3 +83,5 @@
 - Manage コンテキストの List Quiz では Solution, Tag の実体は返さず QuizSummary を返すように TypeSpec の仕様を変更してください。
 - Manage コンテキストの List Quiz では status, creator_id を複数受け入れるようにします。また、 ids としていた名前を quiz_id としたいです。
 - バリデーションエラーから接続エラーまである程度細かい粒度でエラーを定義し、全てに対して API のレスポンスを定義する。
+
+api/src 配下の全ての typescript ファイルについて、docs/instructions/shared/languages/typescript.md およびdocs/instructions/shared/workflow/09.01_unit-testing.md を参考にしつつ、テストを増強し、Statements、Branches、Lines など全てのカバレッジで95%以上達成を全てのファイルで満たすようにテストを強化してください.

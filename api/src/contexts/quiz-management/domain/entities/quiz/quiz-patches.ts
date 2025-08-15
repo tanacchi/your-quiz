@@ -11,7 +11,7 @@ import type { QuizInput } from "./quiz-schema";
 export type QuizPatch = EntityPatch<QuizInput>;
 
 // Type alias for Quiz-specific field suggester
-type QuizFieldSuggester = FieldSuggester<QuizInput>;
+type QuizFieldSuggester = FieldSuggester<Partial<QuizInput>>;
 
 // question用：trim + 文字数制限 + 空文字列対応
 export const suggestQuestionPatches: QuizFieldSuggester = (value) => {

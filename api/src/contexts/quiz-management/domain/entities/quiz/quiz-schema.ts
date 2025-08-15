@@ -29,15 +29,6 @@ export const QuizSchema = z
         path: ["approvedAt"],
       });
     }
-
-    // Ensure answerType consistency with solution
-    if (quiz.answerType === "boolean" && !quiz.solution) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Boolean quiz must have a boolean solution",
-        path: ["solution"],
-      });
-    }
   });
 
 // Re-export types for public API
