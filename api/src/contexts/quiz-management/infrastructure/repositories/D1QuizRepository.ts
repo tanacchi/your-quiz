@@ -94,7 +94,7 @@ export class D1QuizRepository implements IQuizRepository {
   findMany(
     options: {
       status?: components["schemas"]["QuizStatus"];
-      creatorId?: string;
+      creatorId?: string | undefined;
       ids?: string[];
       limit?: number;
       offset?: number;
@@ -353,7 +353,7 @@ export class D1QuizRepository implements IQuizRepository {
 
   private executeFindMany(options: {
     status?: components["schemas"]["QuizStatus"];
-    creatorId?: string;
+    creatorId?: string | undefined;
     ids?: string[];
     limit?: number;
     offset?: number;
@@ -474,6 +474,7 @@ export class D1QuizRepository implements IQuizRepository {
 
     // 更新可能なフィールドのマッピング
     // Partial<QuizSummary>の場合、getメソッドを使用できないため、単純なフィールドアクセスを使用
+    // QuizSummaryData の Partial でも良いかも.
     if ("question" in quiz && quiz.question !== undefined) {
       fields.push("question = ?");
       params.push(quiz.question as string);

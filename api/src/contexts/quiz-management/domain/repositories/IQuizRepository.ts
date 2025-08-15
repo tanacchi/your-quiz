@@ -54,7 +54,7 @@ export interface IQuizRepository {
    */
   findMany(options?: {
     status?: QuizSummaryData["status"];
-    creatorId?: QuizSummaryData["creatorId"];
+    creatorId?: QuizSummaryData["creatorId"] | undefined;
     ids?: QuizSummaryData["id"][];
     limit?: number;
     offset?: number;

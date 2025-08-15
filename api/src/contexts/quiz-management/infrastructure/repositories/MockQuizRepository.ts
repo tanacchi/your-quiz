@@ -173,9 +173,9 @@ export class MockQuizRepository implements IQuizRepository {
   }
 
   findMany(
-    options: {
+    filter: {
       status?: components["schemas"]["QuizStatus"];
-      creatorId?: string;
+      creatorId?: string | undefined;
       tags?: string[];
       limit?: number;
       offset?: number;
@@ -191,26 +191,26 @@ export class MockQuizRepository implements IQuizRepository {
     let filteredData = [...this.mockData];
 
     // フィルタリング
-    if (options.status) {
+    if (filter.status) {
       filteredData = filteredData.filter(
-        (quiz) => quiz.get("status") === options.status,
+        (quiz) => quiz.get("status") === filter.status,
       );
     }
-    if (options.creatorId) {
+    if (filter.creatorId) {
       filteredData = filteredData.filter(
-        (quiz) => quiz.get("creatorId") === options.creatorId,
+        (quiz) => quiz.get("creatorId") === filter.creatorId,
       );
     }
-    if (options.tags && options.tags.length > 0) {
+    if (filter.tags && filter.tags.length > 0) {
       filteredData = filteredData.filter((quiz) => {
         const quizTagIds = TagId.parse(quiz.get("tagIds"));
-        return options.tags?.some((tag) => quizTagIds.includes(tag));
+        return filter.tags?.some((tag) => quizTagIds.includes(tag));
       });
     }
 
     const totalCount = filteredData.length;
-    const limit = options.limit || 10;
-    const offset = options.offset || 0;
+    const limit = filter.limit || 10;
+    const offset = filter.offset || 0;
 
     const items = filteredData.slice(offset, offset + limit);
     const hasMore = offset + limit < totalCount;

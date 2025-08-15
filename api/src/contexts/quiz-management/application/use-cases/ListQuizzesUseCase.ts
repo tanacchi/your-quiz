@@ -133,7 +133,7 @@ export class ListQuizzesUseCase {
   ): ResultAsync<components["schemas"]["QuizListResponse"], UseCaseError> {
     return Result.fromThrowable(
       () => {
-        const creatorId = CreatorId.parse(query.creatorId);
+        const creatorId = CreatorId.optional().parse(query.creatorId);
         const ids = query.ids?.map((id) => QuizId.parse(id)) ?? [];
 
         return {
