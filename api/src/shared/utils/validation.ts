@@ -1,6 +1,5 @@
 import { err, ok, type Result, ResultAsync } from "neverthrow";
-import type { z } from "zod";
-import { ZodError } from "zod";
+import { ZodError, type z } from "zod";
 import type { JsonParseError, ValidationError } from "../errors";
 import { InternalServerError } from "../errors";
 import {
@@ -27,23 +26,50 @@ export const parseJsonSafe = (request: {
 };
 
 /**
- * Zodスキーマによるバリデーション
+ * Zodスキーマによるバリデーション（ValidationError版）
  * @param schema - Zodスキーマ
  * @param data - バリデーション対象データ
  * @returns Result<T, ValidationError> - バリデーション結果またはエラー
  */
-export const validateWithZod = <T>(
+export function validateWithZod<T>(
   schema: z.ZodSchema<T>,
   data: unknown,
-): Result<T, ValidationError> => {
+): Result<T, ValidationError>;
+
+/**
+ * Zodスキーマによるバリデーション（カスタムエラー版）
+ * @param schema - Zodスキーマ
+ * @param data - バリデーション対象データ
+ * @param errMapper - ZodErrorからカスタムエラーへの変換関数（必須）
+ * @returns Result<T, E> - バリデーション結果またはエラー
+ */
+export function validateWithZod<T, E>(
+  schema: z.ZodSchema<T>,
+  data: unknown,
+  errMapper: (e: z.ZodError<T>) => E,
+): Result<T, E>;
+
+/**
+ * 実装本体
+ */
+export function validateWithZod<T, E = ValidationError>(
+  schema: z.ZodSchema<T>,
+  data: unknown,
+  errMapper?: (e: z.ZodError<T>) => E,
+): Result<T, E | ValidationError> {
   const result = schema.safeParse(data);
   if (result.success) {
     return ok(result.data);
   }
 
-  // Zodエラーを詳細なValidationErrorに変換
-  return err(ValidationErrorFactory.fromZodError(result.error));
-};
+  // errMapperが提供されていない場合（ValidationError版）
+  if (errMapper === undefined) {
+    return err(ValidationErrorFactory.fromZodError(result.error));
+  }
+
+  // カスタムerrMapper版
+  return err(errMapper(result.error));
+}
 
 /**
  * エラーをアプリケーション層の適切なエラー型に変換
