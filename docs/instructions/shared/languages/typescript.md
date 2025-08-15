@@ -90,6 +90,20 @@ if (user) {
 const name = getUser()?.name?.toUpperCase();
 ```
 
+#### 1.4 Index signatureの回避
+
+```typescript
+// ❌ 禁止：index signatureでのプロパティアクセス
+const input = value as Record<string, unknown>;
+const id = input["id"]; // TypeScriptエラーになる場合がある
+
+// ✅ テストコードでのみ認められる方法：型定義でプロパティアクセス
+const solutionObj = value as unknown as { id?: unknown; value?: unknown };
+const id = solutionObj.id;
+```
+
+// ✅ プロダクションコードでは正しく厳密な型定義、型指定で上記の対応をせずに書ける方法を検討する
+
 ### 2. Union型によるstring制限
 
 #### 2.1 リテラル型の活用
