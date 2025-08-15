@@ -1,4 +1,5 @@
 import { Result, type ResultAsync } from "neverthrow";
+import { toAppError } from "../../../../shared";
 import { FindFailedError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
 import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
@@ -12,7 +13,6 @@ import {
   type UseCaseError,
   UseCaseInternalError,
 } from "../errors";
-import { InvalidQueryError } from "../errors/use-case-errors";
 import type { ListQuizzesQuery } from "../schemas/list-quizzes-query.schema";
 
 export class ListQuizzesUseCase {
@@ -131,7 +131,6 @@ export class ListQuizzesUseCase {
   execute(
     query: ListQuizzesQuery,
   ): ResultAsync<components["schemas"]["QuizListResponse"], UseCaseError> {
-    // 本当は全部チェインしたい.
     return Result.fromThrowable(
       () => ({
         status: query.status,
@@ -140,7 +139,7 @@ export class ListQuizzesUseCase {
         limit: query.limit,
         offset: query.offset,
       }),
-      (_e) => new InvalidQueryError(), // FIXME
+      (e) => toAppError(e, "Query validation failed"),
     )()
       .asyncAndThen((q) => this.quizRepository.findMany(q))
       .mapErr((repositoryError) => {

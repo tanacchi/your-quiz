@@ -1,6 +1,8 @@
 import { err, ok, type Result, ResultAsync } from "neverthrow";
 import type { z } from "zod";
+import { ZodError } from "zod";
 import type { JsonParseError, ValidationError } from "../errors";
+import { InternalServerError } from "../errors";
 import {
   createJsonParseError,
   ValidationErrorFactory,
@@ -41,4 +43,26 @@ export const validateWithZod = <T>(
 
   // Zodエラーを詳細なValidationErrorに変換
   return err(ValidationErrorFactory.fromZodError(result.error));
+};
+
+/**
+ * エラーをアプリケーション層の適切なエラー型に変換
+ * @param error - 変換対象のエラー
+ * @param context - エラーコンテキスト（ログ用）
+ * @returns ValidationError または InternalServerError
+ */
+export const toAppError = (
+  error: unknown,
+  context: string = "Operation failed",
+): ValidationError | InternalServerError => {
+  // ZodErrorの場合はValidationErrorに変換
+  if (error instanceof ZodError) {
+    return ValidationErrorFactory.fromZodError(error);
+  }
+
+  // その他はInternalServerErrorとして扱う
+  return new InternalServerError(
+    context,
+    error instanceof Error ? error.message : String(error),
+  );
 };
