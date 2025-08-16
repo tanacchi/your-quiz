@@ -6,6 +6,7 @@
     "build",
     "coverage",
     "*.config.cjs",
+    "spec/coverage/**/*",
     "reports"
   ],
   "compilerOptions": {

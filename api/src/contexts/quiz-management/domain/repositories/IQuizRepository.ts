@@ -1,7 +1,10 @@
 import type { ResultAsync } from "neverthrow";
 import type { RepositoryError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
-import type { QuizSummary } from "../entities/quiz-summary/QuizSummary";
+import type {
+  QuizSummary,
+  QuizSummaryData,
+} from "../entities/quiz-summary/QuizSummary";
 
 /**
  * クイズリポジトリインターフェース
@@ -29,17 +32,17 @@ export interface IQuizRepository {
    * IDでクイズを取得する
    *
    * @param id - 取得するクイズのID
-   * @returns クイズ（正解込み）、または null（見つからない場合）、またはRepositoryError
+   * @returns クイズ（正解込み）、またはRepositoryError（見つからない場合はNotFoundError）
    */
   findById(
     id: string,
-  ): ResultAsync<
-    components["schemas"]["QuizWithSolution"] | null,
-    RepositoryError
-  >;
+  ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError>;
 
   /**
    * 条件に基づいてクイズリストを取得する
+   *
+   * パフォーマンス最適化のため、QuizSummaryエンティティを返します。
+   * solution情報が必要な場合は、個別にfindByIdを使用してください。
    *
    * @param options - 検索オプション
    * @param options.status - フィルターするクイズステータス
@@ -47,17 +50,17 @@ export interface IQuizRepository {
    * @param options.tags - フィルターするタグ配列
    * @param options.limit - 取得件数の上限
    * @param options.offset - 取得開始位置のオフセット
-   * @returns ページング情報付きのクイズリスト、またはRepositoryError
+   * @returns ページング情報付きのクイズサマリリスト、またはRepositoryError
    */
   findMany(options?: {
-    status?: components["schemas"]["QuizStatus"];
-    creatorId?: string;
-    tags?: string[];
+    status?: QuizSummaryData["status"];
+    creatorId?: QuizSummaryData["creatorId"] | undefined;
+    ids?: QuizSummaryData["id"][];
     limit?: number;
     offset?: number;
   }): ResultAsync<
     {
-      items: components["schemas"]["QuizWithSolution"][];
+      items: QuizSummary[];
       totalCount: number;
       hasMore: boolean;
     },

@@ -7,10 +7,13 @@
     "build": "run-p build:*",
     "build:api": "run-s gen-openapi-schema && run-p gen-docs gen-types",
     "build:db": "pnpm gen-database-schema",
-    "gen-database-schema": "dbml2sql database.dbml --dialect sqlite -o generated/db.raw.sql && printf 'PRAGMA foreign_keys = ON;\n\n' > generated/db.sql && cat generated/db.raw.sql >> generated/db.sql && rm generated/db.raw.sql",
+    "gen-database-schema": "dbml2sql database.dbml --dialect sqlite -o generated/db.raw.sql && tsx scripts/convert-to-sqlite.ts",
     "gen-docs": "pnpm exec redocly build-docs generated/api.yaml --output generated/redoc.html",
     "gen-openapi-schema": "tsp compile .",
-    "gen-types": "openapi-typescript ./generated/api.yaml --output ../src/types/generated/api.d.ts"
+    "gen-types": "openapi-typescript ./generated/api.yaml --output ../src/types/generated/api.d.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@typespec/compiler": "1.3.0",
@@ -21,8 +24,13 @@
   },
   "devDependencies": {
     "@dbml/cli": "^3.13.9",
+    "@types/node": "^20.19.10",
+    "@vitest/coverage-v8": "^2.1.8",
     "@redocly/cli": "^1.25.17",
     "npm-run-all2": "^8.0.4",
-    "openapi-typescript": "^7.8.0"
+    "openapi-typescript": "^7.8.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.8"
   }
 }

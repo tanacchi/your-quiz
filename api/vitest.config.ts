@@ -5,8 +5,9 @@ export default defineConfig({
     // Node.js環境でAPIテストを実行
     environment: "node",
 
-    // テストファイルパターン
-    include: ["src/**/*.{test,spec}.{ts,js}"],
+    // テストファイルパターン（scripts配下を除外）
+    include: ["src/**/*.{test,spec}.ts"],
+    exclude: ["spec/**/*", "node_modules/**/*"],
 
     // グローバル設定
     globals: true,

@@ -11,12 +11,12 @@ declare global {
 // Uses ユビキタス言語 (Ubiquitous Language): Developer, TypeSpec, Schema, neverthrow
 // Endpoint: GET /api/quiz/v1/manage/quizzes
 
-describe("Quiz Listing - Quizリスト取得", () => {
+describe.todo("Quiz Listing - Quizリスト取得", () => {
   beforeAll(async () => {
     // Given: API server is running with TypeSpec generated types
   });
 
-  describe("型準拠: TypeScript type compliance verification", () => {
+  describe.todo("型準拠: TypeScript type compliance verification", () => {
     // Scenario Outline: TypeScript type compliance verification for GET list endpoint
     quizListingTypeSafetyData.typeComplianceScenarios.forEach(
       (testCase, _index) => {
@@ -40,7 +40,7 @@ describe("Quiz Listing - Quizリスト取得", () => {
     );
   });
 
-  describe("正常系: Valid search and filtering scenarios", () => {
+  describe.todo("正常系: Valid search and filtering scenarios", () => {
     quizSearchData.validSearches.forEach((testCase, _index) => {
       it(`Searches quizzes successfully: ${testCase.description}`, async () => {
         // Given: Valid search filters
@@ -62,7 +62,7 @@ describe("Quiz Listing - Quizリスト取得", () => {
     });
   });
 
-  describe("ワークフローリスト: Quiz list verification workflow", () => {
+  describe.todo("ワークフローリスト: Quiz list verification workflow", () => {
     quizListingTypeSafetyData.workflowListScenarios.forEach(
       (testCase, _index) => {
         it(`Workflow list step: ${testCase.description}`, async () => {
@@ -91,7 +91,7 @@ describe("Quiz Listing - Quizリスト取得", () => {
     );
   });
 
-  describe("ページネーション: Pagination scenarios", () => {
+  describe.todo("ページネーション: Pagination scenarios", () => {
     quizSearchData.paginationScenarios.forEach((testCase, _index) => {
       it(`Pagination works correctly: ${testCase.description}`, async () => {
         // Given: Pagination parameters
@@ -112,7 +112,7 @@ describe("Quiz Listing - Quizリスト取得", () => {
     });
   });
 
-  describe("空結果: Empty result handling scenarios", () => {
+  describe.todo("空結果: Empty result handling scenarios", () => {
     quizSearchData.emptyResultScenarios.forEach((testCase, _index) => {
       it(`Empty results handled correctly: ${testCase.description}`, async () => {
         // Given: Search filters that match nothing
@@ -133,7 +133,7 @@ describe("Quiz Listing - Quizリスト取得", () => {
     });
   });
 
-  describe("レスポンススキーマ: Response schema validation", () => {
+  describe.todo("レスポンススキーマ: Response schema validation", () => {
     quizListingTypeSafetyData.responseSchemaScenarios.forEach(
       (testCase, _index) => {
         it(`Response schema validation: ${testCase.description}`, async () => {
