@@ -26,7 +26,15 @@ import {
  * 型安全なエラーハンドリングを提供します。
  */
 export class D1QuizRepository implements IQuizRepository {
-  constructor(private readonly db: D1Database) {}
+  constructor(private readonly db: D1Database) {
+    console.log("D1QuizRepository constructor - db:", !!db);
+    if (!db) {
+      console.error(
+        "FATAL: D1Database is undefined in D1QuizRepository constructor!",
+      );
+      throw new Error("D1Database is required for D1QuizRepository");
+    }
+  }
 
   /**
    * クイズとソリューションを作成
@@ -107,7 +115,16 @@ export class D1QuizRepository implements IQuizRepository {
     },
     RepositoryError
   > {
-    console.error("D1QuizRepository#findMany");
+    console.log("D1QuizRepository#findMany - db exists:", !!this.db);
+    if (!this.db) {
+      console.error("FATAL: this.db is undefined in findMany!");
+      return errAsync(
+        RepositoryErrorFactory.findFailed(
+          "Quiz",
+          new Error("Database connection not available"),
+        ),
+      );
+    }
     return this.executeFindMany(options).mapErr((error) => {
       console.error("Failed to find quizzes:", error);
       return error;
@@ -366,6 +383,17 @@ export class D1QuizRepository implements IQuizRepository {
     },
     RepositoryError
   > {
+    console.log("executeFindMany - db exists:", !!this.db);
+    if (!this.db) {
+      console.error("FATAL: this.db is undefined in executeFindMany!");
+      return errAsync(
+        RepositoryErrorFactory.findFailed(
+          "Quiz",
+          new Error("Database connection not available in executeFindMany"),
+        ),
+      );
+    }
+
     const conditions: string[] = [];
     const params: D1QueryParam[] = [];
 
@@ -385,8 +413,8 @@ export class D1QuizRepository implements IQuizRepository {
 
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-    console.warn(`whereClause: ${whereClause}`);
-    console.warn(`params: ${params}`);
+    console.debug(`whereClause: ${whereClause}`);
+    console.debug(`params: ${params}`);
 
     // 総数を取得
     const countQuery = ResultAsync.fromPromise(
@@ -422,10 +450,10 @@ export class D1QuizRepository implements IQuizRepository {
           error instanceof Error ? error : new Error("Failed to fetch quizzes"),
         ),
     );
-    console.warn(`dataQuery: ${JSON.stringify(dataQuery)}`);
+    console.debug(`dataQuery: ${JSON.stringify(dataQuery)}`);
 
     return ResultAsync.combine([countQuery, dataQuery])
-      .orTee((e) => console.warn(`findError: ${e.message}`))
+      .orTee((e) => console.debug(`findError: ${e.message}`))
       .andThen(([countResult, dataResult]) => {
         // Count結果の検証
         if (!isCountResult(countResult)) {
@@ -442,7 +470,7 @@ export class D1QuizRepository implements IQuizRepository {
         const totalCount = (countResult as { total: number }).total;
 
         // QuizSummaryエンティティへの変換
-        console.warn(`result: ${JSON.stringify(dataResult.results)}`);
+        console.debug(`result: ${JSON.stringify(dataResult.results)}`);
         const mappingResult = D1QuizSummaryMapper.fromRows(
           dataResult.results.filter(isQuizRow),
         );
