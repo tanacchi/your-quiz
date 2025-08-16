@@ -63,6 +63,19 @@ export interface ParsedChoice {
 /**
  * Record<string, unknown>から安全にプロパティを取得
  */
+/**
+ * Safely retrieves the value of a property from a Record<string, unknown> object.
+ * Checks only for own properties (not inherited ones) using Object.hasOwn.
+ * Returns the property value if it exists, otherwise returns undefined.
+ *
+ * @param obj - The object to retrieve the property from.
+ * @param key - The property key to access.
+ * @returns The value of the property if it exists, otherwise undefined.
+ * @remarks
+ * - This function does not traverse the prototype chain.
+ * - It does not check for non-enumerable properties.
+ * - Use with caution if the object may not be a plain object.
+ */
 function getProperty(obj: Record<string, unknown>, key: string): unknown {
   return Object.hasOwn(obj, key) ? obj[key] : undefined;
 }
