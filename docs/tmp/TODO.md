@@ -85,3 +85,10 @@
 - バリデーションエラーから接続エラーまである程度細かい粒度でエラーを定義し、全てに対して API のレスポンスを定義する。
 
 api/src 配下の全ての typescript ファイルについて、docs/instructions/shared/languages/typescript.md およびdocs/instructions/shared/workflow/09.01_unit-testing.md を参考にしつつ、テストを増強し、Statements、Branches、Lines など全てのカバレッジで95%以上達成を全てのファイルで満たすようにテストを強化してください.
+
+## DB周り
+
+- SQL の整合性チェックをする仕組み、テスト
+- クエリパラメータからエンティティへ変換する（基本全て string で受ける）
+- DB からの row をエンティティへ変換する処理（mapper 側で用意する？）
+
