@@ -21,7 +21,7 @@ describe("QuizSummary Schema", () => {
     tagIds: ["tag-1", "tag-2"],
     status: "pending_approval",
     creatorId: "creator-789",
-    createdAt: "2023-12-01T10:00:00.000Z",
+    createdAt: "2023-12-01 10:00:00",
   };
 
   describe("Brand Types", () => {
@@ -235,7 +235,7 @@ describe("QuizSummary Schema", () => {
         const approvedData = {
           ...validQuizSummaryData,
           status: "approved" as const,
-          approvedAt: "2023-12-02T10:00:00.000Z",
+          approvedAt: "2023-12-02 10:00:00",
         };
         const result = QuizSummarySchema.safeParse(approvedData);
         expect(result.success).toBe(true);
@@ -366,8 +366,8 @@ describe("QuizSummary Schema", () => {
 
     describe("Date Validation", () => {
       it.each([
-        ["ISO string", "2023-12-01T10:00:00.000Z", true],
-        ["ISO without milliseconds", "2023-12-01T10:00:00Z", true],
+        ["SQLite format", "2023-12-01 10:00:00", true],
+        ["SQLite date only", "2023-12-01", false],
         ["invalid date", "invalid-date", false],
         ["empty string", "", false],
         ["null", null, false],
@@ -390,8 +390,8 @@ describe("QuizSummary Schema", () => {
         tagIds: ["typescript", "advanced", "web-dev"],
         status: "approved" as const,
         creatorId: "creator-expert-789",
-        createdAt: "2023-12-01T10:00:00.000Z",
-        approvedAt: "2023-12-02T15:30:00.000Z",
+        createdAt: "2023-12-01 10:00:00",
+        approvedAt: "2023-12-02 15:30:00",
       };
 
       const result = QuizSummarySchema.safeParse(fullApprovedQuiz);
@@ -412,7 +412,7 @@ describe("QuizSummary Schema", () => {
         solutionId: "s",
         status: "pending_approval" as const,
         creatorId: "c",
-        createdAt: "2023-12-01T10:00:00.000Z",
+        createdAt: "2023-12-01 10:00:00",
       };
 
       const result = QuizSummarySchema.safeParse(minimalQuiz);

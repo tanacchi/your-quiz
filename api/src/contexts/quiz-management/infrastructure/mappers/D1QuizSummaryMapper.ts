@@ -43,13 +43,13 @@ export class D1QuizSummaryMapper {
 
     // QuizSummaryエンティティの作成データを準備
     const createData = {
-      id: row.id,
+      id: String(row.id),
       question: row.question,
       answerType: row.answer_type,
-      solutionId: row.solution_id || "",
+      solutionId: String(row.solution_id),
       explanation: row.explanation || undefined,
       status: row.status,
-      creatorId: row.creator_id,
+      creatorId: String(row.creator_id),
       createdAt: row.created_at,
       approvedAt: row.approved_at || undefined,
       tagIds: [],
@@ -83,7 +83,6 @@ export class D1QuizSummaryMapper {
         errors.push(new Error(`Row ${index}: ${mappingResult.error.message}`));
         continue;
       }
-
       results.push(mappingResult.value);
     }
 

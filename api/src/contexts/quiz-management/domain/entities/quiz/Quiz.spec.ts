@@ -14,7 +14,7 @@ describe("Quiz", () => {
       "TypeScript adds static typing to JavaScript while maintaining compatibility",
     status: "pending_approval" as const,
     creatorId: "creator-1",
-    createdAt: "2023-12-01T10:00:00.000Z",
+    createdAt: "2023-12-01 10:00:00",
     approvedAt: undefined,
   } as const;
 
@@ -129,25 +129,23 @@ describe("Quiz", () => {
 
     describe("Approval Workflow", () => {
       it("should approve quiz correctly", () => {
-        const approvedResult = quiz.approve("2023-12-02T10:00:00.000Z");
+        const approvedResult = quiz.approve("2023-12-02 10:00:00");
         expect(approvedResult.isOk()).toBe(true);
 
         if (approvedResult.isOk()) {
           const approvedQuiz = approvedResult.value;
           expect(approvedQuiz.get("status")).toBe("approved");
-          expect(approvedQuiz.get("approvedAt")).toBe(
-            "2023-12-02T10:00:00.000Z",
-          );
+          expect(approvedQuiz.get("approvedAt")).toBe("2023-12-02 10:00:00");
         }
       });
 
       it("should prevent approval of non-pending quiz", () => {
-        const approvedResult = quiz.approve("2023-12-02T10:00:00.000Z");
+        const approvedResult = quiz.approve("2023-12-02 10:00:00");
         expect(approvedResult.isOk()).toBe(true);
 
         const reApprovalResult = approvedResult
           ._unsafeUnwrap()
-          .approve("2023-12-03T10:00:00.000Z");
+          .approve("2023-12-03 10:00:00");
         expect(reApprovalResult.isErr()).toBe(true);
 
         if (reApprovalResult.isErr()) {
@@ -166,7 +164,7 @@ describe("Quiz", () => {
       });
 
       it("should prevent rejection of non-pending quiz", () => {
-        const approvedResult = quiz.approve("2023-12-02T10:00:00.000Z");
+        const approvedResult = quiz.approve("2023-12-02 10:00:00");
         expect(approvedResult.isOk()).toBe(true);
 
         const rejectionResult = approvedResult
@@ -182,7 +180,7 @@ describe("Quiz", () => {
       });
 
       it("should prevent updates for approved quiz", () => {
-        const approvedResult = quiz.approve("2023-12-02T10:00:00.000Z");
+        const approvedResult = quiz.approve("2023-12-02 10:00:00");
         expect(approvedResult.isOk()).toBe(true);
 
         const approvedQuiz = approvedResult._unsafeUnwrap();
@@ -200,7 +198,7 @@ describe("Quiz", () => {
       });
 
       it("should prevent deletion for approved quiz", () => {
-        const approvedResult = quiz.approve("2023-12-02T10:00:00.000Z");
+        const approvedResult = quiz.approve("2023-12-02 10:00:00");
         expect(approvedResult.isOk()).toBe(true);
 
         const approvedQuiz = approvedResult._unsafeUnwrap();
@@ -264,7 +262,7 @@ describe("Quiz", () => {
         id: "quiz-draft",
         creatorId: "creator-draft",
         status: "pending_approval",
-        createdAt: "2023-12-01T10:00:00.000Z",
+        createdAt: "2023-12-01 10:00:00",
       });
 
       expect(draft.hasErrors()).toBe(false);
@@ -320,7 +318,7 @@ describe("Quiz", () => {
               "Rust is designed for systems programming with memory safety",
             status: "pending_approval",
             creatorId: "creator-rust",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           const result = Quiz.fromDraft(draft);
@@ -354,7 +352,7 @@ describe("Quiz", () => {
           });
           draft.update("status", "pending_approval");
           draft.update("creatorId", "creator-ts");
-          draft.update("createdAt", "2023-12-01T10:00:00.000Z");
+          draft.update("createdAt", "2023-12-01 10:00:00");
 
           expect(draft.hasErrors()).toBe(false);
 
@@ -379,7 +377,7 @@ describe("Quiz", () => {
             solution: { id: "sol-business", value: true },
             status: "pending_approval",
             creatorId: "creator-business",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           const result = Quiz.fromDraft(draft);
@@ -391,7 +389,7 @@ describe("Quiz", () => {
             expect(quiz.canBeDeleted()).toBe(true);
 
             // Test approval workflow
-            const approvedResult = quiz.approve("2023-12-02T10:00:00.000Z");
+            const approvedResult = quiz.approve("2023-12-02 10:00:00");
             expect(approvedResult.isOk()).toBe(true);
 
             if (approvedResult.isOk()) {
@@ -413,7 +411,7 @@ describe("Quiz", () => {
             solution: { id: "sol-invalid", value: true },
             status: "pending_approval",
             creatorId: "creator-invalid",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           const result = Quiz.fromDraft(draft);
@@ -435,7 +433,7 @@ describe("Quiz", () => {
             // Missing solution
             status: "pending_approval",
             creatorId: "creator-missing",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           const result = Quiz.fromDraft(draft);
@@ -458,7 +456,7 @@ describe("Quiz", () => {
             solution: { id: "sol-cross", value: true },
             status: "approved", // Invalid without approvedAt
             creatorId: "creator-cross",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
             // Missing approvedAt for approved status
           });
 
@@ -484,7 +482,7 @@ describe("Quiz", () => {
             solution: { id: "sol-patches", value: true },
             status: "pending_approval", // Valid status
             creatorId: "creator-patches",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           expect(draft.hasErrors()).toBe(true);
@@ -517,7 +515,7 @@ describe("Quiz", () => {
             solution: { id: "sol-multi-null", value: true },
             status: "pending_approval",
             creatorId: "creator-multi",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           let iterationCount = 0;
@@ -552,7 +550,7 @@ describe("Quiz", () => {
             solution: { id: "sol-preserve", value: true },
             status: "pending_approval" as const,
             creatorId: "creator-preserve",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           };
 
           draft.with({
@@ -614,7 +612,7 @@ describe("Quiz", () => {
             solution: { id: "sol-equivalent", value: true },
             status: "pending_approval",
             creatorId: "creator-equivalent",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           const fromDraftResult = Quiz.fromDraft(draft);
@@ -653,7 +651,7 @@ describe("Quiz", () => {
             solution: { id: "sol-single", value: true },
             status: "pending_approval",
             creatorId: "creator-single",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           expect(draft.hasErrors()).toBe(true);
@@ -689,7 +687,7 @@ describe("Quiz", () => {
             solution: { id: "sol-multi", value: true },
             status: "pending_approval", // Invalid
             creatorId: "creator-multi",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           const initialErrorCount = draft.getIssues().length;
@@ -714,7 +712,7 @@ describe("Quiz", () => {
             solution: { id: "sol-empty", value: true },
             status: "pending_approval",
             creatorId: "creator-empty",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           const originalState = { ...draft.state };
@@ -735,7 +733,7 @@ describe("Quiz", () => {
             solution: { id: "sol-revalidate", value: true },
             status: "pending_approval",
             creatorId: "creator-revalidate",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           expect(draft.hasErrors()).toBe(true);
@@ -757,7 +755,7 @@ describe("Quiz", () => {
             solution: { id: "sol-obj", value: true },
             status: "pending_approval",
             creatorId: "creator-obj",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           // Create an object patch that modifies explanation
@@ -779,7 +777,7 @@ describe("Quiz", () => {
             solution: { id: "sol-error", value: true },
             status: "pending_approval",
             creatorId: "creator-error",
-            createdAt: "2023-12-01T10:00:00.000Z",
+            createdAt: "2023-12-01 10:00:00",
           });
 
           // Should not crash when empty patches array is provided

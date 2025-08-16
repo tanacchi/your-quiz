@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dateStringOnlySchema } from "../../../../../shared/schemas/datetime.schema";
+import { sqliteDateTimeSchema } from "../../../../../shared/schemas/datetime.schema";
 
 // Brand types for type safety
 export const TagId = z.string().min(1).brand<"TagId">();
@@ -23,7 +23,7 @@ export const TagSchema = z
     id: TagId,
     name: z.string().min(1).max(50),
     createdBy: UserId,
-    createdAt: dateStringOnlySchema,
+    createdAt: sqliteDateTimeSchema,
     relatedTags: z
       .array(
         z.object({

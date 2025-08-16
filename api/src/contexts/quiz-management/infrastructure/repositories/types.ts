@@ -76,27 +76,38 @@ export function isQuizRow(data: unknown): data is QuizRow {
   }
 
   const row = data as Record<string, unknown>;
+  const cond_id =
+    typeof getProperty(row, "id") === "string" ||
+    typeof getProperty(row, "id") === "number";
+  const cond_question = typeof getProperty(row, "question") === "string";
+  const cond_answer_type = typeof getProperty(row, "answer_type") === "string";
+  const cond_solution_id =
+    typeof getProperty(row, "solution_id") === "string" ||
+    typeof getProperty(row, "solution_id") === "number";
+  const cond_status = typeof getProperty(row, "status") === "string";
+  const cond_creator_id =
+    typeof getProperty(row, "creator_id") === "string" ||
+    typeof getProperty(row, "creator_id") === "number";
+  const cond_created_at = typeof getProperty(row, "created_at") === "string";
+  const cond_explanation =
+    getProperty(row, "explanation") === null ||
+    getProperty(row, "explanation") === undefined ||
+    typeof getProperty(row, "explanation") === "string";
+  const cond_approved_at =
+    getProperty(row, "approved_at") === null ||
+    getProperty(row, "approved_at") === undefined ||
+    typeof getProperty(row, "approved_at") === "string";
 
   return (
-    // D1では数値IDが返されるため、number | string両方を許可
-    (typeof getProperty(row, "id") === "string" ||
-      typeof getProperty(row, "id") === "number") &&
-    typeof getProperty(row, "question") === "string" &&
-    typeof getProperty(row, "answer_type") === "string" &&
-    // D1では数値IDが返されるため、number | string両方を許可
-    (typeof getProperty(row, "solution_id") === "string" ||
-      typeof getProperty(row, "solution_id") === "number") &&
-    typeof getProperty(row, "status") === "string" &&
-    // D1では数値IDが返されるため、number | string両方を許可
-    (typeof getProperty(row, "creator_id") === "string" ||
-      typeof getProperty(row, "creator_id") === "number") &&
-    typeof getProperty(row, "created_at") === "string" &&
-    (getProperty(row, "explanation") === null ||
-      getProperty(row, "explanation") === undefined ||
-      typeof getProperty(row, "explanation") === "string") &&
-    (getProperty(row, "approved_at") === null ||
-      getProperty(row, "approved_at") === undefined ||
-      typeof getProperty(row, "approved_at") === "string")
+    cond_id &&
+    cond_question &&
+    cond_answer_type &&
+    cond_solution_id &&
+    cond_status &&
+    cond_creator_id &&
+    cond_created_at &&
+    cond_explanation &&
+    cond_approved_at
   );
 }
 

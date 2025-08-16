@@ -12,7 +12,12 @@
     "directory": "./public"
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 0.5,
+      "invocation_logs": true
+    }
   },
   /**
    * Smart Placement
@@ -52,6 +57,21 @@
     "dev": {
       "vars": {
         "NODE_ENV": "development",
+        "USE_MOCK_DB": "false"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "quiz-db",
+          "migrations_dir": "migrations/quiz-db",
+          "database_id": "b873de55-c382-443d-8714-3d7c1eeef282",
+          "preview_database_id": "local"
+        }
+      ]
+    },
+    "dev-mock": {
+      "vars": {
+        "NODE_ENV": "development",
         "USE_MOCK_DB": "true"
       }
     },
@@ -59,6 +79,14 @@
       "vars": {
         "NODE_ENV": "test",
         "USE_MOCK_DB": "true"
+      },
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 0.3,
+          "invocation_logs": false
+        }
       }
     }
   }

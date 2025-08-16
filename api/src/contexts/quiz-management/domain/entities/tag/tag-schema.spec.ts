@@ -14,7 +14,7 @@ describe("Tag Schema", () => {
     id: "tag-123",
     name: "TypeScript",
     createdBy: "user-456",
-    createdAt: "2023-12-01T10:00:00.000Z",
+    createdAt: "2023-12-01 10:00:00",
     relatedTags: [
       {
         relationType: "category",
@@ -241,8 +241,8 @@ describe("Tag Schema", () => {
 
     describe("Date Validation", () => {
       it.each([
-        ["ISO string", "2023-12-01T10:00:00.000Z", true],
-        ["ISO without milliseconds", "2023-12-01T10:00:00Z", true],
+        ["SQLite format", "2023-12-01 10:00:00", true],
+        ["SQLite date only", "2023-12-01", false],
         ["invalid date", "invalid-date", false],
         ["empty string", "", false],
         ["null", null, false],
@@ -541,7 +541,7 @@ describe("Tag Schema", () => {
         id: "tag-typescript",
         name: "TypeScript",
         createdBy: "user-expert",
-        createdAt: "2023-12-01T10:00:00.000Z",
+        createdAt: "2023-12-01 10:00:00",
         relatedTags: [
           {
             relationType: "hierarchy" as const,
@@ -585,7 +585,7 @@ describe("Tag Schema", () => {
         id: "t",
         name: "T",
         createdBy: "u",
-        createdAt: "2023-12-01T10:00:00.000Z",
+        createdAt: "2023-12-01 10:00:00",
       };
 
       const result = TagSchema.safeParse(minimalTag);
@@ -601,7 +601,7 @@ describe("Tag Schema", () => {
         id: "tag-unicode-special",
         name: "C++ & プログラミング 🚀",
         createdBy: "user-international",
-        createdAt: "2023-12-01T10:00:00.000Z",
+        createdAt: "2023-12-01 10:00:00",
         relatedTags: [
           {
             relationType: "category" as const,

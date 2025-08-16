@@ -23,10 +23,21 @@ import type { CloudflareBindings } from "../../shared/types";
  * @returns 適切なリポジトリ実装
  */
 export function createQuizRepository(env: CloudflareBindings): IQuizRepository {
+  console.log("QuizRepositoryFactory - env:", {
+    NODE_ENV: env.NODE_ENV,
+    USE_MOCK_DB: env.USE_MOCK_DB,
+    DB_exists: !!env.DB,
+  });
+
   if (shouldUseMock(env)) {
+    console.log("Using MockQuizRepository");
     return new MockQuizRepository();
   }
 
+  console.log("Using D1QuizRepository, DB:", !!env.DB);
+  if (!env.DB) {
+    console.error("ERROR: env.DB is undefined!");
+  }
   return new D1QuizRepository(env.DB);
 }
 

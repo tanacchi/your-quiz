@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dateStringOnlySchema } from "../../../../../shared/schemas/datetime.schema";
+import { sqliteDateTimeSchema } from "../../../../../shared/schemas/datetime.schema";
 import {
   CreatorId as CreatorIdSchema,
   QuizId as QuizIdSchema,
@@ -16,8 +16,8 @@ export const QuizSchema = z
     explanation: z.string().max(1000).optional(),
     status: z.enum(["pending_approval", "approved", "rejected"]),
     creatorId: CreatorIdSchema,
-    createdAt: dateStringOnlySchema,
-    approvedAt: dateStringOnlySchema.optional(),
+    createdAt: sqliteDateTimeSchema,
+    approvedAt: sqliteDateTimeSchema.optional(),
   })
   .strict()
   .superRefine((quiz, ctx) => {
