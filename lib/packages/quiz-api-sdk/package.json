@@ -19,7 +19,12 @@
     "generate": "orval --config orval.config.ts",
     "gen:msw": "tsx scripts/gen-msw-handlers.ts"
   },
-  "keywords": ["quiz", "api", "sdk", "typescript"],
+  "keywords": [
+    "quiz",
+    "api",
+    "sdk",
+    "typescript"
+  ],
   "author": "tanacchi",
   "license": "MIT",
   "packageManager": "pnpm@10.14.0",
