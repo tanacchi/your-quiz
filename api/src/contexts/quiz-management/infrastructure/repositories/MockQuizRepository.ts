@@ -188,6 +188,7 @@ export class MockQuizRepository implements IQuizRepository {
     },
     RepositoryError
   > {
+    console.error("MockQuizRepository#findMany");
     let filteredData = [...this.mockData];
 
     // フィルタリング

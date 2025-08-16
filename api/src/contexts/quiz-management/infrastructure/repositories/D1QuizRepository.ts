@@ -1,4 +1,4 @@
-import { ResultAsync } from "neverthrow";
+import { errAsync, ResultAsync } from "neverthrow";
 import {
   type RepositoryError,
   RepositoryErrorFactory,
@@ -107,6 +107,7 @@ export class D1QuizRepository implements IQuizRepository {
     },
     RepositoryError
   > {
+    console.error("D1QuizRepository#findMany");
     return this.executeFindMany(options).mapErr((error) => {
       console.error("Failed to find quizzes:", error);
       return error;
@@ -384,6 +385,8 @@ export class D1QuizRepository implements IQuizRepository {
 
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    console.warn(`whereClause: ${whereClause}`);
+    console.warn(`params: ${params}`);
 
     // 総数を取得
     const countQuery = ResultAsync.fromPromise(
@@ -405,7 +408,7 @@ export class D1QuizRepository implements IQuizRepository {
     const dataQuery = ResultAsync.fromPromise(
       this.db
         .prepare(`
-        SELECT q.id, q.question, q.answer_type, q.explanation, q.status, q.creator_id, q.created_at, q.approved_at
+        SELECT q.id, q.question, q.answer_type, q.solution_id, q.explanation, q.status, q.creator_id, q.created_at, q.approved_at
         FROM Quiz q
         ${whereClause}
         ORDER BY q.created_at DESC
@@ -419,9 +422,11 @@ export class D1QuizRepository implements IQuizRepository {
           error instanceof Error ? error : new Error("Failed to fetch quizzes"),
         ),
     );
+    console.warn(`dataQuery: ${JSON.stringify(dataQuery)}`);
 
-    return ResultAsync.combine([countQuery, dataQuery]).andThen(
-      ([countResult, dataResult]) => {
+    return ResultAsync.combine([countQuery, dataQuery])
+      .orTee((e) => console.warn(`findError: ${e.message}`))
+      .andThen(([countResult, dataResult]) => {
         // Count結果の検証
         if (!isCountResult(countResult)) {
           return ResultAsync.fromSafePromise(
@@ -437,18 +442,17 @@ export class D1QuizRepository implements IQuizRepository {
         const totalCount = (countResult as { total: number }).total;
 
         // QuizSummaryエンティティへの変換
+        console.warn(`result: ${JSON.stringify(dataResult.results)}`);
         const mappingResult = D1QuizSummaryMapper.fromRows(
           dataResult.results.filter(isQuizRow),
         );
 
         if (mappingResult.isErr()) {
-          return ResultAsync.fromSafePromise(
-            Promise.reject(
-              RepositoryErrorFactory.findFailed(
-                "Quiz",
-                new Error(
-                  `Failed to map quiz rows to QuizSummary entities: ${mappingResult.error.message}`,
-                ),
+          return errAsync(
+            RepositoryErrorFactory.findFailed(
+              "Quiz",
+              new Error(
+                `Failed to map quiz rows to QuizSummary entities: ${mappingResult.error.message}`,
               ),
             ),
           );
@@ -461,8 +465,7 @@ export class D1QuizRepository implements IQuizRepository {
             hasMore: offset + limit < totalCount,
           }),
         );
-      },
-    );
+      });
   }
 
   private executeUpdate(

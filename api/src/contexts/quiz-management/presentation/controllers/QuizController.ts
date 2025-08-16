@@ -130,6 +130,7 @@ export class QuizController {
       .match(
         (res) => c.json(res),
         (error) => {
+          console.error(`Error: ${error}`);
           const errorResponse = ControllerErrorHandler.handleError(error);
           return c.json(errorResponse.response, errorResponse.statusCode);
         },
