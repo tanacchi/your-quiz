@@ -22,4 +22,14 @@ export const listQuizzesQuerySchema = z.object({
   offset: z.number().int().min(0).default(0),
 });
 
+export const listQueryFromReq = z
+  .object({
+    status: z.string().optional(),
+    creatorId: z.string().optional(),
+    ids: z.array(z.string()).optional(),
+    limit: z.coerce.number().optional(),
+    offset: z.coerce.number().optional(),
+  })
+  .pipe(listQuizzesQuerySchema);
+
 export type ListQuizzesQuery = z.output<typeof listQuizzesQuerySchema>;
