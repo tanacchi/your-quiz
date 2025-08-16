@@ -4,7 +4,6 @@ import {
   EntityBase,
   type EntityParseError,
   type EntityParseResult,
-  type EntityPatch,
   toIssues,
 } from "../../../../../shared/validation/entity";
 import { suggestQuizSummaryPatches } from "./quiz-summary-patches";
@@ -16,7 +15,6 @@ import {
 } from "./quiz-summary-schema";
 
 // Type aliases for QuizSummary-specific types
-export type QuizSummaryPatch = EntityPatch<QuizSummaryInput>;
 export type QuizSummaryParseError = EntityParseError<QuizSummaryInput>;
 export type QuizSummaryParseResult = EntityParseResult<
   QuizSummary,
@@ -133,13 +131,6 @@ export class QuizSummary extends EntityBase<
   ): QuizSummaryParseResult {
     return draft.commit();
   }
-
-  // Common methods inherited from EntityBase:
-  // - toData(): QuizSummaryData
-  // - get<K>(key: K): QuizSummaryData[K]
-  // - update<K>(key: K, value: QuizSummaryInput[K]): QuizSummaryParseResult
-  // - with(patch: Partial<QuizSummaryInput>): QuizSummaryParseResult
-  // - withMutator(mutator: (draft: QuizSummaryInput) => void): QuizSummaryParseResult
 
   // Business logic methods
 
@@ -291,19 +282,5 @@ export class QuizSummary extends EntityBase<
     constructor() {
       super(parseQuizSummary);
     }
-
-    // Common methods inherited from DraftBase:
-    // - commit(): QuizSummaryParseResult
-    // - validate(): QuizSummaryParseResult
-    // - getParseError(): QuizSummaryParseError | null
-    // - getIssues(): Issue[]
-    // - getPatches(): QuizSummaryPatch[]
-    // - applyPatches(patches: QuizSummaryPatch[]): void
-    // - update<K>(key: K, value: QuizSummaryInput[K]): void
-    // - with(patch: Partial<QuizSummaryInput>): void
-    // - get<K>(key: K): QuizSummaryInput[K] | undefined
-    // - clearErrors(): void
-    // - hasErrors(): boolean
-    // - getErrors(path: string): string[]
   };
 }

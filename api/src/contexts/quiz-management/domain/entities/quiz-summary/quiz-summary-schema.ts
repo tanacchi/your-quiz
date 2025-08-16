@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dateStringOnlySchema } from "../../../../../shared/schemas/datetime.schema";
+import { sqliteDateTimeSchema } from "../../../../../shared/schemas/datetime.schema";
 
 // Brand types for type safety
 export const QuizId = z.string().min(1).brand<"QuizId">();
@@ -42,8 +42,8 @@ export const QuizSummarySchema = z
     tagIds: TagIds,
     status: z.enum(["pending_approval", "approved", "rejected"]),
     creatorId: CreatorId,
-    createdAt: dateStringOnlySchema,
-    approvedAt: dateStringOnlySchema.optional(),
+    createdAt: sqliteDateTimeSchema,
+    approvedAt: sqliteDateTimeSchema.optional(),
   })
   .strict()
   .superRefine((quiz, ctx) => {

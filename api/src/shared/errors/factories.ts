@@ -4,6 +4,7 @@ import {
   ForbiddenError,
   InternalServerError,
   NotFoundError,
+  NotImplementedError,
   RateLimitError,
   UnauthorizedError,
   ValidationError,
@@ -13,7 +14,6 @@ import {
   DeleteFailedError,
   FindFailedError,
   JsonParseError,
-  NotImplementedError,
   UpdateFailedError,
 } from "./infrastructure";
 

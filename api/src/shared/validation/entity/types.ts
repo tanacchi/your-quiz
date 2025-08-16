@@ -25,7 +25,7 @@ export type EntityPatch<TInput> = Partial<TInput> | (() => Partial<TInput>);
  * @template TInput - The input type for the entity (typically z.input<Schema>)
  */
 export type EntityParseError<TInput> = {
-  kind: "parse";
+  kind: "parse" | "invalid_state";
   issues: Issue[];
   patches: EntityPatch<TInput>[];
 };

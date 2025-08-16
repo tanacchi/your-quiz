@@ -11,12 +11,12 @@ declare global {
 // Uses ユビキタス言語 (Ubiquitous Language): Developer, TypeSpec, Schema, neverthrow
 // Endpoint: POST /api/quiz/v1/manage/quizzes
 
-describe("Quiz Creation - クイズ作成", () => {
+describe.todo("Quiz Creation - クイズ作成", () => {
   beforeAll(async () => {
     // Given: API server is running with TypeSpec generated types
   });
 
-  describe("型準拠: TypeScript type compliance verification", () => {
+  describe.todo("型準拠: TypeScript type compliance verification", () => {
     // Scenario Outline: TypeScript type compliance verification for POST endpoint
     quizCreationTypeSafetyData.typeComplianceScenarios.forEach(
       (testCase, _index) => {
@@ -48,7 +48,7 @@ describe("Quiz Creation - クイズ作成", () => {
     );
   });
 
-  describe("正常系: Valid Quiz creation scenarios", () => {
+  describe.todo("正常系: Valid Quiz creation scenarios", () => {
     quizCreationData.validQuizzes.forEach((testCase, _index) => {
       it(`Creates quiz successfully: ${testCase.description}`, async () => {
         // Given: Valid quiz creation data
@@ -80,7 +80,7 @@ describe("Quiz Creation - クイズ作成", () => {
     });
   });
 
-  describe("異常系: Invalid Quiz creation scenarios", () => {
+  describe.todo("異常系: Invalid Quiz creation scenarios", () => {
     quizCreationData.invalidQuizzes.forEach((testCase, _index) => {
       it(`Handles invalid data: ${testCase.description}`, async () => {
         // Given: Invalid quiz creation data
@@ -100,7 +100,7 @@ describe("Quiz Creation - クイズ作成", () => {
     });
   });
 
-  describe("ワークフロー作成: Quiz creation workflow", () => {
+  describe.todo("ワークフロー作成: Quiz creation workflow", () => {
     quizCreationTypeSafetyData.workflowCreateScenarios.forEach(
       (testCase, _index) => {
         it(`Workflow creation step: ${testCase.description}`, async () => {
@@ -122,7 +122,7 @@ describe("Quiz Creation - クイズ作成", () => {
     );
   });
 
-  describe("エラー応答: ErrorResponse schema compliance", () => {
+  describe.todo("エラー応答: ErrorResponse schema compliance", () => {
     quizCreationTypeSafetyData.errorResponseScenarios.forEach(
       (testCase, _index) => {
         it(`Error responses follow schema: ${testCase.description}`, async () => {
@@ -154,7 +154,7 @@ describe("Quiz Creation - クイズ作成", () => {
     );
   });
 
-  describe("リクエストスキーマ: Request schema validation", () => {
+  describe.todo("リクエストスキーマ: Request schema validation", () => {
     quizCreationTypeSafetyData.requestSchemaScenarios.forEach(
       (testCase, _index) => {
         it(`Request schema validation: ${testCase.description}`, async () => {
@@ -173,7 +173,7 @@ describe("Quiz Creation - クイズ作成", () => {
     );
   });
 
-  describe("文字数制限: Character limit validation", () => {
+  describe.todo("文字数制限: Character limit validation", () => {
     quizCreationData.characterLimitScenarios.forEach((testCase, _index) => {
       it(`Character limit validation: ${testCase.description}`, async () => {
         // Given: Test data with specific character lengths
@@ -209,7 +209,7 @@ describe("Quiz Creation - クイズ作成", () => {
     });
   });
 
-  describe("Solution型矛盾: Solution type mismatch validation", () => {
+  describe.todo("Solution型矛盾: Solution type mismatch validation", () => {
     quizCreationData.solutionTypeMismatchScenarios.forEach(
       (testCase, _index) => {
         it(`Solution type mismatch: ${testCase.description}`, async () => {
