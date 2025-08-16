@@ -12,7 +12,12 @@
     "directory": "./public"
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 0.1,
+      "invocation_logs": false
+    }
   },
   /**
    * Smart Placement
@@ -53,12 +58,28 @@
       "vars": {
         "NODE_ENV": "development",
         "USE_MOCK_DB": "true"
+      },
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "invocation_logs": true
+        }
       }
     },
     "test": {
       "vars": {
         "NODE_ENV": "test",
         "USE_MOCK_DB": "true"
+      },
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 0.5,
+          "invocation_logs": false
+        }
       }
     }
   }
