@@ -6,7 +6,7 @@ describe("Tag", () => {
     id: TagId.parse("tag-1"),
     name: "JavaScript",
     createdBy: UserId.parse("user-1"),
-    createdAt: "2023-12-01T10:00:00.000Z",
+    createdAt: "2023-12-01 10:00:00",
     relatedTags: [],
   } as const;
 
@@ -243,7 +243,7 @@ describe("Tag", () => {
       draft.with({
         id: TagId.parse("tag-typescript"),
         createdBy: UserId.parse("user-1"),
-        createdAt: "2023-12-01T10:00:00.000Z",
+        createdAt: "2023-12-01 10:00:00",
       });
 
       const entityResult = draft.commit();

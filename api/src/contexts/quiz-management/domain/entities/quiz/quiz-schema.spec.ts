@@ -23,7 +23,7 @@ describe("Quiz Schema", () => {
     explanation: "TypeScript adds static typing to JavaScript",
     status: "pending_approval",
     creatorId: "creator-789",
-    createdAt: "2023-12-01T10:00:00.000Z",
+    createdAt: "2023-12-01 10:00:00",
   };
 
   describe("Brand Types Re-export", () => {
@@ -232,8 +232,8 @@ describe("Quiz Schema", () => {
 
     describe("Date Fields", () => {
       it.each([
-        ["ISO string", "2023-12-01T10:00:00.000Z", true],
-        ["ISO without milliseconds", "2023-12-01T10:00:00Z", true],
+        ["SQLite string", "2023-12-01 10:00:00", true],
+        ["SQLite format", "2023-12-01 10:00:00", true],
         ["invalid date", "invalid-date", false],
         ["empty string", "", false],
         ["null", null, false],
@@ -255,7 +255,7 @@ describe("Quiz Schema", () => {
       it("should accept valid approvedAt", () => {
         const dataWithApprovedAt = {
           ...validQuizData,
-          approvedAt: "2023-12-02T15:00:00.000Z",
+          approvedAt: "2023-12-02 15:00:00",
         };
         const result = QuizSchema.safeParse(dataWithApprovedAt);
         expect(result.success).toBe(true);
@@ -280,7 +280,7 @@ describe("Quiz Schema", () => {
         const approvedData = {
           ...validQuizData,
           status: "approved" as const,
-          approvedAt: "2023-12-02T10:00:00.000Z",
+          approvedAt: "2023-12-02 10:00:00",
         };
         const result = QuizSchema.safeParse(approvedData);
         expect(result.success).toBe(true);
@@ -433,8 +433,8 @@ describe("Quiz Schema", () => {
           "TypeScript provides static type checking at compile time, making it strongly typed compared to vanilla JavaScript.",
         status: "approved" as const,
         creatorId: "creator-expert-789",
-        createdAt: "2023-12-01T10:00:00.000Z",
-        approvedAt: "2023-12-02T15:30:00.000Z",
+        createdAt: "2023-12-01 10:00:00",
+        approvedAt: "2023-12-02 15:30:00",
       };
 
       const result = QuizSchema.safeParse(fullApprovedQuiz);
@@ -460,7 +460,7 @@ describe("Quiz Schema", () => {
         },
         status: "pending_approval" as const,
         creatorId: "c",
-        createdAt: "2023-12-01T10:00:00.000Z",
+        createdAt: "2023-12-01 10:00:00",
       };
 
       const result = QuizSchema.safeParse(minimalQuiz);

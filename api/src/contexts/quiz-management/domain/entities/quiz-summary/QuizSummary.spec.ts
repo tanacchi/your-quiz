@@ -13,7 +13,7 @@ describe("QuizSummary", () => {
     tagIds: validTagIds,
     status: "pending_approval",
     creatorId: "creator-1",
-    createdAt: "2023-12-01T10:00:00.000Z",
+    createdAt: "2023-12-01 10:00:00",
     approvedAt: undefined,
   } as const;
 
@@ -120,12 +120,12 @@ describe("QuizSummary", () => {
         [
           "invalid createdAt format",
           { createdAt: "invalid-date" },
-          "Invalid ISO8601 datetime",
+          "Invalid SQLite datetime format",
         ],
         [
           "invalid approvedAt format",
           { approvedAt: "invalid-date" },
-          "Invalid ISO8601 datetime",
+          "Invalid SQLite datetime format",
         ],
       ])("should reject %s", (_desc, invalidFields, expectedErrorMessage) => {
         const invalidData = {
@@ -313,7 +313,7 @@ describe("QuizSummary", () => {
           ...(validQuizData as Record<string, unknown>),
           status,
           ...(status === "approved" && {
-            approvedAt: "2023-12-01T12:00:00.000Z",
+            approvedAt: "2023-12-01 12:00:00",
           }),
         };
 
@@ -333,7 +333,7 @@ describe("QuizSummary", () => {
           ...(validQuizData as Record<string, unknown>),
           status,
           ...(status === "approved" && {
-            approvedAt: "2023-12-01T12:00:00.000Z",
+            approvedAt: "2023-12-01 12:00:00",
           }),
         };
 
@@ -347,7 +347,7 @@ describe("QuizSummary", () => {
       it("should approve pending quiz successfully", () => {
         const initialResult = QuizSummary.from(validQuizData);
         const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
-        const approvedAt = "2023-12-01T12:00:00.000Z";
+        const approvedAt = "2023-12-01 12:00:00";
 
         const result = quiz.approve(approvedAt);
 
@@ -357,7 +357,7 @@ describe("QuizSummary", () => {
       });
 
       it.each([
-        ["approved", "2023-12-01T12:00:00.000Z"],
+        ["approved", "2023-12-01 12:00:00"],
         ["rejected", undefined],
       ])("should reject approval for %s status", (status, approvedAt) => {
         const testData = {
@@ -368,7 +368,7 @@ describe("QuizSummary", () => {
         const initialResult = QuizSummary.from(testData);
         const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
 
-        const result = quiz.approve("2023-12-02T12:00:00.000Z");
+        const result = quiz.approve("2023-12-02 12:00:00");
 
         const error = result._unsafeUnwrapErr({ withStackTrace: true });
         expect(
