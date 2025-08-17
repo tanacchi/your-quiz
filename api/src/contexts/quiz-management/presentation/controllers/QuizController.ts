@@ -120,9 +120,9 @@ export class QuizController {
   async listQuizzes(c: AppContext) {
     // クエリパラメータを取得
     return validateWithZod(listQueryFromReq, {
-      status: c.req.query("status"),
-      creatorId: c.req.query("creatorId"),
-      ids: c.req.queries("ids"),
+      status: c.req.queries("status"),
+      creatorId: c.req.queries("creatorId"),
+      quizId: c.req.queries("quizId"),
       limit: c.req.query("limit"),
       offset: c.req.query("offset"),
     })

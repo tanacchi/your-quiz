@@ -101,7 +101,7 @@ export class D1QuizRepository implements IQuizRepository {
    */
   findMany(
     options: {
-      status?: components["schemas"]["QuizStatus"];
+      status?: components["schemas"]["QuizStatus"][] | undefined;
       creatorId?: string | undefined;
       ids?: string[];
       limit?: number;
@@ -370,7 +370,7 @@ export class D1QuizRepository implements IQuizRepository {
   }
 
   private executeFindMany(options: {
-    status?: components["schemas"]["QuizStatus"];
+    status?: components["schemas"]["QuizStatus"][] | undefined;
     creatorId?: string | undefined;
     ids?: string[];
     limit?: number;
@@ -398,9 +398,11 @@ export class D1QuizRepository implements IQuizRepository {
     const params: D1QueryParam[] = [];
 
     // WHERE条件の構築
-    if (options.status) {
-      conditions.push("q.status = ?");
-      params.push(options.status);
+    if (options.status && options.status.length > 0) {
+      conditions.push(
+        `q.status IN (${options.status.map(() => "?").join(", ")})`,
+      );
+      params.push(...options.status);
     }
     if (options.creatorId) {
       conditions.push("q.creator_id = ?");

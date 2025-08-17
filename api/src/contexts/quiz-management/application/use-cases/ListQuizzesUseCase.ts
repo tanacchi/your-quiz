@@ -121,7 +121,7 @@ export class ListQuizzesUseCase {
     return Result.fromThrowable(
       () => {
         const creatorId = CreatorId.optional().parse(query.creatorId);
-        const ids = query.ids?.map((id) => QuizId.parse(id)) ?? [];
+        const ids = query.quizId?.map((id) => QuizId.parse(id)) ?? [];
 
         return {
           status: query.status,
