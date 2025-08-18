@@ -167,6 +167,11 @@ function validateResponseType(
   expectedType: string,
 ) {
   switch (expectedType) {
+    case "QuizSummaryListResponse":
+      expect(responseBody).toHaveProperty("items");
+      expect(responseBody).toHaveProperty("totalCount");
+      expect(responseBody).toHaveProperty("hasMore");
+      break;
     case "QuizListResponse":
       expect(responseBody).toHaveProperty("items");
       expect(responseBody).toHaveProperty("totalCount");

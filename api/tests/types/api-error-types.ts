@@ -114,6 +114,32 @@ export const QuizWithSolutionResponseSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
+// QuizSummary schema - solution情報を含まない軽量版
+export const QuizSummaryResponseSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  answerType: z.enum([
+    "boolean",
+    "free_text",
+    "single_choice",
+    "multiple_choice",
+  ]),
+  solutionId: z.string(),
+  explanation: z.string().optional(),
+  status: z.enum(["pending_approval", "approved", "rejected"]),
+  creatorId: z.string(),
+  createdAt: z.string(),
+  approvedAt: z.string().optional(),
+  tagIds: z.array(z.string()),
+});
+
+export const QuizSummaryListResponseSchema = z.object({
+  items: z.array(QuizSummaryResponseSchema),
+  totalCount: z.number().int().min(0),
+  hasMore: z.boolean(),
+  continuationToken: z.string().optional(),
+});
+
 export const QuizListResponseSchema = z.object({
   items: z.array(QuizWithSolutionResponseSchema),
   totalCount: z.number().int().min(0),
@@ -139,6 +165,10 @@ export type CreateQuizResponse = z.infer<typeof CreateQuizResponseSchema>;
 export type QuizWithSolutionResponse = z.infer<
   typeof QuizWithSolutionResponseSchema
 >;
+export type QuizSummaryResponse = z.infer<typeof QuizSummaryResponseSchema>;
+export type QuizSummaryListResponse = z.infer<
+  typeof QuizSummaryListResponseSchema
+>;
 export type QuizListResponse = z.infer<typeof QuizListResponseSchema>;
 
 // TypeSpec型との互換性を保持
@@ -150,6 +180,9 @@ export type TypeSpecCreateQuizResponse =
   components["schemas"]["CreateQuizResponse"];
 export type TypeSpecQuizWithSolutionResponse =
   components["schemas"]["QuizWithSolution"];
+export type TypeSpecQuizSummaryResponse = components["schemas"]["QuizSummary"];
+export type TypeSpecQuizSummaryListResponse =
+  components["schemas"]["QuizSummaryListResponse"];
 export type TypeSpecQuizListResponse =
   components["schemas"]["QuizListResponse"];
 
@@ -184,6 +217,12 @@ export const isCreateQuizResponse = createZodTypeGuard(
 );
 export const isQuizWithSolutionResponse = createZodTypeGuard(
   QuizWithSolutionResponseSchema,
+);
+export const isQuizSummaryResponse = createZodTypeGuard(
+  QuizSummaryResponseSchema,
+);
+export const isQuizSummaryListResponse = createZodTypeGuard(
+  QuizSummaryListResponseSchema,
 );
 export const isQuizListResponse = createZodTypeGuard(QuizListResponseSchema);
 
@@ -257,6 +296,16 @@ export const assertCreateQuizResponse = createZodAssertion(
 export const assertQuizWithSolutionResponse = createZodAssertion(
   QuizWithSolutionResponseSchema,
   "Expected QuizWithSolutionResponse",
+);
+
+export const assertQuizSummaryResponse = createZodAssertion(
+  QuizSummaryResponseSchema,
+  "Expected QuizSummaryResponse",
+);
+
+export const assertQuizSummaryListResponse = createZodAssertion(
+  QuizSummaryListResponseSchema,
+  "Expected QuizSummaryListResponse",
 );
 
 export const assertQuizListResponse = createZodAssertion(

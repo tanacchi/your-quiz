@@ -7,6 +7,8 @@ import type {
   InternalServerErrorResponse,
   NotFoundErrorResponse,
   QuizListResponse,
+  QuizSummaryListResponse,
+  QuizSummaryResponse,
   QuizWithSolutionResponse,
   RateLimitErrorResponse,
   UnauthorizedErrorResponse,
@@ -22,6 +24,8 @@ import {
   assertValidationError,
   isCreateQuizResponse,
   isQuizListResponse,
+  isQuizSummaryListResponse,
+  isQuizSummaryResponse,
   isQuizWithSolutionResponse,
 } from "../types/api-error-types";
 
@@ -116,6 +120,24 @@ export class TypeSafePactumHelper {
       response,
       isQuizWithSolutionResponse,
       "QuizWithSolutionResponse",
+    );
+  }
+
+  static assertQuizSummaryResponse(response: unknown): QuizSummaryResponse {
+    return TypeSafePactumHelper.assertSuccessResponse(
+      response,
+      isQuizSummaryResponse,
+      "QuizSummaryResponse",
+    );
+  }
+
+  static assertQuizSummaryListResponse(
+    response: unknown,
+  ): QuizSummaryListResponse {
+    return TypeSafePactumHelper.assertSuccessResponse(
+      response,
+      isQuizSummaryListResponse,
+      "QuizSummaryListResponse",
     );
   }
 
