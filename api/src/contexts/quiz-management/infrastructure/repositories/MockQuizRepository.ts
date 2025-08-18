@@ -10,7 +10,6 @@ import {
   QuizId,
   QuizSummary,
   SolutionId,
-  TagId,
 } from "../../domain/entities/quiz-summary/QuizSummary";
 import { TagIds } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
@@ -28,8 +27,8 @@ export class MockQuizRepository implements IQuizRepository {
       explanation: "TypeScript is a typed superset of JavaScript",
       status: "approved",
       creatorId: CreatorId.parse("user-1"),
-      createdAt: new Date().toISOString(),
-      approvedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+      approvedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
       tagIds: TagIds.parse(["tag-1", "tag-2"]),
     }),
     QuizSummary.build({
@@ -39,8 +38,8 @@ export class MockQuizRepository implements IQuizRepository {
       solutionId: SolutionId.parse("sol-2"),
       status: "approved",
       creatorId: CreatorId.parse("user-2"),
-      createdAt: new Date().toISOString(),
-      approvedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+      approvedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
       tagIds: TagIds.parse(["tag-1"]),
     }),
   ];
@@ -106,7 +105,7 @@ export class MockQuizRepository implements IQuizRepository {
       (error) => {
         console.error("Failed to find quiz by ID:", error);
         if (error instanceof NotFoundError) {
-          return RepositoryErrorFactory.findFailed("Quiz", error);
+          return error;
         }
         return RepositoryErrorFactory.findFailed(
           "Quiz",
@@ -203,7 +202,7 @@ export class MockQuizRepository implements IQuizRepository {
     }
     if (filter.tags && filter.tags.length > 0) {
       filteredData = filteredData.filter((quiz) => {
-        const quizTagIds = TagId.parse(quiz.get("tagIds"));
+        const quizTagIds = quiz.get("tagIds");
         return filter.tags?.some((tag) => quizTagIds.includes(tag));
       });
     }
@@ -240,6 +239,9 @@ export class MockQuizRepository implements IQuizRepository {
       Promise.reject(new Error("NOT_IMPLEMENTED")),
       (error) => {
         console.error("Failed to update quiz:", error);
+        if (error instanceof Error && error.message === "NOT_IMPLEMENTED") {
+          return error;
+        }
         return RepositoryErrorFactory.updateFailed(
           "Quiz",
           error instanceof Error ? error : undefined,
@@ -254,6 +256,9 @@ export class MockQuizRepository implements IQuizRepository {
       Promise.reject(new Error("NOT_IMPLEMENTED")),
       (error) => {
         console.error("Failed to delete quiz:", error);
+        if (error instanceof Error && error.message === "NOT_IMPLEMENTED") {
+          return error;
+        }
         return RepositoryErrorFactory.deleteFailed(
           "Quiz",
           error instanceof Error ? error : undefined,

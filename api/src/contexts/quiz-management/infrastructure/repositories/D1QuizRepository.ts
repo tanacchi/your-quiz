@@ -8,25 +8,23 @@ import type { components } from "../../../../shared/types";
 import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import { D1QuizSummaryMapper } from "../mappers/D1QuizSummaryMapper";
-import type { D1QueryParam, QuizRow } from "./types";
-import {
-  isBasicQuizInfo,
-  isCountResult,
-  isParsedChoice,
-  isQuizRow,
-  isValidAnswerType,
-  isValidMatchingStrategy,
-  isValidQuizStatus,
-} from "./types";
+import { D1QueryBuilder } from "./D1QueryBuilder";
+import { SolutionHandler } from "./SolutionHandler";
+import type { QuizRow } from "./types";
+import { isBasicQuizInfo, isCountResult, isQuizRow } from "./types";
 
 /**
  * Cloudflare D1データベースを使用したクイズリポジトリ実装
  *
- * D1データベースに対してCRUD操作を実行し、neverthrowを使用して
- * 型安全なエラーハンドリングを提供します。
+ * リファクタリング後: D1QueryBuilderとSolutionHandlerに責務を分離し、
+ * 依存性注入によってテスタビリティを向上させています。
  */
 export class D1QuizRepository implements IQuizRepository {
-  constructor(private readonly db: D1Database) {
+  constructor(
+    private readonly db: D1Database,
+    private readonly queryBuilder = D1QueryBuilder,
+    private readonly solutionHandler = SolutionHandler,
+  ) {
     console.log("D1QuizRepository constructor - db:", !!db);
     if (!db) {
       console.error(
@@ -43,10 +41,42 @@ export class D1QuizRepository implements IQuizRepository {
     quiz: QuizSummary,
     solution: components["schemas"]["Solution"],
   ): ResultAsync<QuizSummary, RepositoryError> {
-    return this.executeCreateTransaction(quiz, solution).mapErr((error) => {
-      console.error("Failed to create quiz:", error);
-      return error;
-    });
+    return this.solutionHandler
+      .createSolution(this.db, solution)
+      .andThen((solutionId) => {
+        const quizData = {
+          id: quiz.get("id"),
+          question: quiz.get("question"),
+          answerType: quiz.get("answerType"),
+          solutionId,
+          explanation: quiz.get("explanation"),
+          status: quiz.get("status"),
+          creatorId: quiz.get("creatorId"),
+          createdAt: quiz.get("createdAt"),
+          approvedAt: quiz.get("approvedAt"),
+        };
+
+        const { sql, params } =
+          this.queryBuilder.buildCreateQuizQuery(quizData);
+
+        return ResultAsync.fromPromise(
+          this.db
+            .prepare(sql)
+            .bind(...params)
+            .run(),
+          (error) =>
+            RepositoryErrorFactory.createFailed(
+              "Quiz",
+              error instanceof Error
+                ? error
+                : new Error("Unknown quiz creation error"),
+            ),
+        ).map(() => quiz);
+      })
+      .mapErr((error) => {
+        console.error("Failed to create quiz:", error);
+        return error;
+      });
   }
 
   /**
@@ -56,38 +86,54 @@ export class D1QuizRepository implements IQuizRepository {
   findById(
     id: string,
   ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError> {
-    return this.executeQueryWithSolution(
-      `SELECT
-        q.*,
-        bs.value as boolean_value,
-        fts.correct_answer, fts.matching_strategy, fts.case_sensitive,
-        GROUP_CONCAT(
-          json_object(
-            'id', c.id,
-            'solutionId', c.solution_id,
-            'text', c.text,
-            'orderIndex', c.order_index,
-            'isCorrect', c.is_correct
-          )
-        ) as choices,
-        mcs.min_correct_answers
-      FROM Quiz q
-      LEFT JOIN BooleanSolution bs ON q.solution_id = bs.id AND q.answer_type = 'boolean'
-      LEFT JOIN FreeTextSolution fts ON q.solution_id = fts.id AND q.answer_type = 'free_text'
-      LEFT JOIN SingleChoiceSolution scs ON q.solution_id = scs.id AND q.answer_type = 'single_choice'
-      LEFT JOIN MultipleChoiceSolution mcs ON q.solution_id = mcs.id AND q.answer_type = 'multiple_choice'
-      LEFT JOIN Choice c ON (scs.id = c.solution_id OR mcs.id = c.solution_id)
-      WHERE q.id = ?
-      GROUP BY q.id`,
-      [id],
+    const { sql, params } =
+      this.queryBuilder.buildFindByIdWithSolutionQuery(id);
+
+    return ResultAsync.fromPromise(
+      this.db
+        .prepare(sql)
+        .bind(...params)
+        .first(),
+      (error) =>
+        RepositoryErrorFactory.findFailed(
+          "Quiz",
+          error instanceof Error ? error : new Error("Unknown query error"),
+        ),
     )
       .andThen((result) => {
-        if (result === null) {
+        if (!result) {
           return ResultAsync.fromSafePromise(
             Promise.reject(new NotFoundError(`Quiz not found: ${id}`)),
           );
         }
-        return ResultAsync.fromSafePromise(Promise.resolve(result));
+
+        if (!isQuizRow(result)) {
+          return ResultAsync.fromSafePromise(
+            Promise.reject(
+              RepositoryErrorFactory.findFailed(
+                "Quiz",
+                new Error("Invalid quiz row data from database"),
+              ),
+            ),
+          );
+        }
+
+        try {
+          const quizWithSolution =
+            this.solutionHandler.mapRowToQuizWithSolution(result);
+          return ResultAsync.fromSafePromise(Promise.resolve(quizWithSolution));
+        } catch (error) {
+          return ResultAsync.fromSafePromise(
+            Promise.reject(
+              RepositoryErrorFactory.findFailed(
+                "Quiz",
+                error instanceof Error
+                  ? error
+                  : new Error("Failed to map quiz with solution"),
+              ),
+            ),
+          );
+        }
       })
       .mapErr((error) => {
         console.error("Failed to find quiz by ID:", error);
@@ -152,42 +198,6 @@ export class D1QuizRepository implements IQuizRepository {
       console.error("Failed to delete quiz:", error);
       return error;
     });
-  }
-
-  // Private helper methods
-
-  private executeCreateTransaction(
-    quiz: QuizSummary,
-    solution: components["schemas"]["Solution"],
-  ): ResultAsync<QuizSummary, RepositoryError> {
-    return this.createSolution(solution).andThen((solutionId) =>
-      ResultAsync.fromPromise(
-        this.db
-          .prepare(`
-          INSERT INTO Quiz (id, question, answer_type, solution_id, explanation, status, creator_id, created_at, approved_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `)
-          .bind(
-            quiz.get("id"),
-            quiz.get("question"),
-            quiz.get("answerType"),
-            solutionId,
-            quiz.get("explanation") || null,
-            quiz.get("status"),
-            quiz.get("creatorId"),
-            quiz.get("createdAt"),
-            quiz.get("approvedAt") || null,
-          )
-          .run(),
-        (error) =>
-          RepositoryErrorFactory.createFailed(
-            "Quiz",
-            error instanceof Error
-              ? error
-              : new Error("Unknown quiz creation error"),
-          ),
-      ).map(() => quiz),
-    );
   }
 
   private createSolution(
@@ -316,57 +326,6 @@ export class D1QuizRepository implements IQuizRepository {
             : new Error("Unknown choice creation error"),
         ),
     );
-  }
-
-  private executeQueryWithSolution(
-    sql: string,
-    params: D1QueryParam[],
-  ): ResultAsync<
-    components["schemas"]["QuizWithSolution"] | null,
-    RepositoryError
-  > {
-    return ResultAsync.fromPromise(
-      this.db
-        .prepare(sql)
-        .bind(...params)
-        .first(),
-      (error) =>
-        RepositoryErrorFactory.findFailed(
-          "Quiz",
-          error instanceof Error ? error : new Error("Unknown query error"),
-        ),
-    ).andThen((result) => {
-      if (!result) {
-        return ResultAsync.fromSafePromise(Promise.resolve(null));
-      }
-
-      if (!isQuizRow(result)) {
-        return ResultAsync.fromSafePromise(
-          Promise.reject(
-            RepositoryErrorFactory.findFailed(
-              "Quiz",
-              new Error("Invalid quiz row data from database"),
-            ),
-          ),
-        );
-      }
-
-      try {
-        const quizWithSolution = this.mapRowToQuizWithSolution(result);
-        return ResultAsync.fromSafePromise(Promise.resolve(quizWithSolution));
-      } catch (error) {
-        return ResultAsync.fromSafePromise(
-          Promise.reject(
-            RepositoryErrorFactory.findFailed(
-              "Quiz",
-              error instanceof Error
-                ? error
-                : new Error("Failed to map quiz with solution"),
-            ),
-          ),
-        );
-      }
-    });
   }
 
   private executeFindMany(options: {

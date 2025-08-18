@@ -71,7 +71,7 @@ export class CreateQuizUseCase {
       explanation: command.explanation,
       status: "pending_approval" as const,
       creatorId: command.creatorId || "mock-user-id",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
       tagIds: [], // デフォルト値
     };
 
