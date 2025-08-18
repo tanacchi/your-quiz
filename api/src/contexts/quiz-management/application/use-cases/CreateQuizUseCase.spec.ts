@@ -3,7 +3,7 @@ import {
   createImmediateFailure,
   createImmediateSuccess,
 } from "../../../../../tests/helpers/mock-helpers";
-import { CreateFailedError } from "../../../../shared/errors";
+import { CreateFailedError, FindFailedError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
 import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
@@ -77,7 +77,7 @@ describe("CreateQuizUseCase", () => {
               solutionId: "solution-1",
               status: "pending_approval",
               creatorId: "user-123",
-              createdAt: "2024-01-01T00:00:00.000Z",
+              createdAt: "2024-01-01 00:00:00",
               explanation: "TypeScript is a programming language",
               approvedAt: undefined,
             };
@@ -102,7 +102,7 @@ describe("CreateQuizUseCase", () => {
             solutionId: "solution-1",
             status: "pending_approval",
             creatorId: "user-123",
-            createdAt: "2024-01-01T00:00:00.000Z",
+            createdAt: "2024-01-01 00:00:00",
             explanation: "TypeScript is a programming language",
           });
         }
@@ -130,7 +130,7 @@ describe("CreateQuizUseCase", () => {
               solutionId: "solution-2",
               status: "pending_approval",
               creatorId: "mock-user-id",
-              createdAt: "2024-01-01T00:00:00.000Z",
+              createdAt: "2024-01-01 00:00:00",
               explanation: undefined,
               approvedAt: undefined,
             };
@@ -155,7 +155,7 @@ describe("CreateQuizUseCase", () => {
             solutionId: "solution-2",
             status: "pending_approval",
             creatorId: "mock-user-id",
-            createdAt: "2024-01-01T00:00:00.000Z",
+            createdAt: "2024-01-01 00:00:00",
           });
           expect(result.value.explanation).toBeUndefined();
         }
@@ -226,7 +226,7 @@ describe("CreateQuizUseCase", () => {
 
       test("should return UseCaseInternalError for other repository errors", async () => {
         // Arrange
-        const genericError = new CreateFailedError("Quiz", "Unknown error");
+        const genericError = new FindFailedError("Quiz", "Unknown error");
         vi.mocked(mockRepository.create).mockReturnValue(
           createImmediateFailure(genericError),
         );
@@ -264,7 +264,7 @@ describe("CreateQuizUseCase", () => {
               solutionId: "solution-1",
               status: "pending_approval",
               creatorId: "mock-user-id",
-              createdAt: "2024-01-01T00:00:00.000Z",
+              createdAt: "2024-01-01 00:00:00",
             };
             return data[key];
           }),
@@ -279,7 +279,7 @@ describe("CreateQuizUseCase", () => {
               solutionId: "solution-2",
               status: "pending_approval",
               creatorId: "mock-user-id",
-              createdAt: "2024-01-01T00:00:00.000Z",
+              createdAt: "2024-01-01 00:00:00",
             };
             return data[key];
           }),
@@ -325,7 +325,7 @@ describe("CreateQuizUseCase", () => {
               solutionId: "solution-1",
               status: "pending_approval",
               creatorId: "mock-user-id",
-              createdAt: "2024-01-01T00:00:00.000Z",
+              createdAt: "2024-01-01 00:00:00",
             };
             return data[key];
           }),

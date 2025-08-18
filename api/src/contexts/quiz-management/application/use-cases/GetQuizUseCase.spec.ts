@@ -2,10 +2,8 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   createImmediateFailure,
   createImmediateSuccess,
-  createImmediateSuccessWithNull,
-  createImmediateSuccessWithUndefined,
 } from "../../../../../tests/helpers/mock-helpers";
-import { FindFailedError } from "../../../../shared/errors";
+import { CreateFailedError, FindFailedError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
 import { QuizNotFoundError } from "../../domain/errors";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
@@ -88,7 +86,7 @@ describe("GetQuizUseCase", () => {
           solutionId: "solution-456",
           status: "pending_approval",
           creatorId: "user-456",
-          createdAt: "2024-01-01T00:00:00.000Z",
+          createdAt: "2024-01-01 00:00:00",
           solution: {
             type: "boolean",
             id: "solution-456",
@@ -116,8 +114,12 @@ describe("GetQuizUseCase", () => {
     describe("when quiz is not found", () => {
       test("should return QuizNotFoundError when repository returns null", async () => {
         // Arrange
+        const notFoundError = new FindFailedError(
+          "Quiz",
+          "Quiz not found: non-existent-quiz",
+        );
         vi.mocked(mockRepository.findById).mockReturnValue(
-          createImmediateSuccessWithNull(),
+          createImmediateFailure(notFoundError),
         );
 
         // Act
@@ -138,8 +140,12 @@ describe("GetQuizUseCase", () => {
 
       test("should return QuizNotFoundError when repository returns undefined", async () => {
         // Arrange
+        const notFoundError = new FindFailedError(
+          "Quiz",
+          "Quiz not found: undefined-quiz",
+        );
         vi.mocked(mockRepository.findById).mockReturnValue(
-          createImmediateSuccessWithUndefined(),
+          createImmediateFailure(notFoundError),
         );
 
         // Act
@@ -149,6 +155,9 @@ describe("GetQuizUseCase", () => {
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
           expect(result.error).toBeInstanceOf(QuizNotFoundError);
+          if (result.error instanceof QuizNotFoundError) {
+            expect(result.error.quizId).toBe("undefined-quiz");
+          }
         }
       });
     });
@@ -180,7 +189,7 @@ describe("GetQuizUseCase", () => {
 
       test("should return UseCaseInternalError for other repository errors", async () => {
         // Arrange
-        const genericError = new FindFailedError(
+        const genericError = new CreateFailedError(
           "Quiz",
           "Unknown database error",
         );
@@ -198,7 +207,7 @@ describe("GetQuizUseCase", () => {
           if (result.error instanceof UseCaseInternalError) {
             expect(result.error.message).toBe("Internal server error");
             expect(result.error.operation).toBe("Failed to get quiz");
-            expect(result.error.details).toBe("Unknown database error");
+            expect(result.error.details).toBe("Internal server error");
           }
         }
       });
@@ -214,8 +223,12 @@ describe("GetQuizUseCase", () => {
         ["numeric string", "123456789"],
       ])("should handle %s ID: %s", async (_description, quizId) => {
         // Arrange
+        const notFoundError = new FindFailedError(
+          "Quiz",
+          `Quiz not found: ${quizId}`,
+        );
         vi.mocked(mockRepository.findById).mockReturnValue(
-          createImmediateSuccessWithNull(),
+          createImmediateFailure(notFoundError),
         );
 
         // Act
