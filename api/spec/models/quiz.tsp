@@ -103,7 +103,7 @@ model FreeTextSolutionCreate {
       isCorrect: true
     },
     #{
-      id: "choice-b", 
+      id: "choice-b",
       solutionId: "solution-001",
       text: "pop()",
       orderIndex: 1,
@@ -111,7 +111,7 @@ model FreeTextSolutionCreate {
     },
     #{
       id: "choice-c",
-      solutionId: "solution-001", 
+      solutionId: "solution-001",
       text: "shift()",
       orderIndex: 2,
       isCorrect: false
@@ -158,7 +158,7 @@ model SingleChoiceSolutionCreate {
     },
     #{
       id: "choice-b",
-      solutionId: "solution-multi-001", 
+      solutionId: "solution-multi-001",
       text: "Java",
       orderIndex: 1,
       isCorrect: false
@@ -166,7 +166,7 @@ model SingleChoiceSolutionCreate {
     #{
       id: "choice-c",
       solutionId: "solution-multi-001",
-      text: "CSS", 
+      text: "CSS",
       orderIndex: 2,
       isCorrect: true
     }
@@ -362,7 +362,6 @@ model QuizSummary {
   tagIds: string[];  // Tag IDs only, not full Tag objects
 }
 
-model QuizListResponse extends PaginationResponse<QuizWithSolution> {}
 model QuizSummaryListResponse extends PaginationResponse<QuizSummary> {}
 
 model ApprovalRequest {

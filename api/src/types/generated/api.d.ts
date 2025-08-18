@@ -512,13 +512,6 @@ export interface components {
       approvedAt?: components["schemas"]["UtcDateTime"];
     };
     QuizId: string;
-    QuizListResponse: {
-      items: components["schemas"]["QuizWithSolution"][];
-      /** Format: int32 */
-      totalCount: number;
-      hasMore: boolean;
-      continuationToken?: string;
-    };
     QuizSearchFilters: {
       tags?: string[];
       difficulty?: string;
@@ -963,7 +956,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["QuizListResponse"];
+          "application/json": components["schemas"]["QuizSummaryListResponse"];
         };
       };
     };
