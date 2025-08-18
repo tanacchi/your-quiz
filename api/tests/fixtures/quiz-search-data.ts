@@ -1,5 +1,5 @@
 // Quiz List Search test data for PactumJS specs
-// Maintains ユビキタス言語 (Ubiquitous Language): AnonymousUser, QuizListResponse, Search
+// Maintains ユビキタス言語 (Ubiquitous Language): AnonymousUser, QuizSummaryListResponse, Search
 
 export const quizSearchData = {
   // Valid search scenarios - 正常系検索シナリオ

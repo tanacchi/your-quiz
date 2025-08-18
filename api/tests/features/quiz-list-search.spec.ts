@@ -172,11 +172,6 @@ function validateResponseType(
       expect(responseBody).toHaveProperty("totalCount");
       expect(responseBody).toHaveProperty("hasMore");
       break;
-    case "QuizListResponse":
-      expect(responseBody).toHaveProperty("items");
-      expect(responseBody).toHaveProperty("totalCount");
-      expect(responseBody).toHaveProperty("hasMore");
-      break;
     case "ErrorResponse":
       expect(responseBody).toHaveProperty("error");
       expect(responseBody).toHaveProperty("message");

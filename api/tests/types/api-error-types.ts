@@ -140,13 +140,6 @@ export const QuizSummaryListResponseSchema = z.object({
   continuationToken: z.string().optional(),
 });
 
-export const QuizListResponseSchema = z.object({
-  items: z.array(QuizWithSolutionResponseSchema),
-  totalCount: z.number().int().min(0),
-  hasMore: z.boolean(),
-  continuationToken: z.string().optional(),
-});
-
 /**
  * TypeScript型定義（Zodから推論）
  */
@@ -169,7 +162,6 @@ export type QuizSummaryResponse = z.infer<typeof QuizSummaryResponseSchema>;
 export type QuizSummaryListResponse = z.infer<
   typeof QuizSummaryListResponseSchema
 >;
-export type QuizListResponse = z.infer<typeof QuizListResponseSchema>;
 
 // TypeSpec型との互換性を保持
 export type TypeSpecValidationErrorResponse =
@@ -183,8 +175,6 @@ export type TypeSpecQuizWithSolutionResponse =
 export type TypeSpecQuizSummaryResponse = components["schemas"]["QuizSummary"];
 export type TypeSpecQuizSummaryListResponse =
   components["schemas"]["QuizSummaryListResponse"];
-export type TypeSpecQuizListResponse =
-  components["schemas"]["QuizListResponse"];
 
 /**
  * Zodベース型ガード関数群
@@ -224,7 +214,6 @@ export const isQuizSummaryResponse = createZodTypeGuard(
 export const isQuizSummaryListResponse = createZodTypeGuard(
   QuizSummaryListResponseSchema,
 );
-export const isQuizListResponse = createZodTypeGuard(QuizListResponseSchema);
 
 /**
  * Zodベース型アサーション関数群
@@ -306,11 +295,6 @@ export const assertQuizSummaryResponse = createZodAssertion(
 export const assertQuizSummaryListResponse = createZodAssertion(
   QuizSummaryListResponseSchema,
   "Expected QuizSummaryListResponse",
-);
-
-export const assertQuizListResponse = createZodAssertion(
-  QuizListResponseSchema,
-  "Expected QuizListResponse",
 );
 
 /**

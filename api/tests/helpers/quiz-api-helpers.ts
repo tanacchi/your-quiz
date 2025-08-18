@@ -107,8 +107,8 @@ export function validateQuizWithSolution(
   }
 }
 
-// QuizListResponse検証
-export function validateQuizListResponse(
+// QuizSummaryListResponse検証
+export function validateQuizSummaryListResponse(
   responseBody: Record<string, unknown>,
 ): void {
   expect(responseBody).toHaveProperty("quizzes");

@@ -6,7 +6,6 @@ import type {
   ForbiddenErrorResponse,
   InternalServerErrorResponse,
   NotFoundErrorResponse,
-  QuizListResponse,
   QuizSummaryListResponse,
   QuizSummaryResponse,
   QuizWithSolutionResponse,
@@ -23,7 +22,6 @@ import {
   assertUnauthorizedError,
   assertValidationError,
   isCreateQuizResponse,
-  isQuizListResponse,
   isQuizSummaryListResponse,
   isQuizSummaryResponse,
   isQuizWithSolutionResponse,
@@ -138,14 +136,6 @@ export class TypeSafePactumHelper {
       response,
       isQuizSummaryListResponse,
       "QuizSummaryListResponse",
-    );
-  }
-
-  static assertQuizListResponse(response: unknown): QuizListResponse {
-    return TypeSafePactumHelper.assertSuccessResponse(
-      response,
-      isQuizListResponse,
-      "QuizListResponse",
     );
   }
 }
