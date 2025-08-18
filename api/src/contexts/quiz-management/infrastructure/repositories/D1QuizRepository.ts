@@ -101,8 +101,8 @@ export class D1QuizRepository implements IQuizRepository {
    */
   findMany(
     options: {
-      status?: components["schemas"]["QuizStatus"][] | undefined;
-      creatorId?: string | undefined;
+      status?: components["schemas"]["QuizStatus"][];
+      creatorId?: string;
       ids?: string[];
       limit?: number;
       offset?: number;
@@ -370,8 +370,8 @@ export class D1QuizRepository implements IQuizRepository {
   }
 
   private executeFindMany(options: {
-    status?: components["schemas"]["QuizStatus"][] | undefined;
-    creatorId?: string | undefined;
+    status?: components["schemas"]["QuizStatus"][];
+    creatorId?: string;
     ids?: string[];
     limit?: number;
     offset?: number;

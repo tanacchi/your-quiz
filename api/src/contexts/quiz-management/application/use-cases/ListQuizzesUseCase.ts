@@ -125,7 +125,7 @@ export class ListQuizzesUseCase {
 
         return {
           status: query.status,
-          creatorId,
+          ...(creatorId !== undefined && { creatorId }),
           ids,
           limit: query.limit,
           offset: query.offset,

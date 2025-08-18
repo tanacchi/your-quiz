@@ -53,8 +53,8 @@ export interface IQuizRepository {
    * @returns ページング情報付きのクイズサマリリスト、またはRepositoryError
    */
   findMany(options?: {
-    status?: QuizSummaryData["status"][] | undefined;
-    creatorId?: QuizSummaryData["creatorId"] | undefined;
+    status?: QuizSummaryData["status"][];
+    creatorId?: QuizSummaryData["creatorId"];
     ids?: QuizSummaryData["id"][];
     limit?: number;
     offset?: number;

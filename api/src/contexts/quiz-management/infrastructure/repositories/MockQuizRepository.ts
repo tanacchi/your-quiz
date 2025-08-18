@@ -173,8 +173,8 @@ export class MockQuizRepository implements IQuizRepository {
 
   findMany(
     filter: {
-      status?: components["schemas"]["QuizStatus"][] | undefined;
-      creatorId?: string | undefined;
+      status?: components["schemas"]["QuizStatus"][];
+      creatorId?: string;
       ids?: string[];
       limit?: number;
       offset?: number;
