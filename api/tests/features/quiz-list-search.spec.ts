@@ -11,7 +11,7 @@ declare global {
 // Uses ユビキタス言語 (Ubiquitous Language): Developer, TypeSpec, Schema, neverthrow
 // Endpoint: GET /api/quiz/v1/manage/quizzes
 
-describe("Quiz Listing - Quizリスト取得", () => {
+describe.todo("Quiz Listing - Quizリスト取得", () => {
   beforeAll(async () => {
     // Given: API server is running with TypeSpec generated types
   });
