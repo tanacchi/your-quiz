@@ -31,7 +31,7 @@ interface QuizLearning {
   /** Get specific published quiz */
   @get
   @route("/published/{id}")
-  getPublishedQuiz(@path id: QuizId): QuizWithSolution | NotFoundError;
+  getPublishedQuiz(@path id: QuizId): QuizResponse | NotFoundError;
 
   // Deck Management
 
@@ -103,7 +103,7 @@ interface QuizLearning {
   /** Get next quiz in session */
   @get
   @route("/sessions/{id}/next-quiz")
-  getNextQuiz(@path id: SessionId): QuizWithSolution | NotFoundError | ConflictError;
+  getNextQuiz(@path id: SessionId): QuizResponse | NotFoundError | ConflictError;
 
   // Answer Submission
 

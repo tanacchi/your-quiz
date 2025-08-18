@@ -85,7 +85,7 @@ export const CreateQuizResponseSchema = z.object({
   estimatedApprovalDate: z.string().optional(),
 });
 
-export const QuizWithSolutionResponseSchema = z.object({
+export const QuizResponseSchema = z.object({
   id: z.string(),
   question: z.string(),
   answerType: z.enum([
@@ -155,9 +155,7 @@ export type InternalServerErrorResponse = z.infer<
 >;
 
 export type CreateQuizResponse = z.infer<typeof CreateQuizResponseSchema>;
-export type QuizWithSolutionResponse = z.infer<
-  typeof QuizWithSolutionResponseSchema
->;
+export type QuizResponse = z.infer<typeof QuizResponseSchema>;
 export type QuizSummaryResponse = z.infer<typeof QuizSummaryResponseSchema>;
 export type QuizSummaryListResponse = z.infer<
   typeof QuizSummaryListResponseSchema
@@ -170,8 +168,7 @@ export type TypeSpecNotFoundErrorResponse =
   components["schemas"]["NotFoundError"];
 export type TypeSpecCreateQuizResponse =
   components["schemas"]["CreateQuizResponse"];
-export type TypeSpecQuizWithSolutionResponse =
-  components["schemas"]["QuizWithSolution"];
+export type TypeSpecQuizResponse = components["schemas"]["QuizResponse"];
 export type TypeSpecQuizSummaryResponse = components["schemas"]["QuizSummary"];
 export type TypeSpecQuizSummaryListResponse =
   components["schemas"]["QuizSummaryListResponse"];
@@ -205,9 +202,7 @@ export const isInternalServerError = createZodTypeGuard(
 export const isCreateQuizResponse = createZodTypeGuard(
   CreateQuizResponseSchema,
 );
-export const isQuizWithSolutionResponse = createZodTypeGuard(
-  QuizWithSolutionResponseSchema,
-);
+export const isQuizResponse = createZodTypeGuard(QuizResponseSchema);
 export const isQuizSummaryResponse = createZodTypeGuard(
   QuizSummaryResponseSchema,
 );
@@ -282,9 +277,9 @@ export const assertCreateQuizResponse = createZodAssertion(
   "Expected CreateQuizResponse",
 );
 
-export const assertQuizWithSolutionResponse = createZodAssertion(
-  QuizWithSolutionResponseSchema,
-  "Expected QuizWithSolutionResponse",
+export const assertQuizResponse = createZodAssertion(
+  QuizResponseSchema,
+  "Expected QuizResponse",
 );
 
 export const assertQuizSummaryResponse = createZodAssertion(

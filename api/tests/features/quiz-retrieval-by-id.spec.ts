@@ -144,7 +144,7 @@ describe.todo("Quiz Retrieval by ID - Quiz ID別取得", () => {
     "Solution型別: Quiz retrieval with different Solution types",
     () => {
       quizRetrievalData.solutionTypeScenarios.forEach((testCase, _index) => {
-        it(`QuizWithSolution contains correct structure: ${testCase.description}`, async () => {
+        it(`QuizResponse contains correct structure: ${testCase.description}`, async () => {
           // Given: Quiz with specific solution type exists
 
           // When: Quiz is retrieved by ID
@@ -156,7 +156,7 @@ describe.todo("Quiz Retrieval by ID - Quiz ID別取得", () => {
 
           const body = response.json;
 
-          // Then: QuizWithSolution should contain correct solution structure
+          // Then: QuizResponse should contain correct solution structure
           expect(body).toHaveProperty("solution");
           expect(body).toHaveProperty("answerType", testCase.solutionType);
         });
@@ -211,7 +211,7 @@ function validateResponseType(
   expectedType: string,
 ) {
   switch (expectedType) {
-    case "QuizWithSolution":
+    case "QuizResponse":
       expect(responseBody).toHaveProperty("id");
       expect(responseBody).toHaveProperty("question");
       expect(responseBody).toHaveProperty("solution");

@@ -97,7 +97,7 @@ interface QuizManagement {
   createQuiz(
     @doc("新しいクイズの作成情報を含むリクエスト")
     @body request: CreateQuizRequest
-  ): QuizWithSolution | ValidationError | RateLimitError;
+  ): QuizResponse | ValidationError | RateLimitError;
   
   @doc("""
     クイズ詳細情報取得API
@@ -105,7 +105,7 @@ interface QuizManagement {
     ## 機能
     - **完全な問題情報**: 問題文、解答、解説、タグを含む全データを取得
     - **権限制御**: 作成者または管理者のみアクセス可能（承認前クイズの場合）
-    - **解答情報付き**: QuizWithSolution形式で解答も含めて返却
+    - **解答情報付き**: QuizResponse形式で解答も含めて返却
     
     ## アクセス制御
     - **公開クイズ（approved）**: 全ユーザーがアクセス可能
@@ -128,7 +128,7 @@ interface QuizManagement {
   getQuiz(
     @doc("取得対象のクイズID（UUID形式）")
     @path id: QuizId
-  ): QuizWithSolution | NotFoundError;
+  ): QuizResponse | NotFoundError;
   
   @doc("""
     クイズ情報部分更新API（PATCH）
@@ -175,7 +175,7 @@ interface QuizManagement {
     @path id: QuizId, 
     @doc("更新情報を含むリクエスト（部分更新対応）")
     @body request: UpdateQuizRequest
-  ): QuizWithSolution | NotFoundError | ForbiddenError | ValidationError;
+  ): QuizResponse | NotFoundError | ForbiddenError | ValidationError;
   
   @doc("""
     クイズ削除API
@@ -237,7 +237,7 @@ interface QuizManagement {
     - オフセットベース: skip/limit パターン
     
     ## レスポンス情報
-    - クイズ一覧（QuizWithSolution形式）
+    - クイズ一覧（QuizResponse形式）
     - 総件数（フィルタ適用後）
     - 続きの存在フラグ
     - 継続トークン（将来のカーソルベース対応用）

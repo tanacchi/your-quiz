@@ -232,7 +232,7 @@ model ChoiceCreate {
   isCorrect: boolean;
 }
 
-// Quiz with solution (denormalized for API responses)
+// Quiz response (denormalized for API responses)
 @example(#{
   id: "quiz-001",
   question: "JavaScriptで配列の最後に要素を追加するメソッドは？",
@@ -272,7 +272,7 @@ model ChoiceCreate {
   },
   tags: #["javascript", "配列", "初級"]
 })
-model QuizWithSolution {
+model QuizResponse {
   ...Quiz;
   solution: Solution;
   tags?: string[];

@@ -55,7 +55,7 @@ export class D1QuizRepository implements IQuizRepository {
    */
   findById(
     id: string,
-  ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError> {
+  ): ResultAsync<components["schemas"]["QuizResponse"], RepositoryError> {
     return this.executeQueryWithSolution(
       `SELECT
         q.*,
@@ -322,7 +322,7 @@ export class D1QuizRepository implements IQuizRepository {
     sql: string,
     params: D1QueryParam[],
   ): ResultAsync<
-    components["schemas"]["QuizWithSolution"] | null,
+    components["schemas"]["QuizResponse"] | null,
     RepositoryError
   > {
     return ResultAsync.fromPromise(
@@ -352,8 +352,8 @@ export class D1QuizRepository implements IQuizRepository {
       }
 
       try {
-        const quizWithSolution = this.mapRowToQuizWithSolution(result);
-        return ResultAsync.fromSafePromise(Promise.resolve(quizWithSolution));
+        const quizResponse = this.mapRowToQuizResponse(result);
+        return ResultAsync.fromSafePromise(Promise.resolve(quizResponse));
       } catch (error) {
         return ResultAsync.fromSafePromise(
           Promise.reject(
@@ -361,7 +361,7 @@ export class D1QuizRepository implements IQuizRepository {
               "Quiz",
               error instanceof Error
                 ? error
-                : new Error("Failed to map quiz with solution"),
+                : new Error("Failed to map quiz response"),
             ),
           ),
         );
@@ -759,9 +759,9 @@ export class D1QuizRepository implements IQuizRepository {
     });
   }
 
-  private mapRowToQuizWithSolution(
+  private mapRowToQuizResponse(
     row: QuizRow,
-  ): components["schemas"]["QuizWithSolution"] {
+  ): components["schemas"]["QuizResponse"] {
     let solution: components["schemas"]["Solution"];
 
     if (!isValidAnswerType(row.answer_type)) {

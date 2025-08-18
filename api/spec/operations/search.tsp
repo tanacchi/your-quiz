@@ -137,7 +137,7 @@ interface Search {
   //   @doc("取得する類似クイズ数（1-20）。デフォルト：10")
   //   @query limit?: int32 = 10
   // ): {
-  //   quizzes: QuizWithSolution[];   // 類似クイズ一覧（解答付き）
+  //   quizzes: QuizResponse[];   // 類似クイズ一覧（解答付き）
   //   similarity_scores: float32[];  // 各クイズの類似度スコア（0.0-1.0）
   // } | NotFoundError;
   //
@@ -165,7 +165,7 @@ interface Search {
   //   @doc("推奨戦略。'collaborative'（協調）、'content_based'（内容）、'hybrid'（混合）。デフォルト：'hybrid'")
   //   @query strategy?: "collaborative" | "content_based" | "hybrid" = "hybrid"
   // ): {
-  //   quizzes: QuizWithSolution[];   // 推奨クイズ一覧（解答付き）
+  //   quizzes: QuizResponse[];   // 推奨クイズ一覧（解答付き）
   //   reasons: {                     // 推奨理由詳細
   //     quizId: QuizId;              // 推奨クイズID
   //     reason: "similar_topics" | "difficulty_match" | "popular" | "new_topics";  // 推奨根拠

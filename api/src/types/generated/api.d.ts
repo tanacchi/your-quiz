@@ -35,7 +35,7 @@ export interface paths {
      *     - オフセットベース: skip/limit パターン
      *
      *     ## レスポンス情報
-     *     - クイズ一覧（QuizWithSolution形式）
+     *     - クイズ一覧（QuizResponse形式）
      *     - 総件数（フィルタ適用後）
      *     - 続きの存在フラグ
      *     - 継続トークン（将来のカーソルベース対応用）
@@ -96,7 +96,7 @@ export interface paths {
      *     ## 機能
      *     - **完全な問題情報**: 問題文、解答、解説、タグを含む全データを取得
      *     - **権限制御**: 作成者または管理者のみアクセス可能（承認前クイズの場合）
-     *     - **解答情報付き**: QuizWithSolution形式で解答も含めて返却
+     *     - **解答情報付き**: QuizResponse形式で解答も含めて返却
      *
      *     ## アクセス制御
      *     - **公開クイズ（approved）**: 全ユーザーがアクセス可能
@@ -397,7 +397,7 @@ export interface components {
       creatorId: components["schemas"]["UserId"];
       createdAt: components["schemas"]["UtcDateTime"];
       lastModifiedAt: components["schemas"]["UtcDateTime"];
-      quizzes: components["schemas"]["QuizWithSolution"][];
+      quizzes: components["schemas"]["QuizResponse"][];
       /** Format: int32 */
       totalQuizzes: number;
     };
@@ -512,6 +512,19 @@ export interface components {
       approvedAt?: components["schemas"]["UtcDateTime"];
     };
     QuizId: string;
+    QuizResponse: {
+      id: components["schemas"]["QuizId"];
+      question: string;
+      answerType: components["schemas"]["AnswerType"];
+      solutionId: components["schemas"]["SolutionId"];
+      explanation?: string;
+      status: components["schemas"]["QuizStatus"];
+      creatorId: components["schemas"]["UserId"];
+      createdAt: components["schemas"]["UtcDateTime"];
+      approvedAt?: components["schemas"]["UtcDateTime"];
+      solution: components["schemas"]["Solution"];
+      tags?: string[];
+    };
     QuizSearchFilters: {
       tags?: string[];
       difficulty?: string;
@@ -564,19 +577,6 @@ export interface components {
       continuationToken?: string;
     };
     QuizTagId: string;
-    QuizWithSolution: {
-      id: components["schemas"]["QuizId"];
-      question: string;
-      answerType: components["schemas"]["AnswerType"];
-      solutionId: components["schemas"]["SolutionId"];
-      explanation?: string;
-      status: components["schemas"]["QuizStatus"];
-      creatorId: components["schemas"]["UserId"];
-      createdAt: components["schemas"]["UtcDateTime"];
-      approvedAt?: components["schemas"]["UtcDateTime"];
-      solution: components["schemas"]["Solution"];
-      tags?: string[];
-    };
     RateLimitError: {
       /** @enum {number} */
       code: 429;
@@ -642,7 +642,7 @@ export interface components {
     };
     StartSessionResponse: {
       session: components["schemas"]["QuizSessionWithProgress"];
-      firstQuiz?: components["schemas"]["QuizWithSolution"];
+      firstQuiz?: components["schemas"]["QuizResponse"];
     };
     SubmitAnswerRequest: {
       sessionId: components["schemas"]["SessionId"];
@@ -787,7 +787,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["QuizWithSolution"];
+          "application/json": components["schemas"]["QuizResponse"];
         };
       };
       /** @description An unexpected error response. */
@@ -821,7 +821,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["QuizWithSolution"];
+          "application/json": components["schemas"]["QuizResponse"];
         };
       };
       /** @description An unexpected error response. */
@@ -890,7 +890,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["QuizWithSolution"];
+          "application/json": components["schemas"]["QuizResponse"];
         };
       };
       /** @description An unexpected error response. */

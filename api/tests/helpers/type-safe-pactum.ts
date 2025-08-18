@@ -6,9 +6,9 @@ import type {
   ForbiddenErrorResponse,
   InternalServerErrorResponse,
   NotFoundErrorResponse,
+  QuizResponse,
   QuizSummaryListResponse,
   QuizSummaryResponse,
-  QuizWithSolutionResponse,
   RateLimitErrorResponse,
   UnauthorizedErrorResponse,
   ValidationErrorResponse,
@@ -22,9 +22,9 @@ import {
   assertUnauthorizedError,
   assertValidationError,
   isCreateQuizResponse,
+  isQuizResponse,
   isQuizSummaryListResponse,
   isQuizSummaryResponse,
-  isQuizWithSolutionResponse,
 } from "../types/api-error-types";
 
 /**
@@ -111,13 +111,11 @@ export class TypeSafePactumHelper {
     );
   }
 
-  static assertQuizWithSolutionResponse(
-    response: unknown,
-  ): QuizWithSolutionResponse {
+  static assertQuizResponse(response: unknown): QuizResponse {
     return TypeSafePactumHelper.assertSuccessResponse(
       response,
-      isQuizWithSolutionResponse,
-      "QuizWithSolutionResponse",
+      isQuizResponse,
+      "QuizResponse",
     );
   }
 
@@ -210,7 +208,7 @@ export const PactumMatchers = {
     status: "pending_approval",
   },
 
-  quizWithSolutionResponse: {
+  quizResponse: {
     id: like("string"),
     question: like("string"),
     answerType: like("string"),

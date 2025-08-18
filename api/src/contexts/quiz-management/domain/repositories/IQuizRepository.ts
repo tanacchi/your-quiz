@@ -36,7 +36,7 @@ export interface IQuizRepository {
    */
   findById(
     id: string,
-  ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError>;
+  ): ResultAsync<components["schemas"]["QuizResponse"], RepositoryError>;
 
   /**
    * 条件に基づいてクイズリストを取得する

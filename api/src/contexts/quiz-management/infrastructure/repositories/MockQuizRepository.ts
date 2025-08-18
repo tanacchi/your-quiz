@@ -66,13 +66,13 @@ export class MockQuizRepository implements IQuizRepository {
 
   findById(
     id: string,
-  ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError> {
+  ): ResultAsync<components["schemas"]["QuizResponse"], RepositoryError> {
     return ResultAsync.fromPromise(
       new Promise((resolve, reject) => {
         const quiz = this.mockData.find((q) => q.get("id") === id);
         if (quiz) {
-          // QuizSummaryからQuizWithSolution形式に変換（モック用）
-          const quizWithSolution: components["schemas"]["QuizWithSolution"] = {
+          // QuizSummaryからQuizResponse形式に変換（モック用）
+          const quizResponse: components["schemas"]["QuizResponse"] = {
             id: quiz.get("id"),
             question: quiz.get("question"),
             answerType: quiz.get("answerType"),
@@ -91,13 +91,13 @@ export class MockQuizRepository implements IQuizRepository {
           const explanation = quiz.get("explanation");
           const approvedAt = quiz.get("approvedAt");
           if (explanation) {
-            quizWithSolution.explanation = explanation;
+            quizResponse.explanation = explanation;
           }
           if (approvedAt) {
-            quizWithSolution.approvedAt = approvedAt;
+            quizResponse.approvedAt = approvedAt;
           }
 
-          resolve(quizWithSolution);
+          resolve(quizResponse);
         } else {
           reject(new NotFoundError(`Quiz not found: ${id}`));
         }
