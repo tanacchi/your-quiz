@@ -1,10 +1,9 @@
-// @ts-nocheck
 import { describe, expect, test } from "vitest";
 import { InternalServerError } from "../../../../shared/errors";
 import type { QuizRow } from "../repositories/types";
 import { D1QuizSummaryMapper } from "./D1QuizSummaryMapper";
 
-describe.skip("D1QuizSummaryMapper", () => {
+describe("D1QuizSummaryMapper", () => {
   const validQuizRow: QuizRow = {
     id: "quiz-123",
     question: "What is TypeScript?",
@@ -13,7 +12,7 @@ describe.skip("D1QuizSummaryMapper", () => {
     explanation: "TypeScript is a programming language",
     status: "approved",
     creator_id: "user-123",
-    created_at: "2024-01-01T00:00:00.000Z",
+    created_at: "2024-01-01 00:00:00",
     approved_at: "2024-01-02 00:00:00",
   };
 
@@ -36,10 +35,8 @@ describe.skip("D1QuizSummaryMapper", () => {
           );
           expect(quizSummary.get("status")).toBe("approved");
           expect(quizSummary.get("creatorId")).toBe("user-123");
-          expect(quizSummary.get("createdAt")).toBe("2024-01-01T00:00:00.000Z");
-          expect(quizSummary.get("approvedAt")).toBe(
-            "2024-01-02T00:00:00.000Z",
-          );
+          expect(quizSummary.get("createdAt")).toBe("2024-01-01 00:00:00");
+          expect(quizSummary.get("approvedAt")).toBe("2024-01-02 00:00:00");
           expect(quizSummary.get("tagIds")).toEqual([]);
         }
       });
@@ -151,7 +148,8 @@ describe.skip("D1QuizSummaryMapper", () => {
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
           expect(result.error).toBeInstanceOf(InternalServerError);
-          expect(result.error.message).toContain("Missing required fields");
+          expect(result.error.message).toBe("Internal server error");
+          expect(result.error.details).toContain("Missing required fields");
         }
       });
     });
@@ -171,7 +169,8 @@ describe.skip("D1QuizSummaryMapper", () => {
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
           expect(result.error).toBeInstanceOf(InternalServerError);
-          expect(result.error.message).toContain(
+          expect(result.error.message).toBe("Internal server error");
+          expect(result.error.details).toContain(
             "Failed to create QuizSummary from row data",
           );
         }
@@ -191,7 +190,8 @@ describe.skip("D1QuizSummaryMapper", () => {
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
           expect(result.error).toBeInstanceOf(InternalServerError);
-          expect(result.error.message).toContain(
+          expect(result.error.message).toBe("Internal server error");
+          expect(result.error.details).toContain(
             "Failed to create QuizSummary from row data",
           );
         }
@@ -351,7 +351,8 @@ describe.skip("D1QuizSummaryMapper", () => {
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
           expect(result.error).toBeInstanceOf(InternalServerError);
-          expect(result.error.message).toContain("Failed to map 1/3 rows");
+          expect(result.error.message).toBe("Internal server error");
+          expect(result.error.details).toContain("Failed to map 1/3 rows");
           expect(result.error.message).toContain("Row 1:");
         }
       });
@@ -373,7 +374,8 @@ describe.skip("D1QuizSummaryMapper", () => {
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
           expect(result.error).toBeInstanceOf(InternalServerError);
-          expect(result.error.message).toContain("Failed to map 3/5 rows");
+          expect(result.error.message).toBe("Internal server error");
+          expect(result.error.details).toContain("Failed to map 3/5 rows");
           expect(result.error.message).toContain("Row 0:");
           expect(result.error.message).toContain("Row 2:");
           expect(result.error.message).toContain("Row 4:");
@@ -395,7 +397,8 @@ describe.skip("D1QuizSummaryMapper", () => {
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
           expect(result.error).toBeInstanceOf(InternalServerError);
-          expect(result.error.message).toContain("Failed to map 3/3 rows");
+          expect(result.error.message).toBe("Internal server error");
+          expect(result.error.details).toContain("Failed to map 3/3 rows");
         }
       });
     });
@@ -440,7 +443,8 @@ describe.skip("D1QuizSummaryMapper", () => {
         // Assert
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
-          expect(result.error.message).toContain("Failed to map 2/5 rows");
+          expect(result.error.message).toBe("Internal server error");
+          expect(result.error.details).toContain("Failed to map 2/5 rows");
         }
       });
     });

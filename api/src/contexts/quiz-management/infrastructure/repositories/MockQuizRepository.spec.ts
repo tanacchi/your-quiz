@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { beforeEach, describe, expect, test } from "vitest";
 import type { components } from "../../../../shared/types";
 import {
@@ -10,7 +9,7 @@ import {
 import { TagIds } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import { MockQuizRepository } from "./MockQuizRepository";
 
-describe.skip("MockQuizRepository", () => {
+describe("MockQuizRepository", () => {
   let repository: MockQuizRepository;
 
   const createMockQuiz = (
@@ -44,9 +43,11 @@ describe.skip("MockQuizRepository", () => {
       explanation: defaults.explanation,
       status: defaults.status,
       creatorId: CreatorId.parse(defaults.creatorId),
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
       approvedAt:
-        defaults.status === "approved" ? new Date().toISOString() : undefined,
+        defaults.status === "approved"
+          ? new Date().toISOString().slice(0, 19).replace("T", " ")
+          : undefined,
       tagIds: TagIds.parse(defaults.tagIds),
     });
   };
@@ -229,7 +230,8 @@ describe.skip("MockQuizRepository", () => {
         // Assert
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
-          expect(result.error.message).toContain(
+          expect(result.error.message).toBe("Resource not found");
+          expect(result.error.details).toBe(
             "Quiz not found: non-existent-quiz",
           );
         }
