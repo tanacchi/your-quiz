@@ -8,7 +8,7 @@ import type { components } from "../../../../shared/types";
 import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import { D1QuizSummaryMapper } from "../mappers/D1QuizSummaryMapper";
-import type { D1QueryParam, QuizRow } from "./types";
+import type { D1QueryParam, QuizRow } from "../mappers/d1-types";
 import {
   isBasicQuizInfo,
   isCountResult,
@@ -17,7 +17,7 @@ import {
   isValidAnswerType,
   isValidMatchingStrategy,
   isValidQuizStatus,
-} from "./types";
+} from "../mappers/d1-types";
 
 /**
  * Cloudflare D1データベースを使用したクイズリポジトリ実装
