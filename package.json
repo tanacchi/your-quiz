@@ -23,6 +23,8 @@
     "prepare": "husky",
     "test": "run-p test:*",
     "test:api": "pnpm --filter api test",
-    "test:ui": "pnpm --filter ui test"
+    "test:ui": "pnpm --filter ui test",
+    "mutation-test": "pnpm --filter api mutation-test",
+    "mutation-report": "pnpm --filter api mutation-report"
   }
 }
