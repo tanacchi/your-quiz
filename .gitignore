@@ -155,3 +155,6 @@ tags
 ### Serena ###
 .serena/cache/
 **/.serena/cache/
+
+### Stryker ###
+.stryker-tmp/

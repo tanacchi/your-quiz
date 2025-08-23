@@ -21,6 +21,8 @@
 | `format:md` | - | Markdownファイルの自動修正 |
 | `format:biome` | - | BiomeによるJavaScript/TypeScriptの自動修正 |
 | `prepare` | - | Huskyのセットアップ（Git hooksの設定） |
+| `mutation-test` | - | Mutation testing実行（API配下のvalidation.tsを対象） |
+| `mutation-report` | - | Mutation testing結果の分析レポート生成（除外適用後・JSONLとMarkdown） |
 
 ### api/ ディレクトリ
 
@@ -94,6 +96,17 @@ cd api && pnpm test:api
 
 # BDDテストウォッチモード
 cd api && pnpm test:api:watch
+
+# Mutation testing実行（プロジェクトルートから）
+pnpm mutation-test
+
+# Mutation testing結果分析（除外適用後）
+pnpm mutation-report
+
+# Equivalent mutant手動除外の流れ:
+# 1. pnpm mutation-report でレポート確認
+# 2. scripts/mutation-test/equivalent-mutants.json に除外対象を追加
+# 3. pnpm mutation-report で除外適用後レポート再生成
 ```
 
 ### コード品質チェック
