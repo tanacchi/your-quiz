@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "run-p build:*",
+    "build": "run-s build:*",
     "build:api": "run-s gen-openapi-schema && run-p gen-docs gen-types",
     "build:db": "pnpm gen-database-schema",
     "gen-database-schema": "dbml2sql database.dbml --dialect sqlite -o generated/db.raw.sql && tsx scripts/convert-to-sqlite.ts",
