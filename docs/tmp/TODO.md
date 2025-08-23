@@ -84,4 +84,4 @@
 
 - [ ] SQL の整合性チェックをする仕組み、テスト
 - [ ] api/src 配下の全ての typescript ファイルについて、docs/instructions/shared/languages/typescript.md およびdocs/instructions/shared/workflow/09.01_unit-testing.md を参考にしつつ、テストを増強し、Statements、Branches、Lines など全てのカバレッジで95%以上達成を全てのファイルで満たすようにテストを強化してください.
-- [ ] mutation-test の運用ドキュメント作成（unit-test に続く）
+- [ ] mutation-test の運用ドキュメント作成（unit-test に続くタスクとしてnpm script やファイルの読み方、閾値など）
