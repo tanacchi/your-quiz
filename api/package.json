@@ -27,8 +27,7 @@
     "test:tdd": "vitest run --coverage",
     "test:tdd:watch": "vitest --ui --open --watch --coverage",
     "typecheck": "tsc --noEmit",
-    "mutation-test": "stryker run",
-    "mutation-report": "tsx src/scripts/survivor-reporter.ts reports/mutation/mutation-report.json ../reports/mutation-analysis"
+    "mutation-test": "stryker run"
   },
   "dependencies": {
     "hono": "^4.9.0",
