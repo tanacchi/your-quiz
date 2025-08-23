@@ -6,8 +6,9 @@ import type {
   ForbiddenErrorResponse,
   InternalServerErrorResponse,
   NotFoundErrorResponse,
-  QuizListResponse,
-  QuizWithSolutionResponse,
+  QuizResponse,
+  QuizSummaryListResponse,
+  QuizSummaryResponse,
   RateLimitErrorResponse,
   UnauthorizedErrorResponse,
   ValidationErrorResponse,
@@ -21,8 +22,9 @@ import {
   assertUnauthorizedError,
   assertValidationError,
   isCreateQuizResponse,
-  isQuizListResponse,
-  isQuizWithSolutionResponse,
+  isQuizResponse,
+  isQuizSummaryListResponse,
+  isQuizSummaryResponse,
 } from "../types/api-error-types";
 
 /**
@@ -109,21 +111,29 @@ export class TypeSafePactumHelper {
     );
   }
 
-  static assertQuizWithSolutionResponse(
-    response: unknown,
-  ): QuizWithSolutionResponse {
+  static assertQuizResponse(response: unknown): QuizResponse {
     return TypeSafePactumHelper.assertSuccessResponse(
       response,
-      isQuizWithSolutionResponse,
-      "QuizWithSolutionResponse",
+      isQuizResponse,
+      "QuizResponse",
     );
   }
 
-  static assertQuizListResponse(response: unknown): QuizListResponse {
+  static assertQuizSummaryResponse(response: unknown): QuizSummaryResponse {
     return TypeSafePactumHelper.assertSuccessResponse(
       response,
-      isQuizListResponse,
-      "QuizListResponse",
+      isQuizSummaryResponse,
+      "QuizSummaryResponse",
+    );
+  }
+
+  static assertQuizSummaryListResponse(
+    response: unknown,
+  ): QuizSummaryListResponse {
+    return TypeSafePactumHelper.assertSuccessResponse(
+      response,
+      isQuizSummaryListResponse,
+      "QuizSummaryListResponse",
     );
   }
 }
@@ -198,7 +208,7 @@ export const PactumMatchers = {
     status: "pending_approval",
   },
 
-  quizWithSolutionResponse: {
+  quizResponse: {
     id: like("string"),
     question: like("string"),
     answerType: like("string"),

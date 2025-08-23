@@ -51,3 +51,13 @@ quizRoutes.post("/quizzes", (c) => {
   const controller = createQuizController(c.env);
   return controller.createQuiz(c);
 });
+
+quizRoutes.patch("/quizzes/:id", (c) => {
+  const controller = createQuizController(c.env);
+  return controller.updateQuiz(c);
+});
+
+quizRoutes.delete("/quizzes/:id", (c) => {
+  const controller = createQuizController(c.env);
+  return controller.deleteQuiz(c);
+});

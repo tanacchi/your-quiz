@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "run-p build:*",
+    "build": "run-s build:*",
     "build:api": "run-s gen-openapi-schema && run-p gen-docs gen-types",
     "build:db": "pnpm gen-database-schema",
     "gen-database-schema": "dbml2sql database.dbml --dialect sqlite -o generated/db.raw.sql && tsx scripts/convert-to-sqlite.ts",
@@ -24,12 +24,12 @@
   },
   "devDependencies": {
     "@dbml/cli": "^3.13.9",
+    "@redocly/cli": "^2.0.7",
     "@types/node": "^20.19.10",
-    "@vitest/coverage-v8": "^2.1.8",
-    "@redocly/cli": "^1.25.17",
+    "@vitest/coverage-v8": "^3.2.4",
     "npm-run-all2": "^8.0.4",
-    "openapi-typescript": "^7.8.0",
-    "tsx": "^4.19.2",
+    "openapi-typescript": "^7.9.1",
+    "tsx": "^4.20.4",
     "typescript": "^5.9.2",
     "vitest": "^2.1.8"
   }

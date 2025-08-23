@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { components } from "../../types/generated/api";
-import { solutionSchema } from "./solution.schema";
+import { solutionCreateSchema } from "./solution.schema";
 
 /**
  * クイズ作成リクエスト用Zodスキーマ
@@ -28,7 +28,7 @@ export const createQuizSchema = z
       "single_choice",
       "multiple_choice",
     ]),
-    solution: solutionSchema,
+    solution: solutionCreateSchema,
     explanation: z.string().nullish(),
     tags: z.array(z.string()).nullish(),
   })

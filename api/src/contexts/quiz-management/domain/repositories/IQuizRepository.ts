@@ -36,7 +36,7 @@ export interface IQuizRepository {
    */
   findById(
     id: string,
-  ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError>;
+  ): ResultAsync<components["schemas"]["QuizResponse"], RepositoryError>;
 
   /**
    * 条件に基づいてクイズリストを取得する
@@ -45,7 +45,7 @@ export interface IQuizRepository {
    * solution情報が必要な場合は、個別にfindByIdを使用してください。
    *
    * @param options - 検索オプション
-   * @param options.status - フィルターするクイズステータス
+   * @param options.status - フィルターするクイズステータス（配列）
    * @param options.creatorId - フィルターする作成者ID
    * @param options.tags - フィルターするタグ配列
    * @param options.limit - 取得件数の上限
@@ -53,8 +53,8 @@ export interface IQuizRepository {
    * @returns ページング情報付きのクイズサマリリスト、またはRepositoryError
    */
   findMany(options?: {
-    status?: QuizSummaryData["status"];
-    creatorId?: QuizSummaryData["creatorId"] | undefined;
+    status?: QuizSummaryData["status"][];
+    creatorId?: QuizSummaryData["creatorId"];
     ids?: QuizSummaryData["id"][];
     limit?: number;
     offset?: number;

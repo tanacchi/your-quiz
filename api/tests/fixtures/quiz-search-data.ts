@@ -1,5 +1,5 @@
 // Quiz List Search test data for PactumJS specs
-// Maintains ユビキタス言語 (Ubiquitous Language): AnonymousUser, QuizListResponse, Search
+// Maintains ユビキタス言語 (Ubiquitous Language): AnonymousUser, QuizSummaryListResponse, Search
 
 export const quizSearchData = {
   // Valid search scenarios - 正常系検索シナリオ
@@ -13,28 +13,52 @@ export const quizSearchData = {
       },
     },
     {
-      description: "Filter by status - PendingApproval",
-      filters: { status: "PendingApproval" },
+      description: "Filter by status - pending_approval",
+      filters: { status: ["pending_approval"] },
       expected: {
         resultType: "pending_approval_quizzes",
-        statusFilter: "PendingApproval",
+        statusFilter: ["pending_approval"],
       },
     },
     {
-      description: "Filter by solution type - boolean",
-      filters: { solutionType: "boolean" },
+      description: "Filter by multiple status - approved and pending",
+      filters: { status: ["approved", "pending_approval"] },
       expected: {
-        resultType: "boolean_solution_quizzes",
-        solutionTypeFilter: "boolean",
+        resultType: "multiple_status_quizzes",
+        statusFilter: ["approved", "pending_approval"],
       },
     },
     {
-      description: "Combined filters - Approved + multiple_choice",
-      filters: { status: "Approved", solutionType: "multiple_choice" },
+      description: "Filter by creatorId - single user",
+      filters: { creatorId: ["user-123"] },
       expected: {
-        resultType: "approved_multiple_choice_quizzes",
-        statusFilter: "Approved",
-        solutionTypeFilter: "multiple_choice",
+        resultType: "creator_filtered_quizzes",
+        creatorFilter: ["user-123"],
+      },
+    },
+    {
+      description: "Filter by multiple creatorIds",
+      filters: { creatorId: ["user-123", "user-456"] },
+      expected: {
+        resultType: "multiple_creator_quizzes",
+        creatorFilter: ["user-123", "user-456"],
+      },
+    },
+    {
+      description: "Filter by specific quizIds",
+      filters: { quizId: ["quiz-001", "quiz-002"] },
+      expected: {
+        resultType: "specific_quizzes",
+        quizIdFilter: ["quiz-001", "quiz-002"],
+      },
+    },
+    {
+      description: "Combined filters - status + creatorId",
+      filters: { status: ["approved"], creatorId: ["user-123"] },
+      expected: {
+        resultType: "approved_creator_quizzes",
+        statusFilter: ["approved"],
+        creatorFilter: ["user-123"],
       },
     },
   ],
@@ -43,29 +67,29 @@ export const quizSearchData = {
   paginationScenarios: [
     {
       description: "First page with default limit",
-      queryParams: { page: 1 },
+      queryParams: { offset: 0, limit: 10 },
       expected: {
         paginationType: "first_page_default",
-        expectedPage: 1,
-        expectedLimit: 20,
-      },
-    },
-    {
-      description: "Second page with custom limit",
-      queryParams: { page: 2, limit: 10 },
-      expected: {
-        paginationType: "second_page_custom",
-        expectedPage: 2,
+        expectedOffset: 0,
         expectedLimit: 10,
       },
     },
     {
-      description: "Large page number",
-      queryParams: { page: 999, limit: 5 },
+      description: "Second page with custom limit",
+      queryParams: { offset: 10, limit: 5 },
+      expected: {
+        paginationType: "second_page_custom",
+        expectedOffset: 10,
+        expectedLimit: 5,
+      },
+    },
+    {
+      description: "Large offset with small limit",
+      queryParams: { offset: 1000, limit: 3 },
       expected: {
         paginationType: "empty_page",
-        expectedPage: 999,
-        expectedLimit: 5,
+        expectedOffset: 1000,
+        expectedLimit: 3,
         expectedCount: 0,
       },
     },
@@ -74,24 +98,32 @@ export const quizSearchData = {
   // Empty result scenarios - 空結果シナリオ
   emptyResultScenarios: [
     {
-      description: "Non-existent solution type filter",
-      filters: { solutionType: "non_existent_type" },
-      expected: {
-        resultType: "empty_results",
-        reason: "no_matching_solution_type",
-      },
-    },
-    {
       description: "Non-existent status filter",
-      filters: { status: "NonExistentStatus" },
+      filters: { status: ["non_existent_status"] },
       expected: {
         resultType: "empty_results",
         reason: "no_matching_status",
       },
     },
     {
+      description: "Non-existent creatorId filter",
+      filters: { creatorId: ["non-existent-user"] },
+      expected: {
+        resultType: "empty_results",
+        reason: "no_matching_creator",
+      },
+    },
+    {
+      description: "Non-existent quizIds filter",
+      filters: { quizId: ["non-existent-quiz-1", "non-existent-quiz-2"] },
+      expected: {
+        resultType: "empty_results",
+        reason: "no_matching_quiz_ids",
+      },
+    },
+    {
       description: "Impossible filter combination",
-      filters: { status: "Rejected", solutionType: "impossible_type" },
+      filters: { status: ["rejected"], creatorId: ["impossible-user"] },
       expected: {
         resultType: "empty_results",
         reason: "impossible_combination",
@@ -102,17 +134,20 @@ export const quizSearchData = {
   // Schema validation test cases - スキーマ検証テストケース
   schemaValidationCases: [
     {
-      description: "QuizListResponse structure validation",
+      description: "QuizSummaryListResponse structure validation",
       expected: {
-        requiredFields: ["quizzes", "pagination", "totalCount"],
-        quizFields: ["id", "question", "status", "solutionType", "createdAt"],
-        paginationFields: [
-          "page",
-          "limit",
-          "totalPages",
-          "hasNext",
-          "hasPrevious",
+        requiredFields: ["items", "totalCount", "hasMore"],
+        quizSummaryFields: [
+          "id",
+          "question",
+          "answerType",
+          "solutionId",
+          "status",
+          "creatorId",
+          "createdAt",
+          "tagIds",
         ],
+        optionalFields: ["explanation", "approvedAt", "continuationToken"],
       },
     },
   ],

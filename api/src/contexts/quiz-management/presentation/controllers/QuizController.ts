@@ -1,7 +1,8 @@
+import { NotImplementedError } from "../../../../shared/errors";
 import { createQuizSchema } from "../../../../shared/schemas";
 import type { AppContext } from "../../../../shared/types";
 import { parseJsonSafe, validateWithZod } from "../../../../shared/utils";
-import { listQuizzesQuerySchema } from "../../application/schemas/list-quizzes-query.schema";
+import { listQueryFromReq } from "../../application/schemas/list-quizzes-query.schema";
 import type {
   CreateQuizUseCase,
   GetQuizUseCase,
@@ -119,10 +120,10 @@ export class QuizController {
    */
   async listQuizzes(c: AppContext) {
     // クエリパラメータを取得
-    return validateWithZod(listQuizzesQuerySchema, {
-      status: c.req.query("status"),
-      creatorId: c.req.query("creatorId"),
-      ids: c.req.queries("ids"),
+    return validateWithZod(listQueryFromReq, {
+      status: c.req.queries("status"),
+      creatorId: c.req.queries("creatorId"),
+      quizId: c.req.queries("quizId"),
       limit: c.req.query("limit"),
       offset: c.req.query("offset"),
     })
@@ -135,5 +136,33 @@ export class QuizController {
           return c.json(errorResponse.response, errorResponse.statusCode);
         },
       );
+  }
+
+  /**
+   * クイズ更新HTTPハンドラー
+   *
+   * 現在は未実装のため、NOT Implemented エラーを返します。
+   *
+   * @param c - Honoアプリケーションコンテキスト
+   * @returns HTTP 501 (Not Implemented)
+   */
+  async updateQuiz(c: AppContext) {
+    const error = new NotImplementedError("Quiz update");
+    const errorResponse = ControllerErrorHandler.handleError(error);
+    return c.json(errorResponse.response, errorResponse.statusCode);
+  }
+
+  /**
+   * クイズ削除HTTPハンドラー
+   *
+   * 現在は未実装のため、NOT Implemented エラーを返します。
+   *
+   * @param c - Honoアプリケーションコンテキスト
+   * @returns HTTP 501 (Not Implemented)
+   */
+  async deleteQuiz(c: AppContext) {
+    const error = new NotImplementedError("Quiz deletion");
+    const errorResponse = ControllerErrorHandler.handleError(error);
+    return c.json(errorResponse.response, errorResponse.statusCode);
   }
 }

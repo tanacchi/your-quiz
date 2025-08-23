@@ -44,11 +44,11 @@ body {
 }
 
 .hover\:bg-base-dark:hover {
-  background-color: #d15d34 !important;
+  background-color: #d15d34;
 }
 
 .hover\:bg-base-light:hover {
-  background-color: #ffe2cf !important;
+  background-color: #ffe2cf;
 }
 
 .shadow-card {

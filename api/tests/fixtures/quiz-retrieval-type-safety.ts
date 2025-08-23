@@ -5,12 +5,12 @@ export const quizRetrievalTypeSafetyData = {
   // TypeScript type compliance scenarios for GET by ID endpoint
   typeComplianceScenarios: [
     {
-      description: "Get Quiz Success - QuizWithSolution type compliance",
+      description: "Get Quiz Success - QuizResponse type compliance",
       endpointOperation: "get_quiz_success",
       endpointTemplate: "/api/quiz/v1/manage/quizzes/{id}",
       method: "GET",
       testData: null,
-      expectedResponseType: "QuizWithSolution",
+      expectedResponseType: "QuizResponse",
       expectedStatus: 200,
     },
   ],
@@ -38,14 +38,14 @@ export const quizRetrievalTypeSafetyData = {
       endpointTemplate: "/api/quiz/v1/manage/quizzes/{id}",
       method: "GET",
       expectedStatus: 200,
-      expectedResponseType: "QuizWithSolution",
+      expectedResponseType: "QuizResponse",
     },
   ],
 
-  // Response schema validation scenarios for QuizWithSolution
+  // Response schema validation scenarios for QuizResponse
   responseSchemaScenarios: [
     {
-      description: "QuizWithSolution Schema Validation (Create then Get)",
+      description: "QuizResponse Schema Validation (Create then Get)",
       createEndpoint: "/api/quiz/v1/manage/quizzes",
       retrieveEndpointTemplate: "/api/quiz/v1/manage/quizzes/{id}",
       createData: {
@@ -59,7 +59,7 @@ export const quizRetrievalTypeSafetyData = {
         explanation: "Schema test explanation",
       },
       expectedStatus: 200,
-      schemaComponent: "QuizWithSolution",
+      schemaComponent: "QuizResponse",
       requiredFields: ["id", "question", "answerType", "solution"],
     },
   ],

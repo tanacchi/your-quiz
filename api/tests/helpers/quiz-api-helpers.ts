@@ -90,8 +90,8 @@ export function validateErrorResponse(
   expect(errorBody.message.length).toBeGreaterThan(0);
 }
 
-// QuizWithSolution レスポンス検証
-export function validateQuizWithSolution(
+// QuizResponse レスポンス検証
+export function validateQuizResponse(
   responseBody: Record<string, unknown>,
   expectedSolutionType?: string,
 ): void {
@@ -107,8 +107,8 @@ export function validateQuizWithSolution(
   }
 }
 
-// QuizListResponse検証
-export function validateQuizListResponse(
+// QuizSummaryListResponse検証
+export function validateQuizSummaryListResponse(
   responseBody: Record<string, unknown>,
 ): void {
   expect(responseBody).toHaveProperty("quizzes");

@@ -202,3 +202,183 @@ export const solutionSchema = z
       }
     }
   }) satisfies z.ZodType<components["schemas"]["Solution"]>;
+
+/**
+ * クイズ作成用正解データ用Zodスキーマ（IDフィールドなし）
+ *
+ * クイズ作成時の正解情報を検証するためのZodスキーマです。
+ * Solution型からID関連フィールドを除いたSolutionCreate型に対応します。
+ *
+ * TypeSpecで定義されたSolutionCreate型と型互換性があります。
+ */
+export const solutionCreateSchema = z
+  .discriminatedUnion("type", [
+    z.object({
+      type: z.literal("boolean"),
+      value: z.boolean(),
+    }),
+    z.object({
+      type: z.literal("free_text"),
+      correctAnswer: z.string(),
+      matchingStrategy: z.enum(["exact", "partial", "regex"]).default("exact"),
+      caseSensitive: z.boolean().default(false),
+    }),
+    z.object({
+      type: z.literal("single_choice"),
+      choices: z.array(
+        z.object({
+          text: z.string(),
+          orderIndex: z.number().int(),
+          isCorrect: z.boolean(),
+        }),
+      ),
+    }),
+    z.object({
+      type: z.literal("multiple_choice"),
+      minCorrectAnswers: z.number().int().default(1),
+      choices: z.array(
+        z.object({
+          text: z.string(),
+          orderIndex: z.number().int(),
+          isCorrect: z.boolean(),
+        }),
+      ),
+    }),
+  ])
+  .superRefine((data, ctx) => {
+    // Boolean solution validation
+    if (data.type === "boolean") {
+      if (!("value" in data)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Solution type 'boolean' requires 'value' field",
+          path: ["value"],
+        });
+      }
+
+      const invalidFields = [];
+      if ("correctAnswer" in data) invalidFields.push("correctAnswer");
+      if ("choices" in data) invalidFields.push("choices");
+
+      if (invalidFields.length > 0 && invalidFields[0]) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Solution type 'boolean' should not contain '${invalidFields.join("', '")}' field${invalidFields.length > 1 ? "s" : ""}`,
+          path: [invalidFields[0]],
+        });
+      }
+    }
+
+    // Free text solution validation
+    else if (data.type === "free_text") {
+      if (!("correctAnswer" in data)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Solution type 'free_text' requires 'correctAnswer' field",
+          path: ["correctAnswer"],
+        });
+      }
+
+      const invalidFields = [];
+      if ("value" in data) invalidFields.push("value");
+      if ("choices" in data) invalidFields.push("choices");
+
+      if (invalidFields.length > 0 && invalidFields[0]) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Solution type 'free_text' should not contain '${invalidFields.join("', '")}' field${invalidFields.length > 1 ? "s" : ""}`,
+          path: [invalidFields[0]],
+        });
+      }
+    }
+
+    // Single choice solution validation
+    else if (data.type === "single_choice") {
+      if (!("choices" in data)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Solution type 'single_choice' requires 'choices' array",
+          path: ["choices"],
+        });
+      }
+
+      // Validate that exactly one choice is marked as correct
+      if ("choices" in data && Array.isArray(data.choices)) {
+        const correctChoices = data.choices.filter(
+          (choice: { isCorrect?: boolean }) => choice.isCorrect === true,
+        );
+        if (correctChoices.length !== 1) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "Single choice solution must have exactly one correct choice (isCorrect: true)",
+            path: ["choices"],
+          });
+        }
+      }
+
+      const invalidFields = [];
+      if ("value" in data) invalidFields.push("value");
+      if ("correctAnswer" in data) invalidFields.push("correctAnswer");
+
+      if (invalidFields.length > 0 && invalidFields[0]) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Solution type 'single_choice' should not contain '${invalidFields.join("', '")}' field${invalidFields.length > 1 ? "s" : ""}`,
+          path: [invalidFields[0]],
+        });
+      }
+    }
+
+    // Multiple choice solution validation
+    else if (data.type === "multiple_choice") {
+      if (!("choices" in data)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Solution type 'multiple_choice' requires 'choices' array",
+          path: ["choices"],
+        });
+      }
+
+      // Validate that at least minCorrectAnswers choices are marked as correct
+      if ("choices" in data && Array.isArray(data.choices)) {
+        const correctChoices = data.choices.filter(
+          (choice: { isCorrect?: boolean }) => choice.isCorrect === true,
+        );
+        const minCorrect =
+          "minCorrectAnswers" in data &&
+          typeof data.minCorrectAnswers === "number"
+            ? data.minCorrectAnswers
+            : 1;
+
+        if (correctChoices.length < minCorrect) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Multiple choice solution must have at least ${minCorrect} correct choices (isCorrect: true)`,
+            path: ["choices"],
+          });
+        }
+
+        if (correctChoices.length === 0) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "Multiple choice solution must have at least one correct choice (isCorrect: true)",
+            path: ["choices"],
+          });
+        }
+      }
+
+      const invalidFields = [];
+      if ("value" in data) invalidFields.push("value");
+      if ("correctAnswer" in data) invalidFields.push("correctAnswer");
+
+      if (invalidFields.length > 0 && invalidFields[0]) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Solution type 'multiple_choice' should not contain '${invalidFields.join("', '")}' field${invalidFields.length > 1 ? "s" : ""}`,
+          path: [invalidFields[0]],
+        });
+      }
+    }
+  }) satisfies z.ZodType<components["schemas"]["SolutionCreate"]>;

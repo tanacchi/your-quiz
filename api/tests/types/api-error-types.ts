@@ -85,7 +85,7 @@ export const CreateQuizResponseSchema = z.object({
   estimatedApprovalDate: z.string().optional(),
 });
 
-export const QuizWithSolutionResponseSchema = z.object({
+export const QuizResponseSchema = z.object({
   id: z.string(),
   question: z.string(),
   answerType: z.enum([
@@ -114,8 +114,27 @@ export const QuizWithSolutionResponseSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
-export const QuizListResponseSchema = z.object({
-  items: z.array(QuizWithSolutionResponseSchema),
+// QuizSummary schema - solution情報を含まない軽量版
+export const QuizSummaryResponseSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  answerType: z.enum([
+    "boolean",
+    "free_text",
+    "single_choice",
+    "multiple_choice",
+  ]),
+  solutionId: z.string(),
+  explanation: z.string().optional(),
+  status: z.enum(["pending_approval", "approved", "rejected"]),
+  creatorId: z.string(),
+  createdAt: z.string(),
+  approvedAt: z.string().optional(),
+  tagIds: z.array(z.string()),
+});
+
+export const QuizSummaryListResponseSchema = z.object({
+  items: z.array(QuizSummaryResponseSchema),
   totalCount: z.number().int().min(0),
   hasMore: z.boolean(),
   continuationToken: z.string().optional(),
@@ -136,10 +155,11 @@ export type InternalServerErrorResponse = z.infer<
 >;
 
 export type CreateQuizResponse = z.infer<typeof CreateQuizResponseSchema>;
-export type QuizWithSolutionResponse = z.infer<
-  typeof QuizWithSolutionResponseSchema
+export type QuizResponse = z.infer<typeof QuizResponseSchema>;
+export type QuizSummaryResponse = z.infer<typeof QuizSummaryResponseSchema>;
+export type QuizSummaryListResponse = z.infer<
+  typeof QuizSummaryListResponseSchema
 >;
-export type QuizListResponse = z.infer<typeof QuizListResponseSchema>;
 
 // TypeSpec型との互換性を保持
 export type TypeSpecValidationErrorResponse =
@@ -148,10 +168,10 @@ export type TypeSpecNotFoundErrorResponse =
   components["schemas"]["NotFoundError"];
 export type TypeSpecCreateQuizResponse =
   components["schemas"]["CreateQuizResponse"];
-export type TypeSpecQuizWithSolutionResponse =
-  components["schemas"]["QuizWithSolution"];
-export type TypeSpecQuizListResponse =
-  components["schemas"]["QuizListResponse"];
+export type TypeSpecQuizResponse = components["schemas"]["QuizResponse"];
+export type TypeSpecQuizSummaryResponse = components["schemas"]["QuizSummary"];
+export type TypeSpecQuizSummaryListResponse =
+  components["schemas"]["QuizSummaryListResponse"];
 
 /**
  * Zodベース型ガード関数群
@@ -182,10 +202,13 @@ export const isInternalServerError = createZodTypeGuard(
 export const isCreateQuizResponse = createZodTypeGuard(
   CreateQuizResponseSchema,
 );
-export const isQuizWithSolutionResponse = createZodTypeGuard(
-  QuizWithSolutionResponseSchema,
+export const isQuizResponse = createZodTypeGuard(QuizResponseSchema);
+export const isQuizSummaryResponse = createZodTypeGuard(
+  QuizSummaryResponseSchema,
 );
-export const isQuizListResponse = createZodTypeGuard(QuizListResponseSchema);
+export const isQuizSummaryListResponse = createZodTypeGuard(
+  QuizSummaryListResponseSchema,
+);
 
 /**
  * Zodベース型アサーション関数群
@@ -254,14 +277,19 @@ export const assertCreateQuizResponse = createZodAssertion(
   "Expected CreateQuizResponse",
 );
 
-export const assertQuizWithSolutionResponse = createZodAssertion(
-  QuizWithSolutionResponseSchema,
-  "Expected QuizWithSolutionResponse",
+export const assertQuizResponse = createZodAssertion(
+  QuizResponseSchema,
+  "Expected QuizResponse",
 );
 
-export const assertQuizListResponse = createZodAssertion(
-  QuizListResponseSchema,
-  "Expected QuizListResponse",
+export const assertQuizSummaryResponse = createZodAssertion(
+  QuizSummaryResponseSchema,
+  "Expected QuizSummaryResponse",
+);
+
+export const assertQuizSummaryListResponse = createZodAssertion(
+  QuizSummaryListResponseSchema,
+  "Expected QuizSummaryListResponse",
 );
 
 /**

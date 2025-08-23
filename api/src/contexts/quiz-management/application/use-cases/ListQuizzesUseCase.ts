@@ -2,10 +2,7 @@ import { Result, type ResultAsync } from "neverthrow";
 import { fromZodErrorToAppError } from "../../../../shared";
 import { FindFailedError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
-import type {
-  QuizSummary,
-  QuizSummaryData,
-} from "../../domain/entities/quiz-summary/QuizSummary";
+import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import {
   CreatorId,
   QuizId,
@@ -29,7 +26,7 @@ export class ListQuizzesUseCase {
    */
   private toQuizListItem(
     quizSummary: QuizSummary,
-  ): components["schemas"]["QuizListResponse"]["items"][number] {
+  ): components["schemas"]["QuizSummaryListResponse"]["items"][number] {
     return {
       id: quizSummary.get("id"),
       question: quizSummary.get("question"),
@@ -38,6 +35,7 @@ export class ListQuizzesUseCase {
       status: quizSummary.get("status"),
       creatorId: quizSummary.get("creatorId"),
       createdAt: quizSummary.get("createdAt"),
+      tagIds: quizSummary.get("tagIds"),
       ...(() => {
         const x = quizSummary.get("explanation");
         return x !== undefined ? { explanation: x } : {};
@@ -46,61 +44,7 @@ export class ListQuizzesUseCase {
         const x = quizSummary.get("approvedAt");
         return x !== undefined ? { approvedAt: x } : {};
       })(),
-      ...(quizSummary.get("tagIds") && quizSummary.get("tagIds").length > 0
-        ? { tags: quizSummary.get("tagIds") }
-        : {}),
-      solution: this.createMinimalSolution(
-        quizSummary.get("answerType"),
-        quizSummary.get("solutionId"),
-      ),
-    } satisfies components["schemas"]["QuizListResponse"]["items"][number];
-  }
-
-  /**
-   * 最小限のSolutionオブジェクトを作成
-   * リスト表示では詳細な解答情報は不要のため、型に合わせた最小限の値を設定
-   *
-   * @param answerType - 解答タイプ
-   * @param solutionId - ソリューションID
-   * @returns 最小限のSolutionオブジェクト
-   */
-  private createMinimalSolution(
-    answerType: QuizSummaryData["answerType"],
-    solutionId: QuizSummaryData["solutionId"],
-  ): components["schemas"]["Solution"] {
-    switch (answerType) {
-      case "boolean":
-        return {
-          type: "boolean",
-          id: solutionId,
-          value: false,
-        } as const;
-      case "free_text":
-        return {
-          type: "free_text",
-          id: solutionId,
-          correctAnswer: "",
-          matchingStrategy: "exact",
-          caseSensitive: false,
-        } as const;
-      case "single_choice":
-        return {
-          type: "single_choice",
-          id: solutionId,
-          choices: [],
-        } as const;
-      case "multiple_choice":
-        return {
-          type: "multiple_choice",
-          id: solutionId,
-          minCorrectAnswers: 1,
-          choices: [],
-        } as const;
-      default: {
-        const unknownAnswerType: never = answerType;
-        return unknownAnswerType;
-      }
-    }
+    } satisfies components["schemas"]["QuizSummaryListResponse"]["items"][number];
   }
 
   /**
@@ -117,15 +61,18 @@ export class ListQuizzesUseCase {
    */
   execute(
     query: ListQuizzesQuery,
-  ): ResultAsync<components["schemas"]["QuizListResponse"], UseCaseError> {
+  ): ResultAsync<
+    components["schemas"]["QuizSummaryListResponse"],
+    UseCaseError
+  > {
     return Result.fromThrowable(
       () => {
         const creatorId = CreatorId.optional().parse(query.creatorId);
-        const ids = query.ids?.map((id) => QuizId.parse(id)) ?? [];
+        const ids = query.quizId?.map((id) => QuizId.parse(id)) ?? [];
 
         return {
           status: query.status,
-          creatorId,
+          ...(creatorId !== undefined && { creatorId }),
           ids,
           limit: query.limit,
           offset: query.offset,

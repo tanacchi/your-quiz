@@ -1,5 +1,5 @@
 // Quiz Retrieval by ID test data for PactumJS specs
-// Maintains ユビキタス言語 (Ubiquitous Language): AnonymousUser, QuizWithSolution
+// Maintains ユビキタス言語 (Ubiquitous Language): AnonymousUser, QuizResponse
 
 export const quizRetrievalData = {
   // Valid Quiz retrieval scenarios - 正常系シナリオ

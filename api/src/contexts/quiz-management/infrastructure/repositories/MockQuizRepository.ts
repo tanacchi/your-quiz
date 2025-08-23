@@ -10,7 +10,6 @@ import {
   QuizId,
   QuizSummary,
   SolutionId,
-  TagId,
 } from "../../domain/entities/quiz-summary/QuizSummary";
 import { TagIds } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
@@ -67,13 +66,13 @@ export class MockQuizRepository implements IQuizRepository {
 
   findById(
     id: string,
-  ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError> {
+  ): ResultAsync<components["schemas"]["QuizResponse"], RepositoryError> {
     return ResultAsync.fromPromise(
       new Promise((resolve, reject) => {
         const quiz = this.mockData.find((q) => q.get("id") === id);
         if (quiz) {
-          // QuizSummaryからQuizWithSolution形式に変換（モック用）
-          const quizWithSolution: components["schemas"]["QuizWithSolution"] = {
+          // QuizSummaryからQuizResponse形式に変換（モック用）
+          const quizResponse: components["schemas"]["QuizResponse"] = {
             id: quiz.get("id"),
             question: quiz.get("question"),
             answerType: quiz.get("answerType"),
@@ -92,13 +91,13 @@ export class MockQuizRepository implements IQuizRepository {
           const explanation = quiz.get("explanation");
           const approvedAt = quiz.get("approvedAt");
           if (explanation) {
-            quizWithSolution.explanation = explanation;
+            quizResponse.explanation = explanation;
           }
           if (approvedAt) {
-            quizWithSolution.approvedAt = approvedAt;
+            quizResponse.approvedAt = approvedAt;
           }
 
-          resolve(quizWithSolution);
+          resolve(quizResponse);
         } else {
           reject(new NotFoundError(`Quiz not found: ${id}`));
         }
@@ -174,9 +173,9 @@ export class MockQuizRepository implements IQuizRepository {
 
   findMany(
     filter: {
-      status?: components["schemas"]["QuizStatus"];
-      creatorId?: string | undefined;
-      tags?: string[];
+      status?: components["schemas"]["QuizStatus"][];
+      creatorId?: string;
+      ids?: string[];
       limit?: number;
       offset?: number;
     } = {},
@@ -191,9 +190,9 @@ export class MockQuizRepository implements IQuizRepository {
     let filteredData = [...this.mockData];
 
     // フィルタリング
-    if (filter.status) {
-      filteredData = filteredData.filter(
-        (quiz) => quiz.get("status") === filter.status,
+    if (filter.status && filter.status.length > 0) {
+      filteredData = filteredData.filter((quiz) =>
+        filter.status?.includes(quiz.get("status")),
       );
     }
     if (filter.creatorId) {
@@ -201,11 +200,10 @@ export class MockQuizRepository implements IQuizRepository {
         (quiz) => quiz.get("creatorId") === filter.creatorId,
       );
     }
-    if (filter.tags && filter.tags.length > 0) {
-      filteredData = filteredData.filter((quiz) => {
-        const quizTagIds = TagId.parse(quiz.get("tagIds"));
-        return filter.tags?.some((tag) => quizTagIds.includes(tag));
-      });
+    if (filter.ids && filter.ids.length > 0) {
+      filteredData = filteredData.filter((quiz) =>
+        filter.ids?.includes(quiz.get("id")),
+      );
     }
 
     const totalCount = filteredData.length;
