@@ -21,7 +21,7 @@ export class MockQuizRepository implements IQuizRepository {
   private readonly mockData = [
     QuizSummary.build({
       id: QuizId.parse("quiz-1"),
-      question: "What is TypeScript?",
+      question: "[Mock] What is TypeScript?",
       answerType: "single_choice",
       solutionId: SolutionId.parse("sol-1"),
       explanation: "TypeScript is a typed superset of JavaScript",
@@ -33,7 +33,7 @@ export class MockQuizRepository implements IQuizRepository {
     }),
     QuizSummary.build({
       id: QuizId.parse("quiz-2"),
-      question: "Is JavaScript strongly typed?",
+      question: "[Mock] Is JavaScript strongly typed?",
       answerType: "boolean",
       solutionId: SolutionId.parse("sol-2"),
       status: "approved",
