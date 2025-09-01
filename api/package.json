@@ -22,8 +22,8 @@
     "format": "biome check --write .",
     "lint": "biome check .",
     "test": "run-p test:*",
-    "test:bdd": "vitest run --coverage --config=vitest.bdd.config.ts",
-    "test:bdd:watch": "vitest --config=vitest.bdd.config.ts --ui --open --watch --coverage",
+    "test:bdd": "vitest run --config=vitest.bdd.config.ts",
+    "test:bdd:watch": "vitest --config=vitest.bdd.config.ts --ui --open --watch",
     "test:tdd": "vitest run --coverage",
     "test:tdd:watch": "vitest --ui --open --watch --coverage",
     "typecheck": "tsc --noEmit"
