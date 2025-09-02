@@ -11,6 +11,9 @@ export default defineConfig({
     // グローバル設定
     globals: true,
 
+    // グローバルセットアップ（サーバー起動・停止管理）
+    globalSetup: ["./tests/global-setup.ts"],
+
     // セットアップファイル（既存のPactumJS設定を維持）
     setupFiles: ["./tests/setup.ts"],
 
