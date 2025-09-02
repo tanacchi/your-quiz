@@ -16,7 +16,7 @@ const VALID_QUIZ_STATUSES = [
 
 export const listQuizzesQuerySchema = z.object({
   status: z.array(z.enum(VALID_QUIZ_STATUSES)).optional().default(["approved"]),
-  creatorId: z.array(z.string().min(1)).optional(),
+  creatorId: z.string().min(1).optional(),
   quizId: z.array(z.string().min(1)).optional(),
   limit: z.number().int().min(1).max(100).default(10),
   offset: z.number().int().min(0).default(0),
@@ -25,7 +25,7 @@ export const listQuizzesQuerySchema = z.object({
 export const listQueryFromReq = z
   .object({
     status: z.array(z.string()).optional(),
-    creatorId: z.array(z.string()).optional(),
+    creatorId: z.string().optional(),
     quizId: z.array(z.string()).optional(),
     limit: z.coerce.number().optional(),
     offset: z.coerce.number().optional(),

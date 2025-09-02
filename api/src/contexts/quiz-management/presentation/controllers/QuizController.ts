@@ -119,14 +119,16 @@ export class QuizController {
    * @returns HTTP 200 (取得成功) またはエラーレスポンス
    */
   async listQuizzes(c: AppContext) {
-    // クエリパラメータを取得
-    return validateWithZod(listQueryFromReq, {
-      status: c.req.queries("status"),
-      creatorId: c.req.queries("creatorId"),
-      quizId: c.req.queries("quizId"),
-      limit: c.req.query("limit"),
-      offset: c.req.query("offset"),
-    })
+    // クエリパラメータを取得（nullの場合は適切にフォールバック）
+    const rawQueryParams = {
+      status: c.req.queries("status") ?? [],
+      creatorId: c.req.query("creatorId") ?? undefined,
+      quizId: c.req.queries("quizId") ?? [],
+      limit: c.req.query("limit") ?? undefined,
+      offset: c.req.query("offset") ?? undefined,
+    };
+
+    return validateWithZod(listQueryFromReq, rawQueryParams)
       .asyncAndThen((query) => this.listQuizzesUseCase.execute(query))
       .match(
         (res) => c.json(res),

@@ -81,15 +81,12 @@ describe("List Quizzes Query Schema", () => {
 
     describe("CreatorId Field Validation", () => {
       it.each([
-        ["valid single creatorId", ["creator-123"], true],
-        ["valid multiple creatorIds", ["creator-1", "creator-2"], true],
-        ["valid UUID format", ["550e8400-e29b-41d4-a716-446655440000"], true],
-        ["valid alphanumeric", ["user123"], true],
-        ["empty string in array", [""], false],
-        ["whitespace only", ["   "], true], // whitespace-only strings have length > 0
-        ["mixed valid and empty", ["creator-1", ""], false],
-        ["empty array", [], true],
-        ["non-array value", "creator-123", false],
+        ["valid single creatorId", "creator-123", true],
+        ["valid UUID format", "550e8400-e29b-41d4-a716-446655440000", true],
+        ["valid alphanumeric", "user123", true],
+        ["empty string", "", false],
+        ["whitespace only", "   ", true], // whitespace-only strings are valid (length > 0)
+        ["array value (should reject)", ["creator-123"], false],
         ["null value", null, false],
         ["undefined value", undefined, true],
       ])("should validate creatorId: %s -> %s", (_desc, creatorId, isValid) => {
@@ -203,7 +200,7 @@ describe("List Quizzes Query Schema", () => {
       it("should accept valid complete query", () => {
         const validQuery = {
           status: ["approved", "pending_approval"],
-          creatorId: ["creator-1", "creator-2"],
+          creatorId: "creator-123",
           quizId: ["quiz-1", "quiz-2", "quiz-3"],
           limit: 25,
           offset: 50,
@@ -219,7 +216,7 @@ describe("List Quizzes Query Schema", () => {
       it("should reject invalid field combinations", () => {
         const invalidQuery = {
           status: ["invalid_status"],
-          creatorId: [""], // empty string not allowed
+          creatorId: "", // empty string not allowed
           limit: 0, // below minimum
           offset: -1, // negative not allowed
         };
@@ -257,7 +254,7 @@ describe("List Quizzes Query Schema", () => {
       it("should transform string arrays correctly", () => {
         const rawInput = {
           status: ["pending_approval", "approved"],
-          creatorId: ["creator-1", "creator-2"],
+          creatorId: "creator-123",
           quizId: ["quiz-1"],
         };
         const result = listQueryFromReq.safeParse(rawInput);
@@ -265,7 +262,7 @@ describe("List Quizzes Query Schema", () => {
 
         if (result.success) {
           expect(result.data.status).toEqual(["pending_approval", "approved"]);
-          expect(result.data.creatorId).toEqual(["creator-1", "creator-2"]);
+          expect(result.data.creatorId).toEqual("creator-123");
           expect(result.data.quizId).toEqual(["quiz-1"]);
         }
       });
@@ -317,7 +314,7 @@ describe("List Quizzes Query Schema", () => {
       it("should process realistic HTTP query parameter data", () => {
         const httpQueryParams = {
           status: ["approved", "pending_approval"],
-          creatorId: ["user-123"],
+          creatorId: "user-123",
           limit: "20",
           offset: "0",
         };
@@ -326,7 +323,7 @@ describe("List Quizzes Query Schema", () => {
 
         if (result.success) {
           expect(result.data.status).toEqual(["approved", "pending_approval"]);
-          expect(result.data.creatorId).toEqual(["user-123"]);
+          expect(result.data.creatorId).toEqual("user-123");
           expect(result.data.limit).toBe(20);
           expect(result.data.offset).toBe(0);
           expect(typeof result.data.limit).toBe("number");
@@ -337,7 +334,7 @@ describe("List Quizzes Query Schema", () => {
       it("should handle mixed valid and invalid data correctly", () => {
         const mixedInput = {
           status: ["approved"], // valid
-          creatorId: [""], // invalid - empty string
+          creatorId: "", // invalid - empty string
           limit: "15", // valid
           offset: "-5", // invalid - negative
         };
@@ -397,7 +394,6 @@ describe("List Quizzes Query Schema", () => {
       it("should handle empty arrays correctly", () => {
         const input = {
           status: [],
-          creatorId: [],
           quizId: [],
         };
         const result = listQuizzesQuerySchema.safeParse(input);
@@ -407,7 +403,7 @@ describe("List Quizzes Query Schema", () => {
       it("should handle single-item arrays", () => {
         const input = {
           status: ["approved"],
-          creatorId: ["single-creator"],
+          creatorId: "single-creator",
           quizId: ["single-quiz"],
         };
         const result = listQuizzesQuerySchema.safeParse(input);
@@ -415,34 +411,34 @@ describe("List Quizzes Query Schema", () => {
 
         if (result.success) {
           expect(result.data.status).toHaveLength(1);
-          expect(result.data.creatorId).toHaveLength(1);
+          expect(result.data.creatorId).toBe("single-creator");
           expect(result.data.quizId).toHaveLength(1);
         }
       });
 
       it("should handle very large arrays", () => {
         const largeArray = Array(50)
-          .fill("creator")
-          .map((_, i) => `creator-${i}`);
+          .fill("quiz")
+          .map((_, i) => `quiz-${i}`);
         const input = {
-          creatorId: largeArray,
+          quizId: largeArray,
         };
         const result = listQuizzesQuerySchema.safeParse(input);
         expect(result.success).toBe(true);
 
         if (result.success) {
-          expect(result.data.creatorId).toHaveLength(50);
+          expect(result.data.quizId).toHaveLength(50);
         }
       });
     });
 
     describe("Special Characters and Unicode", () => {
       it.each([
-        ["special characters", ["creator-!@#$%"]],
-        ["unicode characters", ["creator-プログラミング"]],
-        ["emoji", ["creator-🚀"]],
-        ["mixed unicode", ["creator-テスト123"]],
-        ["URL encoded characters", ["creator-test%20user"]],
+        ["special characters", "creator-!@#$%"],
+        ["unicode characters", "creator-プログラミング"],
+        ["emoji", "creator-🚀"],
+        ["mixed unicode", "creator-テスト123"],
+        ["URL encoded characters", "creator-test%20user"],
       ])("should handle %s in creatorId", (_desc, creatorId) => {
         const input = { creatorId };
         const result = listQuizzesQuerySchema.safeParse(input);
@@ -502,8 +498,8 @@ describe("List Quizzes Query Schema", () => {
         }
       });
 
-      it("should provide errors for empty strings in arrays", () => {
-        const input = { creatorId: ["valid-creator", ""] };
+      it("should provide errors for empty strings", () => {
+        const input = { creatorId: "" };
         const result = listQuizzesQuerySchema.safeParse(input);
         expect(result.success).toBe(false);
 
@@ -521,7 +517,7 @@ describe("List Quizzes Query Schema", () => {
       it("should collect multiple validation errors", () => {
         const input = {
           status: ["invalid_status"],
-          creatorId: [""],
+          creatorId: "",
           limit: 0,
           offset: -1,
         };
@@ -594,17 +590,17 @@ describe("List Quizzes Query Schema", () => {
         }
       });
 
-      it("should handle filtering by multiple creators", () => {
-        const multiCreatorRequest = {
+      it("should handle filtering by single creator", () => {
+        const singleCreatorRequest = {
           status: ["approved", "pending_approval"],
-          creatorId: ["teacher-1", "teacher-2", "admin-user"],
+          creatorId: "teacher-1",
           limit: 50,
         };
-        const result = listQuizzesQuerySchema.safeParse(multiCreatorRequest);
+        const result = listQuizzesQuerySchema.safeParse(singleCreatorRequest);
         expect(result.success).toBe(true);
 
         if (result.success) {
-          expect(result.data.creatorId).toHaveLength(3);
+          expect(result.data.creatorId).toBe("teacher-1");
           expect(result.data.status).toHaveLength(2);
         }
       });
@@ -629,9 +625,7 @@ describe("List Quizzes Query Schema", () => {
 
         const largeInput = {
           status: ["approved"],
-          creatorId: Array(100)
-            .fill(0)
-            .map((_, i) => `creator-${i}`),
+          creatorId: "creator-performance-test",
           quizId: Array(100)
             .fill(0)
             .map((_, i) => `quiz-${i}`),

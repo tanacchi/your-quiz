@@ -1,4 +1,5 @@
 import { err, ok, type Result } from "neverthrow";
+import { loadSearchQuizFixtures } from "../../../../shared/fixtures";
 import type { SearchQuizzesQuery } from "../../domain/entities/SearchQuizzesQuery";
 import type {
   ISearchRepository,
@@ -9,131 +10,63 @@ import type {
 /**
  * モック検索リポジトリ
  *
- * 検索機能の基本実装を提供するモックリポジトリです。
+ * D1検証システムを活用した共通フィクスチャーを使用。
  * 実際の検索エンジンやデータベースの代わりに、
- * メモリ上のサンプルデータを使用して検索結果を返します。
+ * 型安全に検証されたフィクスチャーデータを使用して検索結果を返します。
  */
 export class MockSearchRepository implements ISearchRepository {
-  private readonly sampleQuizzes = [
-    {
-      id: "quiz-1",
-      question: "JavaScriptで配列をソートするメソッドは？",
-      answerType: "single_choice" as const,
-      solutionId: "solution-1",
-      explanation: "Array.prototype.sort()メソッドを使用します",
-      status: "approved" as const,
-      creatorId: "user-1",
-      createdAt: new Date("2024-01-15").toISOString(),
-      approvedAt: new Date("2024-01-16").toISOString(),
-      solution: {
-        type: "single_choice" as const,
-        id: "solution-1",
-        choices: [
-          {
-            id: "choice-1",
-            solutionId: "solution-1",
-            text: "sort()",
-            orderIndex: 0,
-            isCorrect: true,
-          },
-          {
-            id: "choice-2",
-            solutionId: "solution-1",
-            text: "order()",
-            orderIndex: 1,
-            isCorrect: false,
-          },
-          {
-            id: "choice-3",
-            solutionId: "solution-1",
-            text: "arrange()",
-            orderIndex: 2,
-            isCorrect: false,
-          },
-        ],
-      },
-      tags: ["javascript", "array", "programming"],
-    },
-    {
-      id: "quiz-2",
-      question: "Pythonでリストを逆順にするメソッドは？",
-      answerType: "single_choice" as const,
-      solutionId: "solution-2",
-      explanation: "reverse()メソッドまたはスライシング[::-1]を使用します",
-      status: "approved" as const,
-      creatorId: "user-2",
-      createdAt: new Date("2024-01-20").toISOString(),
-      approvedAt: new Date("2024-01-21").toISOString(),
-      solution: {
-        type: "single_choice" as const,
-        id: "solution-2",
-        choices: [
-          {
-            id: "choice-4",
-            solutionId: "solution-2",
-            text: "reverse()",
-            orderIndex: 0,
-            isCorrect: true,
-          },
-          {
-            id: "choice-5",
-            solutionId: "solution-2",
-            text: "invert()",
-            orderIndex: 1,
-            isCorrect: false,
-          },
-          {
-            id: "choice-6",
-            solutionId: "solution-2",
-            text: "backward()",
-            orderIndex: 2,
-            isCorrect: false,
-          },
-        ],
-      },
-      tags: ["python", "list", "programming"],
-    },
-    {
-      id: "quiz-3",
-      question: "TypeScriptの型安全性の利点は？",
-      answerType: "multiple_choice" as const,
-      solutionId: "solution-3",
-      explanation: "コンパイル時のエラー検出とIDE支援が主な利点です",
-      status: "approved" as const,
-      creatorId: "user-1",
-      createdAt: new Date("2024-02-01").toISOString(),
-      approvedAt: new Date("2024-02-02").toISOString(),
-      solution: {
-        type: "multiple_choice" as const,
-        id: "solution-3",
-        minCorrectAnswers: 2,
-        choices: [
-          {
-            id: "choice-7",
-            solutionId: "solution-3",
-            text: "コンパイル時エラー検出",
-            orderIndex: 0,
-            isCorrect: true,
-          },
-          {
-            id: "choice-8",
-            solutionId: "solution-3",
-            text: "IDE支援の向上",
-            orderIndex: 1,
-            isCorrect: true,
-          },
-          {
-            id: "choice-9",
-            solutionId: "solution-3",
-            text: "実行速度の向上",
-            orderIndex: 2,
-            isCorrect: false,
-          },
-        ],
-      },
-      tags: ["typescript", "type-safety", "programming"],
-    },
-  ];
+  private readonly sampleQuizzes: Array<{
+    id: string;
+    question: string;
+    answerType: "boolean" | "free_text" | "single_choice" | "multiple_choice";
+    solutionId: string;
+    explanation?: string;
+    status: "pending_approval" | "approved" | "rejected";
+    creatorId: string;
+    createdAt: string;
+    approvedAt?: string;
+    solution: {
+      type: "boolean";
+      id: string;
+      value: boolean;
+    };
+    tags?: string[];
+  }>;
+
+  constructor() {
+    // D1検証システムを活用した型安全なフィクスチャーロード
+    const quizFixtures = loadSearchQuizFixtures();
+
+    this.sampleQuizzes = quizFixtures.map((quiz) => {
+      const explanation = quiz.get("explanation");
+      const approvedAt = quiz.get("approvedAt");
+
+      return {
+        id: quiz.get("id"),
+        question: quiz.get("question"),
+        answerType: quiz.get("answerType") as
+          | "boolean"
+          | "free_text"
+          | "single_choice"
+          | "multiple_choice",
+        solutionId: quiz.get("solutionId"),
+        ...(explanation && { explanation }),
+        status: quiz.get("status") as
+          | "pending_approval"
+          | "approved"
+          | "rejected",
+        creatorId: quiz.get("creatorId"),
+        createdAt: quiz.get("createdAt"),
+        ...(approvedAt && { approvedAt }),
+        solution: {
+          type: "boolean" as const,
+          id: quiz.get("solutionId"),
+          value: false, // シンプルな固定値
+        },
+        tags: ["programming"], // 固定タグ
+      };
+    });
+  }
 
   /**
    * クイズを検索する
@@ -225,12 +158,12 @@ export class MockSearchRepository implements ISearchRepository {
           question: quiz.question,
           answerType: quiz.answerType,
           solutionId: quiz.solutionId,
-          explanation: quiz.explanation,
+          ...(quiz.explanation && { explanation: quiz.explanation }),
           status: quiz.status,
           creatorId: quiz.creatorId,
           createdAt: quiz.createdAt,
-          approvedAt: quiz.approvedAt,
-          tagIds: quiz.tags,
+          ...(quiz.approvedAt && { approvedAt: quiz.approvedAt }),
+          tagIds: quiz.tags || [],
         })),
         totalCount,
         hasMore: query.offset + query.limit < totalCount,
