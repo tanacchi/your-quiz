@@ -286,17 +286,33 @@ export interface components {
       id: components["schemas"]["AnswerId"];
       value: boolean;
     };
+    /** @example {
+     *       "type": "boolean",
+     *       "id": "solution-bool-001",
+     *       "value": true
+     *     } */
     BooleanSolution: {
       /** @enum {string} */
       type: "boolean";
       id: components["schemas"]["SolutionId"];
       value: boolean;
     };
+    /** @example {
+     *       "type": "boolean",
+     *       "value": true
+     *     } */
     BooleanSolutionCreate: {
       /** @enum {string} */
       type: "boolean";
       value: boolean;
     };
+    /** @example {
+     *       "id": "choice-a",
+     *       "solutionId": "solution-001",
+     *       "text": "push()",
+     *       "orderIndex": 0,
+     *       "isCorrect": true
+     *     } */
     Choice: {
       id: components["schemas"]["ChoiceId"];
       solutionId: components["schemas"]["SolutionId"];
@@ -305,6 +321,11 @@ export interface components {
       orderIndex: number;
       isCorrect: boolean;
     };
+    /** @example {
+     *       "text": "push()",
+     *       "orderIndex": 0,
+     *       "isCorrect": true
+     *     } */
     ChoiceCreate: {
       text: string;
       /** Format: int32 */
@@ -351,6 +372,22 @@ export interface components {
       deck: components["schemas"]["Deck"];
       session?: components["schemas"]["QuizSession"];
     };
+    /** @example {
+     *       "question": "Pythonでリストの長さを取得する関数は？",
+     *       "answerType": "free_text",
+     *       "solution": {
+     *         "type": "free_text",
+     *         "correctAnswer": "len",
+     *         "matchingStrategy": "exact",
+     *         "caseSensitive": false
+     *       },
+     *       "explanation": "len()関数はシーケンス型（リスト、タプル、文字列など）の長さを返します。",
+     *       "tags": [
+     *         "python",
+     *         "関数",
+     *         "初級"
+     *       ]
+     *     } */
     CreateQuizRequest: {
       question: string;
       answerType: components["schemas"]["AnswerType"];
@@ -401,6 +438,12 @@ export interface components {
       /** Format: int32 */
       totalQuizzes: number;
     };
+    /** @example {
+     *       "code": 400,
+     *       "message": "リクエストの形式が正しくありません",
+     *       "details": "問題文は500文字以下で入力してください",
+     *       "requestId": "req-12345-abcde"
+     *     } */
     ErrorResponse: {
       /** Format: int32 */
       code: number;
@@ -423,6 +466,13 @@ export interface components {
       id: components["schemas"]["AnswerId"];
       text: string;
     };
+    /** @example {
+     *       "type": "free_text",
+     *       "id": "solution-text-001",
+     *       "correctAnswer": "React",
+     *       "matchingStrategy": "exact",
+     *       "caseSensitive": false
+     *     } */
     FreeTextSolution: {
       /** @enum {string} */
       type: "free_text";
@@ -433,6 +483,12 @@ export interface components {
       /** @default false */
       caseSensitive: boolean;
     };
+    /** @example {
+     *       "type": "free_text",
+     *       "correctAnswer": "React",
+     *       "matchingStrategy": "exact",
+     *       "caseSensitive": false
+     *     } */
     FreeTextSolutionCreate: {
       /** @enum {string} */
       type: "free_text";
@@ -459,6 +515,34 @@ export interface components {
       id: components["schemas"]["AnswerId"];
       selectedChoiceIds: components["schemas"]["ChoiceId"][];
     };
+    /** @example {
+     *       "type": "multiple_choice",
+     *       "id": "solution-multi-001",
+     *       "minCorrectAnswers": 2,
+     *       "choices": [
+     *         {
+     *           "id": "choice-a",
+     *           "solutionId": "solution-multi-001",
+     *           "text": "HTML",
+     *           "orderIndex": 0,
+     *           "isCorrect": true
+     *         },
+     *         {
+     *           "id": "choice-b",
+     *           "solutionId": "solution-multi-001",
+     *           "text": "Java",
+     *           "orderIndex": 1,
+     *           "isCorrect": false
+     *         },
+     *         {
+     *           "id": "choice-c",
+     *           "solutionId": "solution-multi-001",
+     *           "text": "CSS",
+     *           "orderIndex": 2,
+     *           "isCorrect": true
+     *         }
+     *       ]
+     *     } */
     MultipleChoiceSolution: {
       /** @enum {string} */
       type: "multiple_choice";
@@ -470,6 +554,27 @@ export interface components {
       minCorrectAnswers: number;
       choices: components["schemas"]["Choice"][];
     };
+    /** @example {
+     *       "type": "multiple_choice",
+     *       "minCorrectAnswers": 2,
+     *       "choices": [
+     *         {
+     *           "text": "HTML",
+     *           "orderIndex": 0,
+     *           "isCorrect": true
+     *         },
+     *         {
+     *           "text": "Java",
+     *           "orderIndex": 1,
+     *           "isCorrect": false
+     *         },
+     *         {
+     *           "text": "CSS",
+     *           "orderIndex": 2,
+     *           "isCorrect": true
+     *         }
+     *       ]
+     *     } */
     MultipleChoiceSolutionCreate: {
       /** @enum {string} */
       type: "multiple_choice";
@@ -480,6 +585,12 @@ export interface components {
       minCorrectAnswers: number;
       choices: components["schemas"]["ChoiceCreate"][];
     };
+    /** @example {
+     *       "code": 404,
+     *       "message": "リソースが見つかりません",
+     *       "details": "指定されたクイズID 'quiz-999' は存在しません",
+     *       "requestId": "req-404-001"
+     *     } */
     NotFoundError: {
       /** @enum {number} */
       code: 404;
@@ -500,6 +611,17 @@ export interface components {
       /** @description Token for cursor-based pagination (optional, for future implementation) */
       continuationToken?: string;
     };
+    /** @example {
+     *       "id": "quiz-001",
+     *       "question": "JavaScriptで配列の最後に要素を追加するメソッドは？",
+     *       "answerType": "single_choice",
+     *       "solutionId": "solution-001",
+     *       "explanation": "push()メソッドは配列の末尾に1つ以上の要素を追加し、配列の新しい長さを返します。",
+     *       "status": "approved",
+     *       "creatorId": "user-123",
+     *       "createdAt": "2024-01-15T10:30:00Z",
+     *       "approvedAt": "2024-01-16T09:15:00Z"
+     *     } */
     Quiz: {
       id: components["schemas"]["QuizId"];
       question: string;
@@ -512,6 +634,49 @@ export interface components {
       approvedAt?: components["schemas"]["UtcDateTime"];
     };
     QuizId: string;
+    /** @example {
+     *       "id": "quiz-001",
+     *       "question": "JavaScriptで配列の最後に要素を追加するメソッドは？",
+     *       "answerType": "single_choice",
+     *       "solutionId": "solution-001",
+     *       "explanation": "push()メソッドは配列の末尾に1つ以上の要素を追加し、配列の新しい長さを返します。",
+     *       "status": "approved",
+     *       "creatorId": "user-123",
+     *       "createdAt": "2024-01-15T10:30:00Z",
+     *       "approvedAt": "2024-01-16T09:15:00Z",
+     *       "solution": {
+     *         "type": "single_choice",
+     *         "id": "solution-001",
+     *         "choices": [
+     *           {
+     *             "id": "choice-a",
+     *             "solutionId": "solution-001",
+     *             "text": "push()",
+     *             "orderIndex": 0,
+     *             "isCorrect": true
+     *           },
+     *           {
+     *             "id": "choice-b",
+     *             "solutionId": "solution-001",
+     *             "text": "pop()",
+     *             "orderIndex": 1,
+     *             "isCorrect": false
+     *           },
+     *           {
+     *             "id": "choice-c",
+     *             "solutionId": "solution-001",
+     *             "text": "shift()",
+     *             "orderIndex": 2,
+     *             "isCorrect": false
+     *           }
+     *         ]
+     *       },
+     *       "tags": [
+     *         "javascript",
+     *         "配列",
+     *         "初級"
+     *       ]
+     *     } */
     QuizResponse: {
       id: components["schemas"]["QuizId"];
       question: string;
@@ -557,6 +722,22 @@ export interface components {
     };
     /** @enum {string} */
     QuizStatus: "pending_approval" | "approved" | "rejected";
+    /** @example {
+     *       "id": "quiz-001",
+     *       "question": "JavaScriptで配列の最後に要素を追加するメソッドは？",
+     *       "answerType": "single_choice",
+     *       "solutionId": "solution-001",
+     *       "explanation": "push()メソッドは配列の末尾に1つ以上の要素を追加し、配列の新しい長さを返します。",
+     *       "status": "approved",
+     *       "creatorId": "user-123",
+     *       "createdAt": "2024-01-15T10:30:00Z",
+     *       "approvedAt": "2024-01-16T09:15:00Z",
+     *       "tagIds": [
+     *         "tag-001",
+     *         "tag-002",
+     *         "tag-003"
+     *       ]
+     *     } */
     QuizSummary: {
       id: components["schemas"]["QuizId"];
       question: string;
@@ -577,6 +758,12 @@ export interface components {
       continuationToken?: string;
     };
     QuizTagId: string;
+    /** @example {
+     *       "code": 429,
+     *       "message": "レート制限に達しました",
+     *       "details": "1日あたりのクイズ作成上限（50問）に達しています。明日の00:00 UTCにリセットされます。",
+     *       "requestId": "req-rate-001"
+     *     } */
     RateLimitError: {
       /** @enum {number} */
       code: 429;
@@ -612,12 +799,54 @@ export interface components {
       id: components["schemas"]["AnswerId"];
       selectedChoiceId: components["schemas"]["ChoiceId"];
     };
+    /** @example {
+     *       "type": "single_choice",
+     *       "id": "solution-001",
+     *       "choices": [
+     *         {
+     *           "id": "choice-a",
+     *           "solutionId": "solution-001",
+     *           "text": "push()",
+     *           "orderIndex": 0,
+     *           "isCorrect": true
+     *         },
+     *         {
+     *           "id": "choice-b",
+     *           "solutionId": "solution-001",
+     *           "text": "pop()",
+     *           "orderIndex": 1,
+     *           "isCorrect": false
+     *         },
+     *         {
+     *           "id": "choice-c",
+     *           "solutionId": "solution-001",
+     *           "text": "shift()",
+     *           "orderIndex": 2,
+     *           "isCorrect": false
+     *         }
+     *       ]
+     *     } */
     SingleChoiceSolution: {
       /** @enum {string} */
       type: "single_choice";
       id: components["schemas"]["SolutionId"];
       choices: components["schemas"]["Choice"][];
     };
+    /** @example {
+     *       "type": "single_choice",
+     *       "choices": [
+     *         {
+     *           "text": "push()",
+     *           "orderIndex": 0,
+     *           "isCorrect": true
+     *         },
+     *         {
+     *           "text": "pop()",
+     *           "orderIndex": 1,
+     *           "isCorrect": false
+     *         }
+     *       ]
+     *     } */
     SingleChoiceSolutionCreate: {
       /** @enum {string} */
       type: "single_choice";
@@ -675,6 +904,33 @@ export interface components {
       components["schemas"]["ErrorResponse"],
       "code" | "message"
     >;
+    /** @example {
+     *       "question": "HTMLの段落を表すタグはどれですか？（修正版）",
+     *       "answerType": "single_choice",
+     *       "solution": {
+     *         "type": "single_choice",
+     *         "choices": [
+     *           {
+     *             "text": "<p>",
+     *             "orderIndex": 0,
+     *             "isCorrect": true
+     *           },
+     *           {
+     *             "text": "<div>",
+     *             "orderIndex": 1,
+     *             "isCorrect": false
+     *           }
+     *         ]
+     *       },
+     *       "explanation": "pタグはparagraphの略で、HTMLで段落を表現するために使用します。段落間には自動的にマージンが設定されます。",
+     *       "tags": [
+     *         "html",
+     *         "基礎",
+     *         "初級",
+     *         "マークアップ"
+     *       ],
+     *       "creatorId": "user-456"
+     *     } */
     UpdateQuizRequest: {
       question?: string;
       answerType?: components["schemas"]["AnswerType"];
@@ -722,6 +978,16 @@ export interface components {
       streak: number;
     };
     UtcDateTime: string;
+    /** @example {
+     *       "code": 400,
+     *       "message": "バリデーションエラー",
+     *       "details": "入力された値に問題があります",
+     *       "requestId": "req-val-001",
+     *       "fieldErrors": {
+     *         "question": "問題文は必須です",
+     *         "tags": "タグは最大10個までです"
+     *       }
+     *     } */
     ValidationError: {
       /** @enum {number} */
       code: 400;
