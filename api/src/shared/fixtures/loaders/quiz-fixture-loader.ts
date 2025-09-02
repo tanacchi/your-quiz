@@ -1,8 +1,8 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import type { QuizSummary } from "../../../contexts/quiz-management/domain/entities/quiz-summary/QuizSummary";
 import { D1QuizSummaryMapper } from "../../../contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper";
 import { isQuizRow } from "../../../contexts/quiz-management/infrastructure/mappers/d1-types";
+import quizRowsData from "../data/quiz-rows.json";
+import searchQuizRowsData from "../data/search-quiz-rows.json";
 
 /**
  * D1検証システムを活用したフィクスチャーローダー
@@ -10,8 +10,6 @@ import { isQuizRow } from "../../../contexts/quiz-management/infrastructure/mapp
  * D1Repositoryと同じ検証フロー（QuizRow → QuizSummary）を使用して
  * 型安全性とデータ整合性を保証します。
  */
-
-const FIXTURES_DIR = join(__dirname, "../data");
 
 let quizCache: QuizSummary[] | null = null;
 let searchQuizCache: QuizSummary[] | null = null;
@@ -26,8 +24,8 @@ export function loadQuizFixtures(): QuizSummary[] {
   }
 
   try {
-    const filePath = join(FIXTURES_DIR, "quiz-rows.json");
-    const jsonData = JSON.parse(readFileSync(filePath, "utf-8"));
+    // 静的インポートに変更（Node.js依存排除）
+    const jsonData = quizRowsData;
 
     // D1と同じ型検証フロー
     const validatedRows = jsonData.map((row: unknown, index: number) => {
@@ -66,8 +64,8 @@ export function loadSearchQuizFixtures(): QuizSummary[] {
   }
 
   try {
-    const filePath = join(FIXTURES_DIR, "search-quiz-rows.json");
-    const jsonData = JSON.parse(readFileSync(filePath, "utf-8"));
+    // 静的インポートに変更（Node.js依存排除）
+    const jsonData = searchQuizRowsData;
 
     // D1と同じ型検証フロー
     const validatedRows = jsonData.map((row: unknown, index: number) => {
