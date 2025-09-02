@@ -5,7 +5,7 @@ import type { SearchQuizzesQuery } from "../entities/SearchQuizzesQuery";
 /**
  * 検索結果タイプ
  */
-export type SearchResult = components["schemas"]["QuizListResponse"];
+export type SearchResult = components["schemas"]["QuizSummaryListResponse"];
 
 /**
  * 検索リポジトリのドメインエラー

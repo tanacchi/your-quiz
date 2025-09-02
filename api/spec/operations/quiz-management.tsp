@@ -97,7 +97,7 @@ interface QuizManagement {
   createQuiz(
     @doc("新しいクイズの作成情報を含むリクエスト")
     @body request: CreateQuizRequest
-  ): QuizWithSolution | ValidationError | RateLimitError;
+  ): QuizResponse | ValidationError | RateLimitError;
   
   @doc("""
     クイズ詳細情報取得API
@@ -105,7 +105,7 @@ interface QuizManagement {
     ## 機能
     - **完全な問題情報**: 問題文、解答、解説、タグを含む全データを取得
     - **権限制御**: 作成者または管理者のみアクセス可能（承認前クイズの場合）
-    - **解答情報付き**: QuizWithSolution形式で解答も含めて返却
+    - **解答情報付き**: QuizResponse形式で解答も含めて返却
     
     ## アクセス制御
     - **公開クイズ（approved）**: 全ユーザーがアクセス可能
@@ -128,45 +128,54 @@ interface QuizManagement {
   getQuiz(
     @doc("取得対象のクイズID（UUID形式）")
     @path id: QuizId
-  ): QuizWithSolution | NotFoundError;
+  ): QuizResponse | NotFoundError;
   
   @doc("""
-    クイズ情報更新API
+    クイズ情報部分更新API（PATCH）
     
     ## 機能
-    - **部分更新対応**: 指定されたフィールドのみを更新
-    - **権限制御**: 作成者のみ更新可能
+    - **真の部分更新**: 指定されたフィールドのみを更新（PATCH方式）
+    - **柔軟な権限制御**: 作成者と管理者で更新可能フィールドが異なる
     - **承認状態制限**: 承認済みクイズは更新不可
-    - **バリデーション**: 更新内容の妥当性を自動検証
+    - **整合性バリデーション**: 更新内容の妥当性を自動検証
     
     ## 更新可能フィールド
-    - 問題文（question）
-    - 解説（explanation）
-    - タグ（tags）
+    - **問題文（question）**: 問題の内容を修正
+    - **回答形式（answerType）**: boolean/free_text/single_choice/multiple_choice
+    - **解答内容（solution）**: SolutionCreateを使用してIDなしで解答を更新
+    - **解説（explanation）**: 問題の説明文を追加・修正
+    - **タグ（tags）**: 学習分野・難易度別のタグ配列
+    - **作成者ID（creatorId）**: 管理者のみ、作成者の変更が可能
     
-    ## 更新制限
-    - **承認済みクイズ**: 更新不可（approved状態）
-    - **他者作成クイズ**: 更新不可（作成者以外）
-    - **解答部分**: 作成後は変更不可（整合性保持のため）
+    ## 権限制御
+    - **作成者権限**: question, answerType, solution, explanation, tags の更新
+    - **管理者権限**: 全フィールド（creatorId含む）の更新
+    - **承認済みクイズ**: 全ユーザーで更新不可（approved状態）
+    
+    ## 整合性チェック
+    - **answerTypeとsolution**: 回答形式と解答内容の整合性を確認
+    - **タグ検証**: 存在するタグIDのみ受け入れ
+    - **作成者存在確認**: creatorId変更時のユーザー存在確認
     
     ## 更新後の動作
-    - 更新されたクイズは承認待ち状態を維持
-    - 管理者に再レビュー通知
-    - 更新履歴の記録
+    - 更新されたクイズは承認待ち状態に戻る（pending_approval）
+    - 管理者に再レビュー通知を送信
+    - 更新履歴の詳細記録（変更フィールドと変更者）
     
     ## 使用場面
-    - 誤字脱字の修正
-    - 解説の充実化
-    - タグ分類の見直し
+    - **内容修正**: 誤字脱字や解答間違いの修正
+    - **形式変更**: 回答形式や選択肢の追加・変更
+    - **管理業務**: 作成者変更や大幅な内容修正
+    - **品質向上**: 解説の充実化やタグ分類の見直し
     """)
-  @put
+  @patch
   @route("/quizzes/{id}")
   updateQuiz(
     @doc("更新対象のクイズID（UUID形式）")
     @path id: QuizId, 
     @doc("更新情報を含むリクエスト（部分更新対応）")
     @body request: UpdateQuizRequest
-  ): QuizWithSolution | NotFoundError | ForbiddenError | ValidationError;
+  ): QuizResponse | NotFoundError | ForbiddenError | ValidationError;
   
   @doc("""
     クイズ削除API
@@ -213,9 +222,9 @@ interface QuizManagement {
     - **権限考慮**: ユーザー権限に応じた表示制御
     
     ## フィルタ機能
-    - **ステータス別**: pending_approval, approved, rejected
-    - **作成者別**: 特定ユーザーの作成クイズのみ表示
-    - **ID指定**: 複数のクイズIDを指定して一括取得
+    - **ステータス別**: pending_approval, approved, rejected（複数指定でOR条件）
+    - **作成者別**: 特定ユーザーの作成クイズのみ表示（複数指定でOR条件）
+    - **クイズID指定**: 複数のクイズIDを指定して一括取得
     
     ## 権限による表示制御
     - **一般ユーザー**: 承認済みクイズのみ表示
@@ -228,27 +237,34 @@ interface QuizManagement {
     - オフセットベース: skip/limit パターン
     
     ## レスポンス情報
-    - クイズ一覧（QuizWithSolution形式）
+    - クイズ一覧（QuizResponse形式）
     - 総件数（フィルタ適用後）
     - 続きの存在フラグ
     - 継続トークン（将来のカーソルベース対応用）
     
+    ## クエリパラメータ使用例
+    - **複数ステータス**: `?status=pending_approval&status=approved` （承認待ち + 承認済み）
+    - **複数作成者**: `?creatorId=user1&creatorId=user2` （複数ユーザーの作品）
+    - **クイズID指定**: `?quizId=quiz1&quizId=quiz2` （特定クイズの一括取得）
+    - **組み合わせ**: `?status=approved&creatorId=user1&creatorId=user2` （複数作成者の承認済みクイズ）
+    
     ## 使用場面
-    - 管理画面でのクイズ管理
-    - 作成者マイページでの作品一覧
-    - 承認待ちキューの表示
+    - **管理画面でのクイズ管理**: 複数ステータス・作成者での絞り込み
+    - **作成者マイページでの作品一覧**: 自身の全ステータスクイズ表示
+    - **承認待ちキューの表示**: pending_approval ステータスのみ表示
+    - **バッチ処理**: 特定IDのクイズ群を一括取得
     """)
   @get
   @route("/quizzes")
   listQuizzes(
     ...PaginationRequest,
-    @doc("ステータス別フィルター。指定されない場合は全ステータス（権限に応じて）")
-    @query status?: QuizStatus,
-    @doc("作成者ID別フィルター。特定ユーザーの作成クイズのみ取得")
-    @query creatorId?: UserId,
+    @doc("ステータス別フィルター（複数指定可能）。指定されない場合は全ステータス（権限に応じて）")
+    @query status?: QuizStatus[],
+    @doc("作成者ID別フィルター（複数指定可能）。特定ユーザーの作成クイズのみ取得")
+    @query creatorId?: UserId[],
     @doc("クイズID配列による指定取得。複数IDの一括取得に使用")
-    @query ids?: string[]
-  ): QuizListResponse;
+    @query quizId?: string[]
+  ): QuizSummaryListResponse;
   
   // 承認ワークフロー操作（初期リリース版では未実装）
   

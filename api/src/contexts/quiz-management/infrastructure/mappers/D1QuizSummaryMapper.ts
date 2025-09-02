@@ -1,7 +1,7 @@
 import { err, ok, type Result } from "neverthrow";
 import { type AppError, InternalServerError } from "../../../../shared/errors";
 import { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
-import type { QuizRow } from "../repositories/types";
+import type { QuizRow } from "./d1-types";
 
 /**
  * D1データベースのクイズ行データをQuizSummaryエンティティに変換するマッパー
@@ -18,29 +18,6 @@ export class D1QuizSummaryMapper {
    * @returns QuizSummaryエンティティ、またはマッピングエラー
    */
   static fromRow(row: QuizRow): Result<QuizSummary, AppError> {
-    // 必須フィールドの存在確認
-    if (
-      !row.id ||
-      !row.question ||
-      !row.answer_type ||
-      !row.status ||
-      !row.creator_id ||
-      !row.created_at
-    ) {
-      return err(
-        new InternalServerError(
-          `Missing required fields in quiz row: ${JSON.stringify({
-            id: !!row.id,
-            question: !!row.question,
-            answer_type: !!row.answer_type,
-            status: !!row.status,
-            creator_id: !!row.creator_id,
-            created_at: !!row.created_at,
-          })}`,
-        ),
-      );
-    }
-
     // QuizSummaryエンティティの作成データを準備
     const createData = {
       id: String(row.id),

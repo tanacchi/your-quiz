@@ -28,7 +28,7 @@ model QuizSession {
 // Extended models for API responses
 model DeckWithQuizzes {
   ...Deck;
-  quizzes: QuizWithSolution[];
+  quizzes: QuizResponse[];
   totalQuizzes: int32;
 }
 
@@ -80,7 +80,7 @@ model StartSessionRequest {
 
 model StartSessionResponse {
   session: QuizSessionWithProgress;
-  firstQuiz?: QuizWithSolution;
+  firstQuiz?: QuizResponse;
 }
 
 model UpdateSessionRequest {

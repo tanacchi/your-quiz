@@ -8,7 +8,7 @@ import type { components } from "../../../../shared/types";
 import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import { D1QuizSummaryMapper } from "../mappers/D1QuizSummaryMapper";
-import type { D1QueryParam, QuizRow } from "./types";
+import type { D1QueryParam, QuizRow } from "../mappers/d1-types";
 import {
   isBasicQuizInfo,
   isCountResult,
@@ -17,7 +17,7 @@ import {
   isValidAnswerType,
   isValidMatchingStrategy,
   isValidQuizStatus,
-} from "./types";
+} from "../mappers/d1-types";
 
 /**
  * Cloudflare D1データベースを使用したクイズリポジトリ実装
@@ -55,7 +55,7 @@ export class D1QuizRepository implements IQuizRepository {
    */
   findById(
     id: string,
-  ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError> {
+  ): ResultAsync<components["schemas"]["QuizResponse"], RepositoryError> {
     return this.executeQueryWithSolution(
       `SELECT
         q.*,
@@ -101,8 +101,8 @@ export class D1QuizRepository implements IQuizRepository {
    */
   findMany(
     options: {
-      status?: components["schemas"]["QuizStatus"];
-      creatorId?: string | undefined;
+      status?: components["schemas"]["QuizStatus"][];
+      creatorId?: string;
       ids?: string[];
       limit?: number;
       offset?: number;
@@ -322,7 +322,7 @@ export class D1QuizRepository implements IQuizRepository {
     sql: string,
     params: D1QueryParam[],
   ): ResultAsync<
-    components["schemas"]["QuizWithSolution"] | null,
+    components["schemas"]["QuizResponse"] | null,
     RepositoryError
   > {
     return ResultAsync.fromPromise(
@@ -352,8 +352,8 @@ export class D1QuizRepository implements IQuizRepository {
       }
 
       try {
-        const quizWithSolution = this.mapRowToQuizWithSolution(result);
-        return ResultAsync.fromSafePromise(Promise.resolve(quizWithSolution));
+        const quizResponse = this.mapRowToQuizResponse(result);
+        return ResultAsync.fromSafePromise(Promise.resolve(quizResponse));
       } catch (error) {
         return ResultAsync.fromSafePromise(
           Promise.reject(
@@ -361,7 +361,7 @@ export class D1QuizRepository implements IQuizRepository {
               "Quiz",
               error instanceof Error
                 ? error
-                : new Error("Failed to map quiz with solution"),
+                : new Error("Failed to map quiz response"),
             ),
           ),
         );
@@ -370,8 +370,8 @@ export class D1QuizRepository implements IQuizRepository {
   }
 
   private executeFindMany(options: {
-    status?: components["schemas"]["QuizStatus"];
-    creatorId?: string | undefined;
+    status?: components["schemas"]["QuizStatus"][];
+    creatorId?: string;
     ids?: string[];
     limit?: number;
     offset?: number;
@@ -398,9 +398,11 @@ export class D1QuizRepository implements IQuizRepository {
     const params: D1QueryParam[] = [];
 
     // WHERE条件の構築
-    if (options.status) {
-      conditions.push("q.status = ?");
-      params.push(options.status);
+    if (options.status && options.status.length > 0) {
+      conditions.push(
+        `q.status IN (${options.status.map(() => "?").join(", ")})`,
+      );
+      params.push(...options.status);
     }
     if (options.creatorId) {
       conditions.push("q.creator_id = ?");
@@ -757,9 +759,9 @@ export class D1QuizRepository implements IQuizRepository {
     });
   }
 
-  private mapRowToQuizWithSolution(
+  private mapRowToQuizResponse(
     row: QuizRow,
-  ): components["schemas"]["QuizWithSolution"] {
+  ): components["schemas"]["QuizResponse"] {
     let solution: components["schemas"]["Solution"];
 
     if (!isValidAnswerType(row.answer_type)) {

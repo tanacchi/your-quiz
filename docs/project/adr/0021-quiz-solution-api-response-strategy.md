@@ -142,7 +142,7 @@ GET /api/quiz/v1/manage/quizzes/:id?fields=id,question,solution.value  # 特定�
   - `QuizDetailResponse`にUnion型`solution`フィールドを追加
   - 各Solution型の詳細仕様を記載
 - [ ] TypeSpec operationsの確認・修正
-  - `QuizWithSolution`モデルの利用確認
+  - `QuizResponse`モデルの利用確認
   - API endpointでの適切なレスポンス型指定
 - [ ] TypeScript SDK生成ロジックの確認
   - Discriminated Unionの適切な生成
