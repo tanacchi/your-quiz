@@ -4,45 +4,22 @@ import {
   RepositoryErrorFactory,
 } from "../../../../shared/errors";
 import { NotFoundError } from "../../../../shared/errors/base";
+import { loadQuizFixtures } from "../../../../shared/fixtures";
 import type { components } from "../../../../shared/types";
-import {
-  CreatorId,
-  QuizId,
-  QuizSummary,
-  SolutionId,
-} from "../../domain/entities/quiz-summary/QuizSummary";
-import { TagIds } from "../../domain/entities/quiz-summary/quiz-summary-schema";
+import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 /**
  * モッククイズリポジトリ実装
+ * D1検証システムを活用した共通フィクスチャーを使用
  * 本番環境ではCloudflare D1に置き換える
  */
 export class MockQuizRepository implements IQuizRepository {
-  private readonly mockData = [
-    QuizSummary.build({
-      id: QuizId.parse("quiz-1"),
-      question: "What is TypeScript?",
-      answerType: "single_choice",
-      solutionId: SolutionId.parse("sol-1"),
-      explanation: "TypeScript is a typed superset of JavaScript",
-      status: "approved",
-      creatorId: CreatorId.parse("user-1"),
-      createdAt: new Date().toISOString(),
-      approvedAt: new Date().toISOString(),
-      tagIds: TagIds.parse(["tag-1", "tag-2"]),
-    }),
-    QuizSummary.build({
-      id: QuizId.parse("quiz-2"),
-      question: "Is JavaScript strongly typed?",
-      answerType: "boolean",
-      solutionId: SolutionId.parse("sol-2"),
-      status: "approved",
-      creatorId: CreatorId.parse("user-2"),
-      createdAt: new Date().toISOString(),
-      approvedAt: new Date().toISOString(),
-      tagIds: TagIds.parse(["tag-1"]),
-    }),
-  ];
+  private readonly mockData: QuizSummary[];
+
+  constructor() {
+    // D1検証システムを活用した型安全なフィクスチャーロード
+    this.mockData = [...loadQuizFixtures()];
+  }
 
   create(
     quiz: QuizSummary,

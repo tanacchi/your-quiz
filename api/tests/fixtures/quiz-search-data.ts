@@ -30,18 +30,10 @@ export const quizSearchData = {
     },
     {
       description: "Filter by creatorId - single user",
-      filters: { creatorId: ["user-123"] },
+      filters: { creatorId: "user-123" },
       expected: {
         resultType: "creator_filtered_quizzes",
-        creatorFilter: ["user-123"],
-      },
-    },
-    {
-      description: "Filter by multiple creatorIds",
-      filters: { creatorId: ["user-123", "user-456"] },
-      expected: {
-        resultType: "multiple_creator_quizzes",
-        creatorFilter: ["user-123", "user-456"],
+        creatorFilter: "user-123",
       },
     },
     {
@@ -54,11 +46,11 @@ export const quizSearchData = {
     },
     {
       description: "Combined filters - status + creatorId",
-      filters: { status: ["approved"], creatorId: ["user-123"] },
+      filters: { status: ["approved"], creatorId: "user-123" },
       expected: {
         resultType: "approved_creator_quizzes",
         statusFilter: ["approved"],
-        creatorFilter: ["user-123"],
+        creatorFilter: "user-123",
       },
     },
   ],
@@ -107,7 +99,7 @@ export const quizSearchData = {
     },
     {
       description: "Non-existent creatorId filter",
-      filters: { creatorId: ["non-existent-user"] },
+      filters: { creatorId: "non-existent-user" },
       expected: {
         resultType: "empty_results",
         reason: "no_matching_creator",
@@ -123,7 +115,7 @@ export const quizSearchData = {
     },
     {
       description: "Impossible filter combination",
-      filters: { status: ["rejected"], creatorId: ["impossible-user"] },
+      filters: { status: ["rejected"], creatorId: "impossible-user" },
       expected: {
         resultType: "empty_results",
         reason: "impossible_combination",
