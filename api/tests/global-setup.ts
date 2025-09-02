@@ -1,14 +1,19 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
 
 /**
  * CI/CD環境対応のグローバルサーバー管理
- * 
+ *
  * BDDテスト実行前にwrangler dev --env dev-mockを自動起動し、
  * テスト終了後に確実にプロセスを終了します。
  */
 
 declare global {
   var __SERVER_PROCESS__: ChildProcess | undefined;
+  namespace NodeJS {
+    interface ProcessEnv {
+      VITEST_DEBUG?: string;
+    }
+  }
 }
 
 /**
@@ -26,11 +31,11 @@ async function waitForServer(url: string, timeoutMs = 30000): Promise<void> {
         console.log(`✅ Server is ready at ${url}`);
         return;
       }
-    } catch (error) {
+    } catch (_error) {
       // サーバーがまだ起動していない場合は継続
     }
 
-    await new Promise(resolve => setTimeout(resolve, checkInterval));
+    await new Promise((resolve) => setTimeout(resolve, checkInterval));
   }
 
   throw new Error(`❌ Server failed to start within ${timeoutMs}ms at ${url}`);
@@ -44,7 +49,7 @@ export async function setup(): Promise<void> {
 
   // wrangler dev --env dev-mock をバックグラウンドで起動
   const serverProcess = spawn("pnpm", ["dev:mock"], {
-    stdio: ["ignore", "pipe", "pipe"], 
+    stdio: ["ignore", "pipe", "pipe"],
     detached: true, // プロセスグループ作成
     cwd: process.cwd(),
   });
@@ -75,7 +80,7 @@ export async function setup(): Promise<void> {
 
   // ヘルスチェック待機
   await waitForServer("http://localhost:8787/health", 30000);
-  
+
   console.log("✅ Server setup completed for BDD tests");
 }
 
@@ -87,13 +92,13 @@ export async function teardown(): Promise<void> {
 
   if (global.__SERVER_PROCESS__) {
     const process = global.__SERVER_PROCESS__;
-    
+
     // プロセスグループ全体を終了（detached: trueで起動しているため）
     if (process.pid) {
       try {
         // SIGTERM送信でGraceful shutdown
         process.kill("SIGTERM");
-        
+
         // 3秒待機してから強制終了
         setTimeout(() => {
           if (!process.killed) {
