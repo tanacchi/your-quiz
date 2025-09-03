@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { createTwoFilesPatch } from "diff";
@@ -63,6 +64,30 @@ const sanitizeFilename = (filePath: string): string => {
     .replace(/^-|-$/g, "");
 };
 
+const generateStableId = (
+  mutant: Mutant,
+  source: string,
+  filePath: string,
+): string => {
+  const lines = source.split(/\r?\n/);
+  const startLine = Math.max(0, mutant.location.start.line - 4);
+  const endLine = Math.min(lines.length - 1, mutant.location.end.line + 2);
+  const context = lines.slice(startLine, endLine + 1).join("\n");
+
+  const hashInput = [
+    filePath.replace(process.cwd(), ""),
+    mutant.mutatorName,
+    mutant.replacement || "",
+    context.trim(),
+  ].join("::");
+
+  return crypto
+    .createHash("sha256")
+    .update(hashInput)
+    .digest("hex")
+    .substring(0, 8);
+};
+
 const loadExcludedMutants = (configPath?: string): ExcludedMutant[] => {
   const defaultPath = path.join(__dirname, "equivalent-mutants.json");
   const targetPath = configPath ?? defaultPath;
@@ -114,7 +139,7 @@ const explain = (
   if (base.includes("conditional")) return `条件式が変更されています。`;
   if (base.includes("unary"))
     return `単項演算子が変更されています（例: !condition → condition）。`;
-  return `ミューテータ \"${mutatorName}\" による置換。`;
+  return `ミューテータ "${mutatorName}" による置換。`;
 };
 
 export function generateSurvivorReports(
@@ -134,7 +159,7 @@ export function generateSurvivorReports(
   const jsonl: string[] = [];
   const excludedJsonl: string[] = [];
   const mdPaths: string[] = [];
-  const fileMarkdowns: Record<string, string[]> = {};
+  const fileDirectories: string[] = [];
   const excludedMarkdown: string[] = [
     "# Excluded Equivalent Mutants Report",
     "",
@@ -161,9 +186,13 @@ export function generateSurvivorReports(
       isExcludedMutant(m, filePath, excludedMutants),
     );
 
-    // Initialize markdown for this file only if there are included survivors
+    // Create directory for this file if there are included survivors
+    let fileDir: string | undefined;
     if (includedSurvivors.length > 0) {
-      fileMarkdowns[filePath] = [`# Survived mutants report: ${filePath}`, ""];
+      const sanitizedFilename = sanitizeFilename(filePath);
+      fileDir = path.join(outDir, sanitizedFilename);
+      fs.mkdirSync(fileDir, { recursive: true });
+      fileDirectories.push(fileDir);
     }
 
     // Process included survivors
@@ -184,11 +213,15 @@ export function generateSurvivorReports(
         `mutated #${m.id}`,
       );
 
+      // Generate stable ID for this mutant
+      const stableId = generateStableId(m, src, filePath);
+
       jsonl.push(
         JSON.stringify({
           file: filePath,
           mutator: m.mutatorName,
           mutant_id: m.id,
+          stable_id: stableId,
           range: m.location,
           original_slice: originalSlice,
           replacement,
@@ -199,18 +232,36 @@ export function generateSurvivorReports(
         }),
       );
 
-      fileMarkdowns[filePath].push(
-        `## mutant #${m.id} (${m.mutatorName})`,
-        "", // 空白行を追加
-        `Location: L${m.location.start.line}:${m.location.start.column}–L${m.location.end.line}:${m.location.end.column}`,
-        "",
-        "```diff",
-        patch.trim(),
-        "```",
-        "",
-        `**Hint**: ${explain(m.mutatorName, originalSlice, replacement)}`,
-        "",
-      );
+      // Create individual markdown file for this mutant
+      if (fileDir) {
+        const mutantMarkdown = [
+          `# Mutant ${stableId} Report`,
+          "",
+          `**File**: ${filePath}`,
+          `**Mutator**: ${m.mutatorName}`,
+          `**Original ID**: ${m.id}`,
+          `**Stable ID**: ${stableId}`,
+          `**Location**: L${m.location.start.line}:${m.location.start.column}–L${m.location.end.line}:${m.location.end.column}`,
+          "",
+          "## Diff",
+          "",
+          "```diff",
+          patch.trim(),
+          "```",
+          "",
+          "## Hint",
+          "",
+          explain(m.mutatorName, originalSlice, replacement),
+          "",
+          "## Instruction",
+          "",
+          "このサバイブ・ミューテーションを失敗させる最小テストを設計してください。",
+        ];
+
+        const mutantFilePath = path.join(fileDir, `mutant-${stableId}.md`);
+        fs.writeFileSync(mutantFilePath, mutantMarkdown.join("\n"));
+        mdPaths.push(mutantFilePath);
+      }
     }
 
     // Process excluded survivors
@@ -282,13 +333,7 @@ export function generateSurvivorReports(
   );
   fs.writeFileSync(excludedMdPath, excludedMarkdown.join("\n"));
 
-  // Write individual markdown files for each source file
-  for (const [filePath, mdContent] of Object.entries(fileMarkdowns)) {
-    const sanitizedFilename = sanitizeFilename(filePath);
-    const mdPath = path.join(outDir, `survived-${sanitizedFilename}.md`);
-    fs.writeFileSync(mdPath, mdContent.join("\n"));
-    mdPaths.push(mdPath);
-  }
+  // Individual mutant markdown files are already created above
 
   return {
     jsonlPath,
@@ -299,7 +344,8 @@ export function generateSurvivorReports(
     excludedJsonl,
     totalMutants: jsonl.length,
     excludedMutants: excludedJsonl.length,
-    fileCount: Object.keys(fileMarkdowns).length,
+    fileCount: fileDirectories.length,
+    fileDirectories,
   };
 }
 
