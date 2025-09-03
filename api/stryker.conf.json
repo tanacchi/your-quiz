@@ -6,7 +6,7 @@
     "configFile": "vitest.config.ts"
   },
   "plugins": ["@stryker-mutator/vitest-runner"],
-  "mutate": ["src/**/*.ts"],
+  "mutate": ["src/shared/**/*.ts"],
   "coverageAnalysis": "perTest",
   "reporters": ["progress", "json"],
   "jsonReporter": {

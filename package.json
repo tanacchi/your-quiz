@@ -36,6 +36,6 @@
     "test:scripts": "vitest run scripts/",
     "mutation-test": "run-s mutation-test:run mutation-test:report",
     "mutation-test:run": "pnpm --filter api mutation-test",
-    "mutation-test:report": "tsx scripts/mutation-test/survivor-reporter.ts reports/mutation/mutation-report.json reports/mutation-analysis"
+    "mutation-test:report": "tsx scripts/mutation-test/survivor-reporter.ts api/reports/mutation/mutation-report.json reports/mutation-analysis"
   }
 }
