@@ -32,7 +32,7 @@ import {
 } from "../../application/use-cases";
 import { QuizController } from "../controllers/QuizController";
 
-describe.skip("quiz.routes", () => {
+describe.todo("quiz.routes", () => {
   let app: Hono;
   let mockEnv: CloudflareBindings;
   let mockRepository: unknown;

@@ -20,7 +20,7 @@ import type {
 import { QuizNotFoundError } from "../../domain/errors";
 import { QuizController } from "./QuizController";
 
-describe.skip("QuizController", () => {
+describe.todo("QuizController", () => {
   let controller: QuizController;
   let mockCreateQuizUseCase: CreateQuizUseCase;
   let mockGetQuizUseCase: GetQuizUseCase;

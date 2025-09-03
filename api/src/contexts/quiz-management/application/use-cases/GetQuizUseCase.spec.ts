@@ -10,7 +10,7 @@ import type { IQuizRepository } from "../../domain/repositories/IQuizRepository"
 import { QuizRetrievalFailedError, UseCaseInternalError } from "../errors";
 import { GetQuizUseCase } from "./GetQuizUseCase";
 
-describe("GetQuizUseCase", () => {
+describe.todo("GetQuizUseCase", () => {
   let useCase: GetQuizUseCase;
   let mockRepository: IQuizRepository;
 

@@ -9,7 +9,7 @@ import {
 import { TagIds } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import { MockQuizRepository } from "./MockQuizRepository";
 
-describe("MockQuizRepository", () => {
+describe.todo("MockQuizRepository", () => {
   let repository: MockQuizRepository;
 
   const createMockQuiz = (

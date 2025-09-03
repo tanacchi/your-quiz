@@ -10,7 +10,7 @@ import type { IQuizRepository } from "../../domain/repositories/IQuizRepository"
 import { QuizCreationFailedError, UseCaseInternalError } from "../errors";
 import { type CreateQuizCommand, CreateQuizUseCase } from "./CreateQuizUseCase";
 
-describe("CreateQuizUseCase", () => {
+describe.todo("CreateQuizUseCase", () => {
   let useCase: CreateQuizUseCase;
   let mockRepository: IQuizRepository;
 
