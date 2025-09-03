@@ -1,7 +1,14 @@
 {
-  "ignores": ["**/node_modules/**", "**/tmp/**", "**/dist/**", "./.serena/**"],
+  "ignores": [
+    "**/node_modules/**",
+    "**/tmp/**",
+    "**/dist/**",
+    "./.serena/**",
+    "**/mutation-analysis/**"
+  ],
   "config": {
     "default": true,
+    "MD010": false,
     "MD013": false,
     "MD024": false,
     "MD033": false

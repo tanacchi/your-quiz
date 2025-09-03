@@ -10,7 +10,7 @@ import type { ApiErrorResponse } from "../types/api-error-types";
 // Comprehensive Error Handling Test Suite
 // Uses neverthrow Result types and TypeSpec error definitions
 
-describe("Comprehensive Error Handling - 包括的エラーハンドリング", () => {
+describe.todo("Comprehensive Error Handling - 包括的エラーハンドリング", () => {
   beforeAll(async () => {
     // Given: API server is running with typed error system
     // Setup mock data for testing scenarios

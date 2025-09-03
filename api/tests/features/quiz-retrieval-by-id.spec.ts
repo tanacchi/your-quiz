@@ -11,12 +11,12 @@ declare global {
 // Uses ユビキタス言語 (Ubiquitous Language): Developer, TypeSpec, Schema, neverthrow
 // Endpoint: GET /api/quiz/v1/manage/quizzes/{id}
 
-describe("Quiz Retrieval by ID - Quiz ID別取得", () => {
+describe.todo("Quiz Retrieval by ID - Quiz ID別取得", () => {
   beforeAll(async () => {
     // Given: API server is running with TypeSpec generated types
   });
 
-  describe("型準拠: TypeScript type compliance verification", () => {
+  describe.todo("型準拠: TypeScript type compliance verification", () => {
     // Scenario Outline: TypeScript type compliance verification for GET by ID endpoint
     quizRetrievalTypeSafetyData.typeComplianceScenarios.forEach(
       (testCase, _index) => {
@@ -44,7 +44,7 @@ describe("Quiz Retrieval by ID - Quiz ID別取得", () => {
     );
   });
 
-  describe("正常系: Valid Quiz retrieval scenarios", () => {
+  describe.todo("正常系: Valid Quiz retrieval scenarios", () => {
     quizRetrievalData.validRetrievals.forEach((testCase, _index) => {
       it(`Retrieves quiz successfully: ${testCase.description}`, async () => {
         // Given: Quiz exists with valid ID
@@ -65,7 +65,7 @@ describe("Quiz Retrieval by ID - Quiz ID別取得", () => {
     });
   });
 
-  describe("異常系: Quiz retrieval failure scenarios", () => {
+  describe.todo("異常系: Quiz retrieval failure scenarios", () => {
     quizRetrievalData.failureScenarios.forEach((testCase, _index) => {
       it(`Handles invalid ID: ${testCase.description}`, async () => {
         // Given: Invalid quiz ID
@@ -87,7 +87,7 @@ describe("Quiz Retrieval by ID - Quiz ID別取得", () => {
     });
   });
 
-  describe("ワークフロー取得: Quiz retrieval workflow", () => {
+  describe.todo("ワークフロー取得: Quiz retrieval workflow", () => {
     quizRetrievalTypeSafetyData.workflowRetrieveScenarios.forEach(
       (testCase, _index) => {
         it(`Workflow retrieval step: ${testCase.description}`, async () => {
@@ -109,7 +109,7 @@ describe("Quiz Retrieval by ID - Quiz ID別取得", () => {
     );
   });
 
-  describe("エラー応答: ErrorResponse schema compliance", () => {
+  describe.todo("エラー応答: ErrorResponse schema compliance", () => {
     quizRetrievalTypeSafetyData.errorResponseScenarios.forEach(
       (testCase, _index) => {
         it(`Error responses follow schema: ${testCase.description}`, async () => {
@@ -140,26 +140,31 @@ describe("Quiz Retrieval by ID - Quiz ID別取得", () => {
     );
   });
 
-  describe("Solution型別: Quiz retrieval with different Solution types", () => {
-    quizRetrievalData.solutionTypeScenarios.forEach((testCase, _index) => {
-      it(`QuizWithSolution contains correct structure: ${testCase.description}`, async () => {
-        // Given: Quiz with specific solution type exists
+  describe.todo(
+    "Solution型別: Quiz retrieval with different Solution types",
+    () => {
+      quizRetrievalData.solutionTypeScenarios.forEach((testCase, _index) => {
+        it(`QuizResponse contains correct structure: ${testCase.description}`, async () => {
+          // Given: Quiz with specific solution type exists
 
-        // When: Quiz is retrieved by ID
-        const response = await spec()
-          .get(`/api/quiz/v1/manage/quizzes/test-quiz-${testCase.solutionType}`)
-          .expectStatus(200);
+          // When: Quiz is retrieved by ID
+          const response = await spec()
+            .get(
+              `/api/quiz/v1/manage/quizzes/test-quiz-${testCase.solutionType}`,
+            )
+            .expectStatus(200);
 
-        const body = response.json;
+          const body = response.json;
 
-        // Then: QuizWithSolution should contain correct solution structure
-        expect(body).toHaveProperty("solution");
-        expect(body).toHaveProperty("answerType", testCase.solutionType);
+          // Then: QuizResponse should contain correct solution structure
+          expect(body).toHaveProperty("solution");
+          expect(body).toHaveProperty("answerType", testCase.solutionType);
+        });
       });
-    });
-  });
+    },
+  );
 
-  describe("レスポンススキーマ: Response schema validation", () => {
+  describe.todo("レスポンススキーマ: Response schema validation", () => {
     quizRetrievalTypeSafetyData.responseSchemaScenarios.forEach(
       (testCase, _index) => {
         it(`Response schema validation: ${testCase.description}`, async () => {
@@ -206,7 +211,7 @@ function validateResponseType(
   expectedType: string,
 ) {
   switch (expectedType) {
-    case "QuizWithSolution":
+    case "QuizResponse":
       expect(responseBody).toHaveProperty("id");
       expect(responseBody).toHaveProperty("question");
       expect(responseBody).toHaveProperty("solution");

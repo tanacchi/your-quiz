@@ -17,11 +17,11 @@ export function isChoice(value: unknown): value is Choice {
   if (typeof value !== "object" || value === null) return false;
   const obj = value as Record<string, unknown>;
   return (
-    typeof obj["id"] === "string" &&
-    typeof obj["solutionId"] === "string" &&
-    typeof obj["text"] === "string" &&
-    typeof obj["orderIndex"] === "number" &&
-    typeof obj["isCorrect"] === "boolean"
+    typeof obj.id === "string" &&
+    typeof obj.solutionId === "string" &&
+    typeof obj.text === "string" &&
+    typeof obj.orderIndex === "number" &&
+    typeof obj.isCorrect === "boolean"
   );
 }
 
@@ -35,9 +35,9 @@ export function isSingleChoiceSolution(
   if (typeof value !== "object" || value === null) return false;
   const obj = value as Record<string, unknown>;
   return (
-    obj["type"] === "single_choice" &&
-    typeof obj["id"] === "string" &&
-    isChoiceArray(obj["choices"])
+    obj.type === "single_choice" &&
+    typeof obj.id === "string" &&
+    isChoiceArray(obj.choices)
   );
 }
 
@@ -47,10 +47,10 @@ export function isMultipleChoiceSolution(
   if (typeof value !== "object" || value === null) return false;
   const obj = value as Record<string, unknown>;
   return (
-    obj["type"] === "multiple_choice" &&
-    typeof obj["id"] === "string" &&
-    typeof obj["minCorrectAnswers"] === "number" &&
-    isChoiceArray(obj["choices"])
+    obj.type === "multiple_choice" &&
+    typeof obj.id === "string" &&
+    typeof obj.minCorrectAnswers === "number" &&
+    isChoiceArray(obj.choices)
   );
 }
 
@@ -64,10 +64,10 @@ export function isQuizResponse(value: unknown): value is Quiz {
   if (typeof value !== "object" || value === null) return false;
   const obj = value as Record<string, unknown>;
   return (
-    typeof obj["id"] === "string" &&
-    typeof obj["question"] === "string" &&
-    typeof obj["answerType"] === "string" &&
-    typeof obj["status"] === "string"
+    typeof obj.id === "string" &&
+    typeof obj.question === "string" &&
+    typeof obj.answerType === "string" &&
+    typeof obj.status === "string"
   );
 }
 
@@ -75,9 +75,9 @@ export function isErrorResponse(value: unknown): value is ErrorResponse {
   if (typeof value !== "object" || value === null) return false;
   const obj = value as Record<string, unknown>;
   return (
-    typeof obj["error"] === "string" &&
-    typeof obj["message"] === "string" &&
-    typeof obj["code"] === "number"
+    typeof obj.error === "string" &&
+    typeof obj.message === "string" &&
+    typeof obj.code === "number"
   );
 }
 
@@ -273,7 +273,7 @@ export function validateErrorResponseStructure(
       throw new Error(`${context}: Expected error code field`);
     }
 
-    const actualCodeType = typeof responseBody["code"];
+    const actualCodeType = typeof responseBody.code;
     if (actualCodeType !== expectedStructure.errorCodeType) {
       throw new Error(
         `${context}: Error code type mismatch. Expected ${expectedStructure.errorCodeType}, got ${actualCodeType}`,
@@ -286,7 +286,7 @@ export function validateErrorResponseStructure(
       throw new Error(`${context}: Expected error message field`);
     }
 
-    const actualMessageType = typeof responseBody["message"];
+    const actualMessageType = typeof responseBody.message;
     if (actualMessageType !== expectedStructure.errorMessageType) {
       throw new Error(
         `${context}: Error message type mismatch. Expected ${expectedStructure.errorMessageType}, got ${actualMessageType}`,

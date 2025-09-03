@@ -46,10 +46,14 @@ describe("Quiz Listing - Quizリスト取得", () => {
         // Given: Valid search filters
 
         // When: Quiz list is retrieved with filters
-        const response = await spec()
-          .get("/api/quiz/v1/manage/quizzes")
-          .withQueryParams(testCase.filters)
-          .expectStatus(200);
+        const request = spec().get("/api/quiz/v1/manage/quizzes");
+
+        // 空でないフィルターがある場合のみwithQueryParamsを呼び出す
+        if (Object.keys(testCase.filters).length > 0) {
+          request.withQueryParams(testCase.filters);
+        }
+
+        const response = await request.expectStatus(200);
 
         const body = response.json;
 
@@ -118,17 +122,29 @@ describe("Quiz Listing - Quizリスト取得", () => {
         // Given: Search filters that match nothing
 
         // When: Quiz list is searched with non-matching filters
+        // 無効なstatusの場合は400エラー、その他は200でempty results
+        const expectedStatus = testCase.description.includes(
+          "Non-existent status filter",
+        )
+          ? 400
+          : 200;
+
         const response = await spec()
           .get("/api/quiz/v1/manage/quizzes")
           .withQueryParams(testCase.filters)
-          .expectStatus(200);
+          .expectStatus(expectedStatus);
 
         const body = response.json;
 
-        // Then: Response should indicate empty results
-        expect(body.items).toEqual([]);
-        expect(body.totalCount).toBe(0);
-        expect(body.hasMore).toBe(false);
+        // Then: Response should indicate empty results (200) or validation error (400)
+        if (expectedStatus === 200) {
+          expect(body.items).toEqual([]);
+          expect(body.totalCount).toBe(0);
+          expect(body.hasMore).toBe(false);
+        } else if (expectedStatus === 400) {
+          expect(body).toHaveProperty("message");
+          expect(body).toHaveProperty("code");
+        }
       });
     });
   });
@@ -167,7 +183,7 @@ function validateResponseType(
   expectedType: string,
 ) {
   switch (expectedType) {
-    case "QuizListResponse":
+    case "QuizSummaryListResponse":
       expect(responseBody).toHaveProperty("items");
       expect(responseBody).toHaveProperty("totalCount");
       expect(responseBody).toHaveProperty("hasMore");

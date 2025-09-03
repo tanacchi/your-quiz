@@ -5,6 +5,7 @@ export {
   ForbiddenError,
   InternalServerError,
   NotFoundError,
+  NotImplementedError,
   RateLimitError,
   type TypeSpecError,
   UnauthorizedError,
@@ -32,7 +33,6 @@ export {
   FindFailedError,
   type InfrastructureError,
   JsonParseError,
-  NotImplementedError,
   RepositoryError,
   UpdateFailedError,
 } from "./infrastructure";

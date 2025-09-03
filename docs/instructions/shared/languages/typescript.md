@@ -90,6 +90,47 @@ if (user) {
 const name = getUser()?.name?.toUpperCase();
 ```
 
+#### 1.4 null/undefinedチェックの統一
+
+```typescript
+// ❌ 冗長なnull/undefinedチェック
+if (data.explanation !== undefined && data.explanation !== null) {
+  result.explanation = data.explanation;
+}
+
+// ✅ 簡潔なnull/undefinedチェック
+if (data.explanation != null) {
+  result.explanation = data.explanation;
+}
+
+// ✅ スプレッド構文との組み合わせ
+const result = {
+  id: data.id,
+  name: data.name,
+  ...(data.explanation != null && { explanation: data.explanation }),
+  ...(data.optional != null && { optional: data.optional }),
+};
+
+// ✅ 三項演算子との組み合わせ
+const value = data.optional != null ? data.optional : defaultValue;
+```
+
+**理由**: `!= null` は `!== undefined && !== null` と同等だが、より簡潔で読みやすく、JavaScriptの慣習に従っている。
+
+#### 1.5 Index signatureの回避
+
+```typescript
+// ❌ 禁止：index signatureでのプロパティアクセス
+const input = value as Record<string, unknown>;
+const id = input["id"]; // TypeScriptエラーになる場合がある
+
+// ✅ テストコードでのみ認められる方法：型定義でプロパティアクセス
+const solutionObj = value as unknown as { id?: unknown; value?: unknown };
+const id = solutionObj.id;
+```
+
+// ✅ プロダクションコードでは正しく厳密な型定義、型指定で上記の対応をせずに書ける方法を検討する
+
 ### 2. Union型によるstring制限
 
 #### 2.1 リテラル型の活用

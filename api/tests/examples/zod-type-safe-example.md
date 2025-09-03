@@ -75,10 +75,10 @@ describe("Zodベース型安全テスト", () => {
 
     // Zodベースの型安全なアサーション
     const validationError = assertValidationError(response.json);
-    
+
     // 型安全性: validationError は ValidationErrorResponse 型
     expect(validationError.code).toBe(400);
-    
+
     // フィールドエラーの詳細検証
     if (validationError.fieldErrors) {
       expect(validationError.fieldErrors.question).toBeDefined();
@@ -100,7 +100,7 @@ describe("詳細なスキーマ検証", () => {
 
     // 詳細なバリデーション結果を取得
     const validationResult = SchemaValidators.validateWithDetails(
-      CreateQuizResponseSchema, 
+      CreateQuizResponseSchema,
       response.json
     );
 
@@ -117,18 +117,18 @@ describe("詳細なスキーマ検証", () => {
       .get("/api/quiz/v1/manage/quizzes/123")
       .expectStatus(200);
 
-    const quiz = assertQuizWithSolutionResponse(response.json);
-    
+    const quiz = assertQuizResponse(response.json);
+
     // 特定フィールドの追加検証
     SchemaValidators.validateField(
-      z.string().min(5), 
-      quiz.question, 
+      z.string().min(5),
+      quiz.question,
       "question"
     );
-    
+
     // answerTypeの enum 検証
     SchemaValidators.validateField(
-      z.enum(["boolean", "free_text", "single_choice", "multiple_choice"]), 
+      z.enum(["boolean", "free_text", "single_choice", "multiple_choice"]),
       quiz.answerType,
       "answerType"
     );
@@ -147,16 +147,16 @@ describe("エラーシナリオの包括的テスト", () => {
 
     // Zodによる厳密な構造検証
     const notFoundError = assertNotFoundError(response.json);
-    
+
     // TypeSpec仕様に完全準拠していることを確認
     expect(notFoundError.code).toBe(404);
     expect(notFoundError.message).toBe("Resource not found");
-    
+
     // オプショナルフィールドの検証
     if (notFoundError.details) {
       expect(typeof notFoundError.details).toBe("string");
     }
-    
+
     if (notFoundError.requestId) {
       expect(typeof notFoundError.requestId).toBe("string");
     }

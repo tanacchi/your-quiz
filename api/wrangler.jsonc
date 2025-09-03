@@ -12,7 +12,12 @@
     "directory": "./public"
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 0.5,
+      "invocation_logs": true
+    }
   },
   /**
    * Smart Placement
@@ -30,7 +35,9 @@
     {
       "binding": "DB",
       "database_name": "quiz-db",
-      "database_id": "YOUR_DATABASE_ID"
+      "migrations_dir": "migrations/quiz-db",
+      "database_id": "b873de55-c382-443d-8714-3d7c1eeef282",
+      "preview_database_id": "local"
     }
   ],
 
@@ -39,7 +46,49 @@
    * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
    */
   "vars": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "USE_MOCK_DB": "false"
+  },
+
+  /**
+   * Environment-specific configurations
+   */
+  "env": {
+    "dev": {
+      "vars": {
+        "NODE_ENV": "development",
+        "USE_MOCK_DB": "false"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "quiz-db",
+          "migrations_dir": "migrations/quiz-db",
+          "database_id": "b873de55-c382-443d-8714-3d7c1eeef282",
+          "preview_database_id": "local"
+        }
+      ]
+    },
+    "dev-mock": {
+      "vars": {
+        "NODE_ENV": "development",
+        "USE_MOCK_DB": "true"
+      }
+    },
+    "test": {
+      "vars": {
+        "NODE_ENV": "test",
+        "USE_MOCK_DB": "true"
+      },
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 0.3,
+          "invocation_logs": false
+        }
+      }
+    }
   }
   /**
    * Note: Use secrets to store sensitive data.

@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { isObjectLike } from "../../utils/type-guard";
 import type { EntityPatch, Issue } from "./types";
 
 /**
@@ -23,8 +24,8 @@ export const materializeEntityPatch = <TInput>(
 export const applyEntityPatch = <TInput>(
   input: unknown,
   patch: EntityPatch<TInput>,
-): unknown => {
-  const base = isEntityLike<TInput>(input) ? { ...input } : {};
+) => {
+  const base = isObjectLike<TInput>(input) ? { ...input } : {};
   const patchData = materializeEntityPatch(patch);
   return { ...base, ...patchData };
 };
@@ -37,11 +38,10 @@ export const applyEntityPatch = <TInput>(
  * @param patches - Array of patches to apply
  * @returns The patched data
  */
-export const applyEntityPatches = <TInput>(
-  input: unknown,
+export const applyEntityPatches = <TInput = unknown>(
+  input: Partial<TInput>,
   patches: EntityPatch<TInput>[],
-): unknown =>
-  patches.reduce((acc, patch) => applyEntityPatch(acc, patch), input);
+) => patches.reduce((acc, patch) => applyEntityPatch(acc, patch), input);
 
 /**
  * Converts Zod error to generic Issue array.
@@ -59,15 +59,3 @@ export const toIssues = (error: z.ZodError): Issue[] =>
     code: issue.code,
     message: issue.message,
   }));
-
-/**
- * Type guard to check if input data resembles entity input structure.
- * Used to safely apply patches without runtime errors.
- *
- * @template TInput - The input type for the entity
- * @param input - The data to check
- * @returns Type predicate indicating if input is entity-like
- */
-const isEntityLike = <TInput>(input: unknown): input is Partial<TInput> => {
-  return typeof input === "object" && input !== null;
-};

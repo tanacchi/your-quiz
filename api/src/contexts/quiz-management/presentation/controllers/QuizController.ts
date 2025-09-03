@@ -1,10 +1,11 @@
+import { NotImplementedError } from "../../../../shared/errors";
 import { createQuizSchema } from "../../../../shared/schemas";
-import type { AppContext, components } from "../../../../shared/types";
+import type { AppContext } from "../../../../shared/types";
 import { parseJsonSafe, validateWithZod } from "../../../../shared/utils";
+import { listQueryFromReq } from "../../application/schemas/list-quizzes-query.schema";
 import type {
   CreateQuizUseCase,
   GetQuizUseCase,
-  ListQuizzesQuery,
   ListQuizzesUseCase,
 } from "../../application/use-cases";
 import { ControllerErrorHandler } from "../errors";
@@ -118,40 +119,52 @@ export class QuizController {
    * @returns HTTP 200 (取得成功) またはエラーレスポンス
    */
   async listQuizzes(c: AppContext) {
-    // クエリパラメータから検索条件を取得
-    const query: ListQuizzesQuery = {
-      status: c.req.query("status") as components["schemas"]["QuizStatus"],
+    // クエリパラメータを取得（nullの場合は適切にフォールバック）
+    const rawQueryParams = {
+      status: c.req.queries("status") ?? [],
+      creatorId: c.req.query("creatorId") ?? undefined,
+      quizId: c.req.queries("quizId") ?? [],
+      limit: c.req.query("limit") ?? undefined,
+      offset: c.req.query("offset") ?? undefined,
     };
 
-    const creatorId = c.req.query("creatorId");
-    if (creatorId) {
-      query.creatorId = creatorId;
-    }
+    return validateWithZod(listQueryFromReq, rawQueryParams)
+      .asyncAndThen((query) => this.listQuizzesUseCase.execute(query))
+      .match(
+        (res) => c.json(res),
+        (error) => {
+          console.error(`Error: ${error}`);
+          const errorResponse = ControllerErrorHandler.handleError(error);
+          return c.json(errorResponse.response, errorResponse.statusCode);
+        },
+      );
+  }
 
-    // idsパラメータの処理（配列形式に対応）
-    const idsParam = c.req.queries("ids");
-    if (idsParam && idsParam.length > 0) {
-      query.ids = idsParam;
-    }
+  /**
+   * クイズ更新HTTPハンドラー
+   *
+   * 現在は未実装のため、NOT Implemented エラーを返します。
+   *
+   * @param c - Honoアプリケーションコンテキスト
+   * @returns HTTP 501 (Not Implemented)
+   */
+  async updateQuiz(c: AppContext) {
+    const error = new NotImplementedError("Quiz update");
+    const errorResponse = ControllerErrorHandler.handleError(error);
+    return c.json(errorResponse.response, errorResponse.statusCode);
+  }
 
-    const limitParam = c.req.query("limit");
-    if (limitParam) {
-      query.limit = Number(limitParam);
-    }
-
-    const offsetParam = c.req.query("offset");
-    if (offsetParam) {
-      query.offset = Number(offsetParam);
-    }
-
-    const result = await this.listQuizzesUseCase.execute(query);
-
-    if (result.isErr()) {
-      const error = result.error;
-      const errorResponse = ControllerErrorHandler.handleError(error);
-      return c.json(errorResponse.response, errorResponse.statusCode);
-    }
-
-    return c.json(result.value);
+  /**
+   * クイズ削除HTTPハンドラー
+   *
+   * 現在は未実装のため、NOT Implemented エラーを返します。
+   *
+   * @param c - Honoアプリケーションコンテキスト
+   * @returns HTTP 501 (Not Implemented)
+   */
+  async deleteQuiz(c: AppContext) {
+    const error = new NotImplementedError("Quiz deletion");
+    const errorResponse = ControllerErrorHandler.handleError(error);
+    return c.json(errorResponse.response, errorResponse.statusCode);
   }
 }

@@ -26,7 +26,7 @@ Your Quiz APIのTypeScript SDKを自動生成し、型安全で開発効率の�
 
 ```typescript
 // 自動生成される型定義
-export type Solution = 
+export type Solution =
   | { type: "boolean"; value: boolean }
   | { type: "free_text"; correctAnswer: string; matchingStrategy: "exact" | "partial" | "regex"; caseSensitive: boolean }
   | { type: "single_choice"; correctChoiceId: string; choices: Choice[] }
@@ -119,17 +119,17 @@ export interface GetQuizOptions {
 }
 
 // 条件付き型定義
-export type GetQuizResponse<T extends GetQuizOptions> = 
-  T['include'] extends readonly string[] 
+export type GetQuizResponse<T extends GetQuizOptions> =
+  T['include'] extends readonly string[]
     ? T['include'][number] extends 'solution'
-      ? QuizWithSolution
+      ? QuizResponse
       : QuizBasic
     : QuizBasic;
 
 // 型安全なクライアントメソッド
 class QuizManagementAPI {
   async getQuiz<T extends GetQuizOptions>(
-    id: string, 
+    id: string,
     options?: T
   ): Promise<GetQuizResponse<T>> {
     // 実装
@@ -141,10 +141,10 @@ class QuizManagementAPI {
 
 ```typescript
 // Solution情報を含む取得（型安全）
-const quizWithSolution = await api.getQuiz("quiz-123", { 
-  include: ['solution'] 
+const quizResponse = await api.getQuiz("quiz-123", {
+  include: ['solution']
 });
-// quizWithSolution.solution が利用可能（型チェック済み）
+// quizResponse.solution が利用可能（型チェック済み）
 
 // 基本情報のみ取得
 const basicQuiz = await api.getQuiz("quiz-123");
@@ -157,7 +157,7 @@ const basicQuiz = await api.getQuiz("quiz-123");
 
 ```typescript
 // エラー型定義
-export type APIError = 
+export type APIError =
   | { type: "validation"; code: string; message: string; details?: ValidationDetails }
   | { type: "not_found"; code: string; message: string }
   | { type: "forbidden"; code: string; message: string }
@@ -165,13 +165,13 @@ export type APIError =
   | { type: "internal"; code: string; message: string };
 
 // Result型パターン
-export type APIResult<T> = 
+export type APIResult<T> =
   | { success: true; data: T }
   | { success: false; error: APIError };
 
 // クライアントメソッド
 class QuizManagementAPI {
-  async getQuiz(id: string): Promise<APIResult<QuizWithSolution>> {
+  async getQuiz(id: string): Promise<APIResult<QuizResponse>> {
     try {
       const response = await this.httpClient.get(`/quizzes/${id}`);
       return { success: true, data: response.data };
@@ -184,7 +184,7 @@ class QuizManagementAPI {
 // 利用例
 const result = await api.getQuiz("quiz-123");
 if (result.success) {
-  // result.data が QuizWithSolution として型安全にアクセス可能
+  // result.data が QuizResponse として型安全にアクセス可能
   console.log(result.data.solution);
 } else {
   // result.error が APIError として型安全にアクセス可能
@@ -204,7 +204,7 @@ graph TD
     B --> C[TypeScript SDK生成]
     C --> D[型検証テスト]
     D --> E[SDKパッケージ発行]
-    
+
     F[API Catalog更新] --> G[TypeSpec同期確認]
     G --> A
 ```
@@ -227,13 +227,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Install TypeSpec
         run: npm install -g @typespec/compiler
-      
+
       - name: Generate OpenAPI
         run: tsp compile api/spec/main.tsp --emit @typespec/openapi3
-      
+
       - name: Generate TypeScript SDK
         run: |
           npx @openapitools/openapi-generator-cli generate \
@@ -241,10 +241,10 @@ jobs:
             -g typescript-fetch \
             -o ./packages/sdk \
             --additional-properties=typescriptThreePlus=true,supportsES6=true
-      
+
       - name: Run SDK Tests
         run: npm run test:sdk
-      
+
       - name: Publish SDK
         if: github.ref == 'refs/heads/main'
         run: npm publish packages/sdk
@@ -264,7 +264,7 @@ jobs:
 
 ```typescript
 // 新answerType追加時の互換性確保
-type Solution = 
+type Solution =
   | LegacySolution  // 既存の型
   | NewSolution;    // 新しい型
 
@@ -307,10 +307,10 @@ type TestUnionDiscrimination = Expect<
 describe('Solution Type Guards', () => {
   it('should correctly identify boolean solution', () => {
     const solution: Solution = { type: "boolean", value: true };
-    
+
     expect(isBooleanSolution(solution)).toBe(true);
     expect(isFreeTextSolution(solution)).toBe(false);
-    
+
     if (isBooleanSolution(solution)) {
       // TypeScript型チェック: solution.value が boolean
       expect(typeof solution.value).toBe('boolean');
@@ -330,7 +330,7 @@ export { QuizLearningAPI } from './apis/quiz-learning';
 export { UserSessionAPI } from './apis/user-session';
 
 // 型ガード関数も個別エクスポート
-export { 
+export {
   isBooleanSolution,
   isFreeTextSolution,
   isSingleChoiceSolution,
@@ -376,6 +376,6 @@ export {
 
 ---
 
-**作成日**: 2025-08-04  
-**更新日**: 2025-08-04  
+**作成日**: 2025-08-04
+**更新日**: 2025-08-04
 **作成者**: Claude Code Assistant
