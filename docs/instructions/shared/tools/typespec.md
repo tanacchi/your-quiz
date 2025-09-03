@@ -49,17 +49,14 @@ tsp compile specs/main.tsp --emit @typespec/openapi3
 tsp compile specs/main.tsp --emit @typespec/openapi3 --output-dir docs/api
 ```
 
-#### 2.2 package.jsonスクリプト
+#### 2.2 プロジェクト固有コマンド確認
 
-```json
-{
-  "scripts": {
-    "typespec:compile": "tsp compile specs/main.tsp --emit @typespec/openapi3",
-    "typespec:watch": "tsp compile specs/main.tsp --emit @typespec/openapi3 --watch",
-    "typespec:format": "tsp format specs/**/*.tsp"
-  }
-}
-```
+**重要**: TypeSpecのコンパイルコマンドはプロジェクトごとに異なります。
+必ず以下を確認してから実行してください：
+
+1. `package.json` の `scripts` セクションを確認
+2. プロジェクト固有のビルドコマンドを特定
+3. 推測でのコマンド実行は避け、実際の設定に従う
 
 ### 3. Git管理方針
 
@@ -99,8 +96,8 @@ git commit -m "ユーザー管理APIのTypeSpec仕様を追加
 vim specs/models/user.tsp      # モデル定義
 vim specs/operations/users.tsp # 操作定義
 
-# 2. OpenAPI生成
-pnpm typespec:compile
+# 2. OpenAPI生成（プロジェクト固有コマンドを確認）
+# 例: pnpm build, pnpm gen-schema等
 
 # 3. 生成結果確認
 cat docs/api/openapi.yaml
@@ -116,8 +113,8 @@ git commit -m "ユーザーAPIの仕様追加"
 # 1. TypeSpec修正
 vim specs/models/user.tsp
 
-# 2. 再生成
-pnpm typespec:compile
+# 2. 再生成（プロジェクト固有コマンドを確認）
+# 例: pnpm build, pnpm gen-schema等
 
 # 3. 差分確認
 git diff docs/api/openapi.yaml

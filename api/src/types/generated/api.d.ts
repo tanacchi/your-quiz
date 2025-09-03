@@ -20,9 +20,9 @@ export interface paths {
      *     - **権限考慮**: ユーザー権限に応じた表示制御
      *
      *     ## フィルタ機能
-     *     - **ステータス別**: pending_approval, approved, rejected
-     *     - **作成者別**: 特定ユーザーの作成クイズのみ表示
-     *     - **ID指定**: 複数のクイズIDを指定して一括取得
+     *     - **ステータス別**: pending_approval, approved, rejected（複数指定でOR条件）
+     *     - **作成者別**: 特定ユーザーの作成クイズのみ表示（複数指定でOR条件）
+     *     - **クイズID指定**: 複数のクイズIDを指定して一括取得
      *
      *     ## 権限による表示制御
      *     - **一般ユーザー**: 承認済みクイズのみ表示
@@ -35,15 +35,22 @@ export interface paths {
      *     - オフセットベース: skip/limit パターン
      *
      *     ## レスポンス情報
-     *     - クイズ一覧（QuizWithSolution形式）
+     *     - クイズ一覧（QuizResponse形式）
      *     - 総件数（フィルタ適用後）
      *     - 続きの存在フラグ
      *     - 継続トークン（将来のカーソルベース対応用）
      *
+     *     ## クエリパラメータ使用例
+     *     - **複数ステータス**: `?status=pending_approval&status=approved` （承認待ち + 承認済み）
+     *     - **複数作成者**: `?creatorId=user1&creatorId=user2` （複数ユーザーの作品）
+     *     - **クイズID指定**: `?quizId=quiz1&quizId=quiz2` （特定クイズの一括取得）
+     *     - **組み合わせ**: `?status=approved&creatorId=user1&creatorId=user2` （複数作成者の承認済みクイズ）
+     *
      *     ## 使用場面
-     *     - 管理画面でのクイズ管理
-     *     - 作成者マイページでの作品一覧
-     *     - 承認待ちキューの表示 */
+     *     - **管理画面でのクイズ管理**: 複数ステータス・作成者での絞り込み
+     *     - **作成者マイページでの作品一覧**: 自身の全ステータスクイズ表示
+     *     - **承認待ちキューの表示**: pending_approval ステータスのみ表示
+     *     - **バッチ処理**: 特定IDのクイズ群を一括取得 */
     get: operations["QuizManagement_listQuizzes"];
     put?: never;
     /** @description 新しいクイズ作成API
@@ -89,7 +96,7 @@ export interface paths {
      *     ## 機能
      *     - **完全な問題情報**: 問題文、解答、解説、タグを含む全データを取得
      *     - **権限制御**: 作成者または管理者のみアクセス可能（承認前クイズの場合）
-     *     - **解答情報付き**: QuizWithSolution形式で解答も含めて返却
+     *     - **解答情報付き**: QuizResponse形式で解答も含めて返却
      *
      *     ## アクセス制御
      *     - **公開クイズ（approved）**: 全ユーザーがアクセス可能
@@ -107,34 +114,7 @@ export interface paths {
      *     - 管理画面での承認レビュー
      *     - 作成者による内容確認 */
     get: operations["QuizManagement_getQuiz"];
-    /** @description クイズ情報更新API
-     *
-     *     ## 機能
-     *     - **部分更新対応**: 指定されたフィールドのみを更新
-     *     - **権限制御**: 作成者のみ更新可能
-     *     - **承認状態制限**: 承認済みクイズは更新不可
-     *     - **バリデーション**: 更新内容の妥当性を自動検証
-     *
-     *     ## 更新可能フィールド
-     *     - 問題文（question）
-     *     - 解説（explanation）
-     *     - タグ（tags）
-     *
-     *     ## 更新制限
-     *     - **承認済みクイズ**: 更新不可（approved状態）
-     *     - **他者作成クイズ**: 更新不可（作成者以外）
-     *     - **解答部分**: 作成後は変更不可（整合性保持のため）
-     *
-     *     ## 更新後の動作
-     *     - 更新されたクイズは承認待ち状態を維持
-     *     - 管理者に再レビュー通知
-     *     - 更新履歴の記録
-     *
-     *     ## 使用場面
-     *     - 誤字脱字の修正
-     *     - 解説の充実化
-     *     - タグ分類の見直し */
-    put: operations["QuizManagement_updateQuiz"];
+    put?: never;
     post?: never;
     /** @description クイズ削除API
      *
@@ -165,7 +145,43 @@ export interface paths {
     delete: operations["QuizManagement_deleteQuiz"];
     options?: never;
     head?: never;
-    patch?: never;
+    /** @description クイズ情報部分更新API（PATCH）
+     *
+     *     ## 機能
+     *     - **真の部分更新**: 指定されたフィールドのみを更新（PATCH方式）
+     *     - **柔軟な権限制御**: 作成者と管理者で更新可能フィールドが異なる
+     *     - **承認状態制限**: 承認済みクイズは更新不可
+     *     - **整合性バリデーション**: 更新内容の妥当性を自動検証
+     *
+     *     ## 更新可能フィールド
+     *     - **問題文（question）**: 問題の内容を修正
+     *     - **回答形式（answerType）**: boolean/free_text/single_choice/multiple_choice
+     *     - **解答内容（solution）**: SolutionCreateを使用してIDなしで解答を更新
+     *     - **解説（explanation）**: 問題の説明文を追加・修正
+     *     - **タグ（tags）**: 学習分野・難易度別のタグ配列
+     *     - **作成者ID（creatorId）**: 管理者のみ、作成者の変更が可能
+     *
+     *     ## 権限制御
+     *     - **作成者権限**: question, answerType, solution, explanation, tags の更新
+     *     - **管理者権限**: 全フィールド（creatorId含む）の更新
+     *     - **承認済みクイズ**: 全ユーザーで更新不可（approved状態）
+     *
+     *     ## 整合性チェック
+     *     - **answerTypeとsolution**: 回答形式と解答内容の整合性を確認
+     *     - **タグ検証**: 存在するタグIDのみ受け入れ
+     *     - **作成者存在確認**: creatorId変更時のユーザー存在確認
+     *
+     *     ## 更新後の動作
+     *     - 更新されたクイズは承認待ち状態に戻る（pending_approval）
+     *     - 管理者に再レビュー通知を送信
+     *     - 更新履歴の詳細記録（変更フィールドと変更者）
+     *
+     *     ## 使用場面
+     *     - **内容修正**: 誤字脱字や解答間違いの修正
+     *     - **形式変更**: 回答形式や選択肢の追加・変更
+     *     - **管理業務**: 作成者変更や大幅な内容修正
+     *     - **品質向上**: 解説の充実化やタグ分類の見直し */
+    patch: operations["QuizManagement_updateQuiz"];
     trace?: never;
   };
   "/api/search/v1/quizzes": {
@@ -270,15 +286,47 @@ export interface components {
       id: components["schemas"]["AnswerId"];
       value: boolean;
     };
+    /** @example {
+     *       "type": "boolean",
+     *       "id": "solution-bool-001",
+     *       "value": true
+     *     } */
     BooleanSolution: {
       /** @enum {string} */
       type: "boolean";
       id: components["schemas"]["SolutionId"];
       value: boolean;
     };
+    /** @example {
+     *       "type": "boolean",
+     *       "value": true
+     *     } */
+    BooleanSolutionCreate: {
+      /** @enum {string} */
+      type: "boolean";
+      value: boolean;
+    };
+    /** @example {
+     *       "id": "choice-a",
+     *       "solutionId": "solution-001",
+     *       "text": "push()",
+     *       "orderIndex": 0,
+     *       "isCorrect": true
+     *     } */
     Choice: {
       id: components["schemas"]["ChoiceId"];
       solutionId: components["schemas"]["SolutionId"];
+      text: string;
+      /** Format: int32 */
+      orderIndex: number;
+      isCorrect: boolean;
+    };
+    /** @example {
+     *       "text": "push()",
+     *       "orderIndex": 0,
+     *       "isCorrect": true
+     *     } */
+    ChoiceCreate: {
       text: string;
       /** Format: int32 */
       orderIndex: number;
@@ -324,10 +372,26 @@ export interface components {
       deck: components["schemas"]["Deck"];
       session?: components["schemas"]["QuizSession"];
     };
+    /** @example {
+     *       "question": "Pythonでリストの長さを取得する関数は？",
+     *       "answerType": "free_text",
+     *       "solution": {
+     *         "type": "free_text",
+     *         "correctAnswer": "len",
+     *         "matchingStrategy": "exact",
+     *         "caseSensitive": false
+     *       },
+     *       "explanation": "len()関数はシーケンス型（リスト、タプル、文字列など）の長さを返します。",
+     *       "tags": [
+     *         "python",
+     *         "関数",
+     *         "初級"
+     *       ]
+     *     } */
     CreateQuizRequest: {
       question: string;
       answerType: components["schemas"]["AnswerType"];
-      solution: components["schemas"]["Solution"];
+      solution: components["schemas"]["SolutionCreate"];
       explanation?: string;
       tags?: string[];
     };
@@ -370,10 +434,16 @@ export interface components {
       creatorId: components["schemas"]["UserId"];
       createdAt: components["schemas"]["UtcDateTime"];
       lastModifiedAt: components["schemas"]["UtcDateTime"];
-      quizzes: components["schemas"]["QuizWithSolution"][];
+      quizzes: components["schemas"]["QuizResponse"][];
       /** Format: int32 */
       totalQuizzes: number;
     };
+    /** @example {
+     *       "code": 400,
+     *       "message": "リクエストの形式が正しくありません",
+     *       "details": "問題文は500文字以下で入力してください",
+     *       "requestId": "req-12345-abcde"
+     *     } */
     ErrorResponse: {
       /** Format: int32 */
       code: number;
@@ -396,10 +466,32 @@ export interface components {
       id: components["schemas"]["AnswerId"];
       text: string;
     };
+    /** @example {
+     *       "type": "free_text",
+     *       "id": "solution-text-001",
+     *       "correctAnswer": "React",
+     *       "matchingStrategy": "exact",
+     *       "caseSensitive": false
+     *     } */
     FreeTextSolution: {
       /** @enum {string} */
       type: "free_text";
       id: components["schemas"]["SolutionId"];
+      correctAnswer: string;
+      /** @default exact */
+      matchingStrategy: components["schemas"]["MatchingStrategy"];
+      /** @default false */
+      caseSensitive: boolean;
+    };
+    /** @example {
+     *       "type": "free_text",
+     *       "correctAnswer": "React",
+     *       "matchingStrategy": "exact",
+     *       "caseSensitive": false
+     *     } */
+    FreeTextSolutionCreate: {
+      /** @enum {string} */
+      type: "free_text";
       correctAnswer: string;
       /** @default exact */
       matchingStrategy: components["schemas"]["MatchingStrategy"];
@@ -423,6 +515,34 @@ export interface components {
       id: components["schemas"]["AnswerId"];
       selectedChoiceIds: components["schemas"]["ChoiceId"][];
     };
+    /** @example {
+     *       "type": "multiple_choice",
+     *       "id": "solution-multi-001",
+     *       "minCorrectAnswers": 2,
+     *       "choices": [
+     *         {
+     *           "id": "choice-a",
+     *           "solutionId": "solution-multi-001",
+     *           "text": "HTML",
+     *           "orderIndex": 0,
+     *           "isCorrect": true
+     *         },
+     *         {
+     *           "id": "choice-b",
+     *           "solutionId": "solution-multi-001",
+     *           "text": "Java",
+     *           "orderIndex": 1,
+     *           "isCorrect": false
+     *         },
+     *         {
+     *           "id": "choice-c",
+     *           "solutionId": "solution-multi-001",
+     *           "text": "CSS",
+     *           "orderIndex": 2,
+     *           "isCorrect": true
+     *         }
+     *       ]
+     *     } */
     MultipleChoiceSolution: {
       /** @enum {string} */
       type: "multiple_choice";
@@ -434,6 +554,43 @@ export interface components {
       minCorrectAnswers: number;
       choices: components["schemas"]["Choice"][];
     };
+    /** @example {
+     *       "type": "multiple_choice",
+     *       "minCorrectAnswers": 2,
+     *       "choices": [
+     *         {
+     *           "text": "HTML",
+     *           "orderIndex": 0,
+     *           "isCorrect": true
+     *         },
+     *         {
+     *           "text": "Java",
+     *           "orderIndex": 1,
+     *           "isCorrect": false
+     *         },
+     *         {
+     *           "text": "CSS",
+     *           "orderIndex": 2,
+     *           "isCorrect": true
+     *         }
+     *       ]
+     *     } */
+    MultipleChoiceSolutionCreate: {
+      /** @enum {string} */
+      type: "multiple_choice";
+      /**
+       * Format: int32
+       * @default 1
+       */
+      minCorrectAnswers: number;
+      choices: components["schemas"]["ChoiceCreate"][];
+    };
+    /** @example {
+     *       "code": 404,
+     *       "message": "リソースが見つかりません",
+     *       "details": "指定されたクイズID 'quiz-999' は存在しません",
+     *       "requestId": "req-404-001"
+     *     } */
     NotFoundError: {
       /** @enum {number} */
       code: 404;
@@ -454,6 +611,17 @@ export interface components {
       /** @description Token for cursor-based pagination (optional, for future implementation) */
       continuationToken?: string;
     };
+    /** @example {
+     *       "id": "quiz-001",
+     *       "question": "JavaScriptで配列の最後に要素を追加するメソッドは？",
+     *       "answerType": "single_choice",
+     *       "solutionId": "solution-001",
+     *       "explanation": "push()メソッドは配列の末尾に1つ以上の要素を追加し、配列の新しい長さを返します。",
+     *       "status": "approved",
+     *       "creatorId": "user-123",
+     *       "createdAt": "2024-01-15T10:30:00Z",
+     *       "approvedAt": "2024-01-16T09:15:00Z"
+     *     } */
     Quiz: {
       id: components["schemas"]["QuizId"];
       question: string;
@@ -466,12 +634,61 @@ export interface components {
       approvedAt?: components["schemas"]["UtcDateTime"];
     };
     QuizId: string;
-    QuizListResponse: {
-      items: components["schemas"]["QuizWithSolution"][];
-      /** Format: int32 */
-      totalCount: number;
-      hasMore: boolean;
-      continuationToken?: string;
+    /** @example {
+     *       "id": "quiz-001",
+     *       "question": "JavaScriptで配列の最後に要素を追加するメソッドは？",
+     *       "answerType": "single_choice",
+     *       "solutionId": "solution-001",
+     *       "explanation": "push()メソッドは配列の末尾に1つ以上の要素を追加し、配列の新しい長さを返します。",
+     *       "status": "approved",
+     *       "creatorId": "user-123",
+     *       "createdAt": "2024-01-15T10:30:00Z",
+     *       "approvedAt": "2024-01-16T09:15:00Z",
+     *       "solution": {
+     *         "type": "single_choice",
+     *         "id": "solution-001",
+     *         "choices": [
+     *           {
+     *             "id": "choice-a",
+     *             "solutionId": "solution-001",
+     *             "text": "push()",
+     *             "orderIndex": 0,
+     *             "isCorrect": true
+     *           },
+     *           {
+     *             "id": "choice-b",
+     *             "solutionId": "solution-001",
+     *             "text": "pop()",
+     *             "orderIndex": 1,
+     *             "isCorrect": false
+     *           },
+     *           {
+     *             "id": "choice-c",
+     *             "solutionId": "solution-001",
+     *             "text": "shift()",
+     *             "orderIndex": 2,
+     *             "isCorrect": false
+     *           }
+     *         ]
+     *       },
+     *       "tags": [
+     *         "javascript",
+     *         "配列",
+     *         "初級"
+     *       ]
+     *     } */
+    QuizResponse: {
+      id: components["schemas"]["QuizId"];
+      question: string;
+      answerType: components["schemas"]["AnswerType"];
+      solutionId: components["schemas"]["SolutionId"];
+      explanation?: string;
+      status: components["schemas"]["QuizStatus"];
+      creatorId: components["schemas"]["UserId"];
+      createdAt: components["schemas"]["UtcDateTime"];
+      approvedAt?: components["schemas"]["UtcDateTime"];
+      solution: components["schemas"]["Solution"];
+      tags?: string[];
     };
     QuizSearchFilters: {
       tags?: string[];
@@ -505,8 +722,23 @@ export interface components {
     };
     /** @enum {string} */
     QuizStatus: "pending_approval" | "approved" | "rejected";
-    QuizTagId: string;
-    QuizWithSolution: {
+    /** @example {
+     *       "id": "quiz-001",
+     *       "question": "JavaScriptで配列の最後に要素を追加するメソッドは？",
+     *       "answerType": "single_choice",
+     *       "solutionId": "solution-001",
+     *       "explanation": "push()メソッドは配列の末尾に1つ以上の要素を追加し、配列の新しい長さを返します。",
+     *       "status": "approved",
+     *       "creatorId": "user-123",
+     *       "createdAt": "2024-01-15T10:30:00Z",
+     *       "approvedAt": "2024-01-16T09:15:00Z",
+     *       "tagIds": [
+     *         "tag-001",
+     *         "tag-002",
+     *         "tag-003"
+     *       ]
+     *     } */
+    QuizSummary: {
       id: components["schemas"]["QuizId"];
       question: string;
       answerType: components["schemas"]["AnswerType"];
@@ -516,9 +748,22 @@ export interface components {
       creatorId: components["schemas"]["UserId"];
       createdAt: components["schemas"]["UtcDateTime"];
       approvedAt?: components["schemas"]["UtcDateTime"];
-      solution: components["schemas"]["Solution"];
-      tags?: string[];
+      tagIds: string[];
     };
+    QuizSummaryListResponse: {
+      items: components["schemas"]["QuizSummary"][];
+      /** Format: int32 */
+      totalCount: number;
+      hasMore: boolean;
+      continuationToken?: string;
+    };
+    QuizTagId: string;
+    /** @example {
+     *       "code": 429,
+     *       "message": "レート制限に達しました",
+     *       "details": "1日あたりのクイズ作成上限（50問）に達しています。明日の00:00 UTCにリセットされます。",
+     *       "requestId": "req-rate-001"
+     *     } */
     RateLimitError: {
       /** @enum {number} */
       code: 429;
@@ -554,17 +799,69 @@ export interface components {
       id: components["schemas"]["AnswerId"];
       selectedChoiceId: components["schemas"]["ChoiceId"];
     };
+    /** @example {
+     *       "type": "single_choice",
+     *       "id": "solution-001",
+     *       "choices": [
+     *         {
+     *           "id": "choice-a",
+     *           "solutionId": "solution-001",
+     *           "text": "push()",
+     *           "orderIndex": 0,
+     *           "isCorrect": true
+     *         },
+     *         {
+     *           "id": "choice-b",
+     *           "solutionId": "solution-001",
+     *           "text": "pop()",
+     *           "orderIndex": 1,
+     *           "isCorrect": false
+     *         },
+     *         {
+     *           "id": "choice-c",
+     *           "solutionId": "solution-001",
+     *           "text": "shift()",
+     *           "orderIndex": 2,
+     *           "isCorrect": false
+     *         }
+     *       ]
+     *     } */
     SingleChoiceSolution: {
       /** @enum {string} */
       type: "single_choice";
       id: components["schemas"]["SolutionId"];
       choices: components["schemas"]["Choice"][];
     };
+    /** @example {
+     *       "type": "single_choice",
+     *       "choices": [
+     *         {
+     *           "text": "push()",
+     *           "orderIndex": 0,
+     *           "isCorrect": true
+     *         },
+     *         {
+     *           "text": "pop()",
+     *           "orderIndex": 1,
+     *           "isCorrect": false
+     *         }
+     *       ]
+     *     } */
+    SingleChoiceSolutionCreate: {
+      /** @enum {string} */
+      type: "single_choice";
+      choices: components["schemas"]["ChoiceCreate"][];
+    };
     Solution:
       | components["schemas"]["BooleanSolution"]
       | components["schemas"]["FreeTextSolution"]
       | components["schemas"]["SingleChoiceSolution"]
       | components["schemas"]["MultipleChoiceSolution"];
+    SolutionCreate:
+      | components["schemas"]["BooleanSolutionCreate"]
+      | components["schemas"]["FreeTextSolutionCreate"]
+      | components["schemas"]["SingleChoiceSolutionCreate"]
+      | components["schemas"]["MultipleChoiceSolutionCreate"];
     SolutionId: string;
     StartSessionRequest: {
       deckId: components["schemas"]["DeckId"];
@@ -574,7 +871,7 @@ export interface components {
     };
     StartSessionResponse: {
       session: components["schemas"]["QuizSessionWithProgress"];
-      firstQuiz?: components["schemas"]["QuizWithSolution"];
+      firstQuiz?: components["schemas"]["QuizResponse"];
     };
     SubmitAnswerRequest: {
       sessionId: components["schemas"]["SessionId"];
@@ -607,10 +904,40 @@ export interface components {
       components["schemas"]["ErrorResponse"],
       "code" | "message"
     >;
+    /** @example {
+     *       "question": "HTMLの段落を表すタグはどれですか？（修正版）",
+     *       "answerType": "single_choice",
+     *       "solution": {
+     *         "type": "single_choice",
+     *         "choices": [
+     *           {
+     *             "text": "<p>",
+     *             "orderIndex": 0,
+     *             "isCorrect": true
+     *           },
+     *           {
+     *             "text": "<div>",
+     *             "orderIndex": 1,
+     *             "isCorrect": false
+     *           }
+     *         ]
+     *       },
+     *       "explanation": "pタグはparagraphの略で、HTMLで段落を表現するために使用します。段落間には自動的にマージンが設定されます。",
+     *       "tags": [
+     *         "html",
+     *         "基礎",
+     *         "初級",
+     *         "マークアップ"
+     *       ],
+     *       "creatorId": "user-456"
+     *     } */
     UpdateQuizRequest: {
       question?: string;
+      answerType?: components["schemas"]["AnswerType"];
+      solution?: components["schemas"]["SolutionCreate"];
       explanation?: string;
       tags?: string[];
+      creatorId?: components["schemas"]["UserId"];
     };
     UpdateSessionRequest: {
       isCompleted?: boolean;
@@ -651,6 +978,16 @@ export interface components {
       streak: number;
     };
     UtcDateTime: string;
+    /** @example {
+     *       "code": 400,
+     *       "message": "バリデーションエラー",
+     *       "details": "入力された値に問題があります",
+     *       "requestId": "req-val-001",
+     *       "fieldErrors": {
+     *         "question": "問題文は必須です",
+     *         "tags": "タグは最大10個までです"
+     *       }
+     *     } */
     ValidationError: {
       /** @enum {number} */
       code: 400;
@@ -668,12 +1005,12 @@ export interface operations {
   QuizManagement_listQuizzes: {
     parameters: {
       query?: {
-        /** @description ステータス別フィルター。指定されない場合は全ステータス（権限に応じて） */
-        status?: components["schemas"]["QuizStatus"];
-        /** @description 作成者ID別フィルター。特定ユーザーの作成クイズのみ取得 */
-        creatorId?: components["schemas"]["UserId"];
+        /** @description ステータス別フィルター（複数指定可能）。指定されない場合は全ステータス（権限に応じて） */
+        status?: components["schemas"]["QuizStatus"][];
+        /** @description 作成者ID別フィルター（複数指定可能）。特定ユーザーの作成クイズのみ取得 */
+        creatorId?: components["schemas"]["UserId"][];
         /** @description クイズID配列による指定取得。複数IDの一括取得に使用 */
-        ids?: string[];
+        quizId?: string[];
       };
       header?: never;
       path?: never;
@@ -691,7 +1028,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["QuizListResponse"];
+          "application/json": components["schemas"]["QuizSummaryListResponse"];
         };
       };
     };
@@ -716,7 +1053,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["QuizWithSolution"];
+          "application/json": components["schemas"]["QuizResponse"];
         };
       };
       /** @description An unexpected error response. */
@@ -750,7 +1087,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["QuizWithSolution"];
+          "application/json": components["schemas"]["QuizResponse"];
         };
       };
       /** @description An unexpected error response. */
@@ -760,46 +1097,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["NotFoundError"];
-        };
-      };
-    };
-  };
-  QuizManagement_updateQuiz: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description 更新対象のクイズID（UUID形式） */
-        id: components["schemas"]["QuizId"];
-      };
-      cookie?: never;
-    };
-    /** @description 更新情報を含むリクエスト（部分更新対応） */
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateQuizRequest"];
-      };
-    };
-    responses: {
-      /** @description The request has succeeded. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["QuizWithSolution"];
-        };
-      };
-      /** @description An unexpected error response. */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["NotFoundError"]
-            | components["schemas"]["ForbiddenError"]
-            | components["schemas"]["ValidationError"];
         };
       };
     };
@@ -832,6 +1129,46 @@ export interface operations {
           "application/json":
             | components["schemas"]["NotFoundError"]
             | components["schemas"]["ForbiddenError"];
+        };
+      };
+    };
+  };
+  QuizManagement_updateQuiz: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 更新対象のクイズID（UUID形式） */
+        id: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    /** @description 更新情報を含むリクエスト（部分更新対応） */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateQuizRequest"];
+      };
+    };
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuizResponse"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"]
+            | components["schemas"]["ValidationError"];
         };
       };
     };
@@ -885,7 +1222,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["QuizListResponse"];
+          "application/json": components["schemas"]["QuizSummaryListResponse"];
         };
       };
     };

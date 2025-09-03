@@ -1,7 +1,8 @@
+import { NotImplementedError } from "../../../../shared/errors";
 import { createQuizSchema } from "../../../../shared/schemas";
 import type { AppContext } from "../../../../shared/types";
 import { parseJsonSafe, validateWithZod } from "../../../../shared/utils";
-import { listQuizzesQuerySchema } from "../../application/schemas/list-quizzes-query.schema";
+import { listQueryFromReq } from "../../application/schemas/list-quizzes-query.schema";
 import type {
   CreateQuizUseCase,
   GetQuizUseCase,
@@ -118,14 +119,16 @@ export class QuizController {
    * @returns HTTP 200 (取得成功) またはエラーレスポンス
    */
   async listQuizzes(c: AppContext) {
-    // クエリパラメータを取得
-    return validateWithZod(listQuizzesQuerySchema, {
-      status: c.req.query("status"),
-      creatorId: c.req.query("creatorId"),
-      ids: c.req.queries("ids"),
-      limit: c.req.query("limit"),
-      offset: c.req.query("offset"),
-    })
+    // クエリパラメータを取得（nullの場合は適切にフォールバック）
+    const rawQueryParams = {
+      status: c.req.queries("status") ?? [],
+      creatorId: c.req.query("creatorId") ?? undefined,
+      quizId: c.req.queries("quizId") ?? [],
+      limit: c.req.query("limit") ?? undefined,
+      offset: c.req.query("offset") ?? undefined,
+    };
+
+    return validateWithZod(listQueryFromReq, rawQueryParams)
       .asyncAndThen((query) => this.listQuizzesUseCase.execute(query))
       .match(
         (res) => c.json(res),
@@ -135,5 +138,33 @@ export class QuizController {
           return c.json(errorResponse.response, errorResponse.statusCode);
         },
       );
+  }
+
+  /**
+   * クイズ更新HTTPハンドラー
+   *
+   * 現在は未実装のため、NOT Implemented エラーを返します。
+   *
+   * @param c - Honoアプリケーションコンテキスト
+   * @returns HTTP 501 (Not Implemented)
+   */
+  async updateQuiz(c: AppContext) {
+    const error = new NotImplementedError("Quiz update");
+    const errorResponse = ControllerErrorHandler.handleError(error);
+    return c.json(errorResponse.response, errorResponse.statusCode);
+  }
+
+  /**
+   * クイズ削除HTTPハンドラー
+   *
+   * 現在は未実装のため、NOT Implemented エラーを返します。
+   *
+   * @param c - Honoアプリケーションコンテキスト
+   * @returns HTTP 501 (Not Implemented)
+   */
+  async deleteQuiz(c: AppContext) {
+    const error = new NotImplementedError("Quiz deletion");
+    const errorResponse = ControllerErrorHandler.handleError(error);
+    return c.json(errorResponse.response, errorResponse.statusCode);
   }
 }

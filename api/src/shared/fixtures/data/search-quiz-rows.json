@@ -1,0 +1,53 @@
+[
+  {
+    "id": "quiz-1",
+    "question": "JavaScriptで配列をソートするメソッドは？",
+    "answer_type": "single_choice",
+    "solution_id": "solution-1",
+    "explanation": "Array.prototype.sort()メソッドを使用します",
+    "status": "approved",
+    "creator_id": "user-1",
+    "created_at": "2024-01-15 00:00:00",
+    "approved_at": "2024-01-16 00:00:00",
+    "boolean_value": null,
+    "correct_answer": null,
+    "matching_strategy": null,
+    "case_sensitive": null,
+    "choices": "[{\"id\":\"choice-1\",\"solutionId\":\"solution-1\",\"text\":\"sort()\",\"orderIndex\":0,\"isCorrect\":true},{\"id\":\"choice-2\",\"solutionId\":\"solution-1\",\"text\":\"order()\",\"orderIndex\":1,\"isCorrect\":false},{\"id\":\"choice-3\",\"solutionId\":\"solution-1\",\"text\":\"arrange()\",\"orderIndex\":2,\"isCorrect\":false}]",
+    "min_correct_answers": null
+  },
+  {
+    "id": "quiz-2",
+    "question": "Pythonでリストを逆順にするメソッドは？",
+    "answer_type": "single_choice",
+    "solution_id": "solution-2",
+    "explanation": "reverse()メソッドまたはスライシング[::-1]を使用します",
+    "status": "approved",
+    "creator_id": "user-2",
+    "created_at": "2024-01-20 00:00:00",
+    "approved_at": "2024-01-21 00:00:00",
+    "boolean_value": null,
+    "correct_answer": null,
+    "matching_strategy": null,
+    "case_sensitive": null,
+    "choices": "[{\"id\":\"choice-4\",\"solutionId\":\"solution-2\",\"text\":\"reverse()\",\"orderIndex\":0,\"isCorrect\":true},{\"id\":\"choice-5\",\"solutionId\":\"solution-2\",\"text\":\"invert()\",\"orderIndex\":1,\"isCorrect\":false},{\"id\":\"choice-6\",\"solutionId\":\"solution-2\",\"text\":\"backward()\",\"orderIndex\":2,\"isCorrect\":false}]",
+    "min_correct_answers": null
+  },
+  {
+    "id": "quiz-3",
+    "question": "TypeScriptの型安全性の利点は？",
+    "answer_type": "multiple_choice",
+    "solution_id": "solution-3",
+    "explanation": "コンパイル時のエラー検出とIDE支援が主な利点です",
+    "status": "approved",
+    "creator_id": "user-1",
+    "created_at": "2024-02-01 00:00:00",
+    "approved_at": "2024-02-02 00:00:00",
+    "boolean_value": null,
+    "correct_answer": null,
+    "matching_strategy": null,
+    "case_sensitive": null,
+    "choices": "[{\"id\":\"choice-7\",\"solutionId\":\"solution-3\",\"text\":\"コンパイル時エラー検出\",\"orderIndex\":0,\"isCorrect\":true},{\"id\":\"choice-8\",\"solutionId\":\"solution-3\",\"text\":\"IDE支援の向上\",\"orderIndex\":1,\"isCorrect\":true},{\"id\":\"choice-9\",\"solutionId\":\"solution-3\",\"text\":\"実行速度の向上\",\"orderIndex\":2,\"isCorrect\":false}]",
+    "min_correct_answers": 2
+  }
+]

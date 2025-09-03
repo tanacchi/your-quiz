@@ -11,12 +11,12 @@ declare global {
 // Uses ユビキタス言語 (Ubiquitous Language): Developer, TypeSpec, Schema, neverthrow
 // Endpoint: GET /api/quiz/v1/manage/quizzes
 
-describe.todo("Quiz Listing - Quizリスト取得", () => {
+describe("Quiz Listing - Quizリスト取得", () => {
   beforeAll(async () => {
     // Given: API server is running with TypeSpec generated types
   });
 
-  describe.todo("型準拠: TypeScript type compliance verification", () => {
+  describe("型準拠: TypeScript type compliance verification", () => {
     // Scenario Outline: TypeScript type compliance verification for GET list endpoint
     quizListingTypeSafetyData.typeComplianceScenarios.forEach(
       (testCase, _index) => {
@@ -40,16 +40,20 @@ describe.todo("Quiz Listing - Quizリスト取得", () => {
     );
   });
 
-  describe.todo("正常系: Valid search and filtering scenarios", () => {
+  describe("正常系: Valid search and filtering scenarios", () => {
     quizSearchData.validSearches.forEach((testCase, _index) => {
       it(`Searches quizzes successfully: ${testCase.description}`, async () => {
         // Given: Valid search filters
 
         // When: Quiz list is retrieved with filters
-        const response = await spec()
-          .get("/api/quiz/v1/manage/quizzes")
-          .withQueryParams(testCase.filters)
-          .expectStatus(200);
+        const request = spec().get("/api/quiz/v1/manage/quizzes");
+
+        // 空でないフィルターがある場合のみwithQueryParamsを呼び出す
+        if (Object.keys(testCase.filters).length > 0) {
+          request.withQueryParams(testCase.filters);
+        }
+
+        const response = await request.expectStatus(200);
 
         const body = response.json;
 
@@ -62,7 +66,7 @@ describe.todo("Quiz Listing - Quizリスト取得", () => {
     });
   });
 
-  describe.todo("ワークフローリスト: Quiz list verification workflow", () => {
+  describe("ワークフローリスト: Quiz list verification workflow", () => {
     quizListingTypeSafetyData.workflowListScenarios.forEach(
       (testCase, _index) => {
         it(`Workflow list step: ${testCase.description}`, async () => {
@@ -91,7 +95,7 @@ describe.todo("Quiz Listing - Quizリスト取得", () => {
     );
   });
 
-  describe.todo("ページネーション: Pagination scenarios", () => {
+  describe("ページネーション: Pagination scenarios", () => {
     quizSearchData.paginationScenarios.forEach((testCase, _index) => {
       it(`Pagination works correctly: ${testCase.description}`, async () => {
         // Given: Pagination parameters
@@ -112,28 +116,40 @@ describe.todo("Quiz Listing - Quizリスト取得", () => {
     });
   });
 
-  describe.todo("空結果: Empty result handling scenarios", () => {
+  describe("空結果: Empty result handling scenarios", () => {
     quizSearchData.emptyResultScenarios.forEach((testCase, _index) => {
       it(`Empty results handled correctly: ${testCase.description}`, async () => {
         // Given: Search filters that match nothing
 
         // When: Quiz list is searched with non-matching filters
+        // 無効なstatusの場合は400エラー、その他は200でempty results
+        const expectedStatus = testCase.description.includes(
+          "Non-existent status filter",
+        )
+          ? 400
+          : 200;
+
         const response = await spec()
           .get("/api/quiz/v1/manage/quizzes")
           .withQueryParams(testCase.filters)
-          .expectStatus(200);
+          .expectStatus(expectedStatus);
 
         const body = response.json;
 
-        // Then: Response should indicate empty results
-        expect(body.items).toEqual([]);
-        expect(body.totalCount).toBe(0);
-        expect(body.hasMore).toBe(false);
+        // Then: Response should indicate empty results (200) or validation error (400)
+        if (expectedStatus === 200) {
+          expect(body.items).toEqual([]);
+          expect(body.totalCount).toBe(0);
+          expect(body.hasMore).toBe(false);
+        } else if (expectedStatus === 400) {
+          expect(body).toHaveProperty("message");
+          expect(body).toHaveProperty("code");
+        }
       });
     });
   });
 
-  describe.todo("レスポンススキーマ: Response schema validation", () => {
+  describe("レスポンススキーマ: Response schema validation", () => {
     quizListingTypeSafetyData.responseSchemaScenarios.forEach(
       (testCase, _index) => {
         it(`Response schema validation: ${testCase.description}`, async () => {
@@ -167,7 +183,7 @@ function validateResponseType(
   expectedType: string,
 ) {
   switch (expectedType) {
-    case "QuizListResponse":
+    case "QuizSummaryListResponse":
       expect(responseBody).toHaveProperty("items");
       expect(responseBody).toHaveProperty("totalCount");
       expect(responseBody).toHaveProperty("hasMore");

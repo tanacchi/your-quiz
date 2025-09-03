@@ -19,8 +19,8 @@ export type CreateQuizCommand = {
   question: string;
   /** 回答形式（単一選択、複数選択、自由記述など） */
   answerType: components["schemas"]["AnswerType"];
-  /** 正解データ */
-  solution: components["schemas"]["Solution"];
+  /** 正解データ（ID不要） */
+  solution: components["schemas"]["SolutionCreate"];
   /** 解説文（オプション） */
   explanation?: string;
   /** タグ配列（オプション） */
@@ -63,17 +63,26 @@ export class CreateQuizUseCase {
     command: CreateQuizCommand,
   ): ResultAsync<components["schemas"]["Quiz"], UseCaseError> {
     // QuizSummaryエンティティの作成と検証
+    const quizId = Date.now().toString(); // 簡易ID生成
+    const solutionId = `solution-${quizId}`; // ソリューションID生成
+
     const quizData = {
-      id: Date.now().toString(), // 簡易ID生成
+      id: quizId,
       question: command.question,
       answerType: command.answerType,
-      solutionId: command.solution.id,
+      solutionId: solutionId,
       explanation: command.explanation,
       status: "pending_approval" as const,
       creatorId: command.creatorId || "mock-user-id",
       createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
       tagIds: [], // デフォルト値
     };
+
+    // SolutionCreateからSolutionへ変換（IDを付与）
+    const solutionWithId: components["schemas"]["Solution"] = {
+      ...command.solution,
+      id: solutionId,
+    } as components["schemas"]["Solution"];
 
     const quizValidationResult = parseQuizSummary(quizData);
 
@@ -94,7 +103,7 @@ export class CreateQuizUseCase {
 
     // リポジトリを通じて永続化
     return this.quizRepository
-      .create(quiz, command.solution)
+      .create(quiz, solutionWithId)
       .mapErr((repositoryError) => {
         // リポジトリエラーをユースケースエラーにマッピング
         if (repositoryError instanceof CreateFailedError) {

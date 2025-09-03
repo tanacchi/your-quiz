@@ -5,12 +5,13 @@ export const quizListingTypeSafetyData = {
   // TypeScript type compliance scenarios for GET list endpoint
   typeComplianceScenarios: [
     {
-      description: "List Quizzes Success - QuizListResponse type compliance",
+      description:
+        "List Quizzes Success - QuizSummaryListResponse type compliance",
       endpointOperation: "list_quizzes_success",
       endpoint: "/api/quiz/v1/manage/quizzes",
       method: "GET",
       testData: null,
-      expectedResponseType: "QuizListResponse",
+      expectedResponseType: "QuizSummaryListResponse",
       expectedStatus: 200,
     },
   ],
@@ -22,18 +23,18 @@ export const quizListingTypeSafetyData = {
       endpoint: "/api/quiz/v1/manage/quizzes",
       method: "GET",
       expectedStatus: 200,
-      expectedResponseType: "QuizListResponse",
+      expectedResponseType: "QuizSummaryListResponse",
     },
   ],
 
-  // Response schema validation scenarios for QuizListResponse
+  // Response schema validation scenarios for QuizSummaryListResponse
   responseSchemaScenarios: [
     {
-      description: "QuizListResponse Schema Validation",
+      description: "QuizSummaryListResponse Schema Validation",
       endpoint: "/api/quiz/v1/manage/quizzes",
       method: "GET",
       expectedStatus: 200,
-      schemaComponent: "QuizListResponse",
+      schemaComponent: "QuizSummaryListResponse",
       requiredFields: ["items", "totalCount", "hasMore"],
     },
   ],

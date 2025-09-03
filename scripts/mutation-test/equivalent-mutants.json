@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "description": "Equivalent mutant除外設定ファイル - 手動でユーザーが判定・追加",
+  "excluded_mutants": [
+    {
+      "id": "example",
+      "file": "src/example/file.ts",
+      "mutatorName": "StringLiteral",
+      "original_slice": "\"Operation failed\"",
+      "replacement": "\"\"",
+      "location": {
+        "start": { "line": 82, "column": 21 },
+        "end": { "line": 82, "column": 39 }
+      },
+      "reason": "エラーメッセージの内容変更は動作に影響しない",
+      "category": "cosmetic-change",
+      "added_by": "user",
+      "added_at": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "categories": {
+    "cosmetic-change": "ログメッセージ・エラーメッセージ等の表示内容変更",
+    "dead-code": "実行時に到達不可能なコード",
+    "defensive-programming": "デフェンシブコーディングによる冗長チェック",
+    "compiler-optimization": "コンパイラ最適化による等価変換"
+  }
+}

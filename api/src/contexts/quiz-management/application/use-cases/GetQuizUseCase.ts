@@ -9,7 +9,7 @@ import {
   UseCaseInternalError,
 } from "../errors";
 
-type Quiz = components["schemas"]["QuizWithSolution"];
+type Quiz = components["schemas"]["QuizResponse"];
 
 export class GetQuizUseCase {
   constructor(private readonly quizRepository: IQuizRepository) {}
