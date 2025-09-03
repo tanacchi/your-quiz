@@ -1,0 +1,442 @@
+# Mutant cf8f2992 Report
+
+**File**: src/contexts/quiz-management/domain/entities/quiz/quiz-patches.spec.ts
+**Mutator**: BlockStatement
+**Original ID**: 1654
+**Stable ID**: cf8f2992
+**Location**: L35:49–L441:4
+
+## Diff
+
+```diff
+Index: src/contexts/quiz-management/domain/entities/quiz/quiz-patches.spec.ts
+===================================================================
+--- src/contexts/quiz-management/domain/entities/quiz/quiz-patches.spec.ts	original
++++ src/contexts/quiz-management/domain/entities/quiz/quiz-patches.spec.ts	mutated #1654
+@@ -31,416 +31,10 @@
+     creatorId: "creator-789",
+     createdAt: "2023-12-01T10:00:00.000Z",
+   };
+ 
+-  describe("Individual Patch Suggesters", () => {
+-    describe("suggestQuestionPatches", () => {
+-      it.each([
+-        [
+-          "untrimmed question",
+-          "  Valid question?  ",
+-          [{ question: "Valid question?" }],
+-        ],
+-        ["empty string", "", [{ question: "Sample boolean question?" }]],
+-        ["only whitespace", "   ", [{ question: "Sample boolean question?" }]],
+-        ["exactly 500 chars", "A".repeat(500), []],
+-        ["501 chars", "A".repeat(501), [{ question: `${"A".repeat(497)}...` }]],
+-        ["valid question", "Valid question?", []],
+-        ["non-string input", 123, []],
+-        ["null input", null, []],
+-      ])("should handle %s", (_desc, input, expected) => {
+-        const result = suggestQuestionPatches(input);
+-        expect(result).toEqual(expected);
+-      });
++  describe("Individual Patch Suggesters", () => {});
+ 
+-      describe("Patch Application", () => {
+-        it("should apply trim patch correctly", () => {
+-          const input = {
+-            ...validQuizInput,
+-            question: "  Untrimmed question?  ",
+-          };
+-          const patches = suggestQuestionPatches(input.question);
+-          const patch = patches[0];
+-          if (!patch) throw new Error("Expected patch to exist");
+-          const patched = applyEntityPatch(input, patch);
+-
+-          expect(patched.question).toBe("Untrimmed question?");
+-        });
+-
+-        it("should apply sample question patch correctly", () => {
+-          const input = { ...validQuizInput, question: "" };
+-          const patches = suggestQuestionPatches(input.question);
+-          const patch = patches[0];
+-          if (!patch) throw new Error("Expected patch to exist");
+-          const patched = applyEntityPatch(input, patch);
+-
+-          expect(patched.question).toBe("Sample boolean question?");
+-        });
+-
+-        it("should apply truncation patch correctly", () => {
+-          const longQuestion = "A".repeat(501);
+-          const input = { ...validQuizInput, question: longQuestion };
+-          const patches = suggestQuestionPatches(input.question);
+-          expect(patches.length).toBeGreaterThanOrEqual(1);
+-          const patched = applyEntityPatch(input, patches.at(0) ?? {});
+-
+-          expect(patched.question).toBe(`${"A".repeat(497)}...`);
+-          expect(patched.question?.length).toBe(500);
+-        });
+-      });
+-    });
+-
+-    describe("suggestExplanationPatches", () => {
+-      it.each([
+-        [
+-          "untrimmed explanation",
+-          "  Valid explanation  ",
+-          [{ explanation: "Valid explanation" }],
+-        ],
+-        ["exactly 1000 chars", "A".repeat(1000), []],
+-        [
+-          "1001 chars",
+-          "A".repeat(1001),
+-          [{ explanation: `${"A".repeat(997)}...` }],
+-        ],
+-        ["valid explanation", "Valid explanation", []],
+-        ["empty string", "", []],
+-        ["non-string input", 123, []],
+-      ])("should handle %s", (_desc, input, expected) => {
+-        const result = suggestExplanationPatches(input);
+-        expect(result).toEqual(expected);
+-      });
+-
+-      describe("Patch Application", () => {
+-        it("should apply truncation patch correctly", () => {
+-          const longExplanation = "A".repeat(1001);
+-          const input = { ...validQuizInput, explanation: longExplanation };
+-          const patches = suggestExplanationPatches(input.explanation);
+-          const patched = applyEntityPatch(input, patches.at(0) ?? {});
+-
+-          expect(patched.explanation).toBe(`${"A".repeat(997)}...`);
+-          expect(patched.explanation?.length).toBe(1000);
+-        });
+-      });
+-    });
+-
+-    describe("suggestIdFieldPatches", () => {
+-      it.each([
+-        ["id field", "id"],
+-        ["creatorId field", "creatorId"],
+-      ])("should handle %s", (_desc, fieldName) => {
+-        const suggester = suggestIdFieldPatches(fieldName as keyof QuizInput);
+-
+-        const testCases = [
+-          ["untrimmed id", "  valid-id  ", [{ [fieldName]: "valid-id" }]],
+-          ["empty after trim", "   ", []],
+-          ["valid id", "valid-id", []],
+-          ["non-string input", 123, []],
+-        ];
+-
+-        testCases.forEach(([_testDesc, input, expected]) => {
+-          const result = suggester(input);
+-          expect(result).toEqual(expected);
+-        });
+-      });
+-
+-      describe("Patch Application", () => {
+-        it("should apply id trim patch correctly", () => {
+-          const input = { ...validQuizInput, id: "  quiz-123  " };
+-          const patches = suggestIdFieldPatches("id")(input.id);
+-          const patched = applyEntityPatch(input, patches.at(0) ?? {});
+-
+-          expect(patched.id).toBe("quiz-123");
+-        });
+-      });
+-    });
+-
+-    describe("suggestAnswerTypePatches", () => {
+-      it.each([
+-        ["bool", "bool", [{ answerType: "boolean" }]],
+-        ["boolean", "boolean", [{ answerType: "boolean" }]],
+-        ["true_false", "true_false", [{ answerType: "boolean" }]],
+-        ["truefalse", "truefalse", [{ answerType: "boolean" }]],
+-        ["yes_no", "yes_no", [{ answerType: "boolean" }]],
+-        ["yesno", "yesno", [{ answerType: "boolean" }]],
+-        ["correct_incorrect", "correct_incorrect", [{ answerType: "boolean" }]],
+-        ["○×", "○×", [{ answerType: "boolean" }]],
+-        ["ox", "ox", [{ answerType: "boolean" }]],
+-        ["maru_batsu", "maru_batsu", [{ answerType: "boolean" }]],
+-        ["mixed case bool", "BOOL", [{ answerType: "boolean" }]],
+-        ["with spaces", " boolean ", [{ answerType: "boolean" }]],
+-        ["valid boolean", "boolean", [{ answerType: "boolean" }]],
+-        ["unknown type", "single_choice", []],
+-        ["non-string input", 123, []],
+-      ])("should handle %s", (_desc, input, expected) => {
+-        const result = suggestAnswerTypePatches(input);
+-        expect(result).toEqual(expected);
+-      });
+-
+-      describe("Patch Application", () => {
+-        it("should apply boolean correction patch correctly", () => {
+-          const input = { ...validQuizInput, answerType: "bool" };
+-          const patches = suggestAnswerTypePatches(input.answerType);
+-          const patched = applyEntityPatch(input, patches.at(0) ?? {});
+-
+-          expect(patched.answerType).toBe("boolean");
+-        });
+-      });
+-    });
+-
+-    describe("suggestStatusPatches", () => {
+-      it.each([
+-        ["pending", "pending", [{ status: "pending_approval" }]],
+-        ["waiting", "waiting", [{ status: "pending_approval" }]],
+-        ["draft", "draft", [{ status: "pending_approval" }]],
+-        ["approve", "approve", [{ status: "approved" }]],
+-        ["accept", "accept", [{ status: "approved" }]],
+-        ["published", "published", [{ status: "approved" }]],
+-        ["reject", "reject", [{ status: "rejected" }]],
+-        ["decline", "decline", [{ status: "rejected" }]],
+-        ["denied", "denied", [{ status: "rejected" }]],
+-        ["mixed case", "PENDING", [{ status: "pending_approval" }]],
+-        ["with spaces", " approve ", [{ status: "approved" }]],
+-        [
+-          "pending_approval contains pending",
+-          "pending_approval",
+-          [{ status: "pending_approval" }],
+-        ],
+-        ["unknown status", "unknown_status", []],
+-        ["non-string input", 123, []],
+-      ])("should handle %s", (_desc, input, expected) => {
+-        const result = suggestStatusPatches(input);
+-        expect(result).toEqual(expected);
+-      });
+-
+-      describe("Patch Application", () => {
+-        it("should apply status correction patch correctly", () => {
+-          const input = { ...validQuizInput, status: "pending" };
+-          const patches = suggestStatusPatches(input.status);
+-          const patched = applyEntityPatch(input, patches.at(0) ?? {});
+-
+-          expect(patched.status).toBe("pending_approval");
+-        });
+-      });
+-    });
+-
+-    describe("suggestSolutionPatches", () => {
+-      it("should handle null solution", () => {
+-        const mockTimestamp = 1234567890;
+-        vi.spyOn(Date, "now").mockReturnValue(mockTimestamp);
+-
+-        const result = suggestSolutionPatches(null);
+-        expect(result).toEqual([
+-          {
+-            solution: {
+-              id: `solution-${mockTimestamp}`,
+-              value: false,
+-            },
+-          },
+-        ]);
+-
+-        vi.restoreAllMocks();
+-      });
+-
+-      it("should handle undefined solution", () => {
+-        const mockTimestamp = 1234567890;
+-        vi.spyOn(Date, "now").mockReturnValue(mockTimestamp);
+-
+-        const result = suggestSolutionPatches(undefined);
+-        expect(result).toEqual([
+-          {
+-            solution: {
+-              id: `solution-${mockTimestamp}`,
+-              value: false,
+-            },
+-          },
+-        ]);
+-
+-        vi.restoreAllMocks();
+-      });
+-
+-      it("should handle invalid solution object", () => {
+-        const mockTimestamp = 1234567890;
+-        vi.spyOn(Date, "now").mockReturnValue(mockTimestamp);
+-
+-        const invalidSolution = { invalidField: "test" };
+-        const result = suggestSolutionPatches(invalidSolution);
+-
+-        expect(result).toEqual([
+-          {
+-            solution: {
+-              id: `solution-${mockTimestamp}`,
+-              value: false,
+-            },
+-          },
+-        ]);
+-
+-        vi.restoreAllMocks();
+-      });
+-
+-      it("should handle solution with invalid id", () => {
+-        const mockTimestamp = 1234567890;
+-        vi.spyOn(Date, "now").mockReturnValue(mockTimestamp);
+-
+-        const solutionWithInvalidId = { id: 123, value: true };
+-        const result = suggestSolutionPatches(solutionWithInvalidId);
+-
+-        expect(result).toEqual([
+-          {
+-            solution: {
+-              id: `solution-${mockTimestamp}`,
+-              value: true,
+-            },
+-          },
+-        ]);
+-
+-        vi.restoreAllMocks();
+-      });
+-
+-      it("should handle solution with valid id but invalid value", () => {
+-        const solutionWithInvalidValue = { id: "valid-id", value: "true" };
+-        const result = suggestSolutionPatches(solutionWithInvalidValue);
+-
+-        expect(result).toEqual([
+-          {
+-            solution: {
+-              id: "valid-id",
+-              value: true,
+-            },
+-          },
+-        ]);
+-      });
+-
+-      it("should handle solution with whitespace id", () => {
+-        const solutionWithWhitespaceId = {
+-          id: "  solution-123  ",
+-          value: false,
+-        };
+-        const result = suggestSolutionPatches(solutionWithWhitespaceId);
+-
+-        // SolutionId accepts whitespace, so no patch should be suggested for valid solution
+-        expect(result).toEqual([]);
+-      });
+-
+-      it("should not suggest patch for valid solution", () => {
+-        const validSolution = { id: "solution-123", value: true };
+-        const result = suggestSolutionPatches(validSolution);
+-        expect(result).toEqual([]);
+-      });
+-
+-      describe("Patch Application", () => {
+-        it("should apply default solution patch correctly", () => {
+-          const mockTimestamp = 1234567890;
+-          vi.spyOn(Date, "now").mockReturnValue(mockTimestamp);
+-
+-          const input = { ...validQuizInput, solution: null };
+-          const patches = suggestSolutionPatches(input.solution);
+-          const patched = applyEntityPatch(input, patches.at(0) ?? {});
+-
+-          expect(patched.solution).toEqual({
+-            id: `solution-${mockTimestamp}`,
+-            value: false,
+-          });
+-
+-          vi.restoreAllMocks();
+-        });
+-
+-        it("should apply solution correction patch correctly", () => {
+-          const input = {
+-            ...validQuizInput,
+-            solution: { id: "  solution-123  ", value: "true" },
+-          };
+-          const patches = suggestSolutionPatches(input.solution);
+-          const patched = applyEntityPatch(input, patches.at(0) ?? {});
+-
+-          expect(patched.solution).toEqual({
+-            id: "solution-123",
+-            value: true,
+-          });
+-        });
+-      });
+-    });
+-
+-    describe("suggestAnswerTypeSolutionConsistencyPatches", () => {
+-      it("should suggest answerType correction when solution exists but answerType is not boolean", () => {
+-        const quiz = {
+-          answerType: "single_choice" as "boolean",
+-          solution: { id: "solution-123", value: true },
+-        };
+-        const result = suggestAnswerTypeSolutionConsistencyPatches(quiz);
+-        expect(result).toEqual([{ answerType: "boolean" }]);
+-      });
+-
+-      it("should suggest solution when answerType is boolean but no solution", () => {
+-        const mockTimestamp = 1234567890;
+-        vi.spyOn(Date, "now").mockReturnValue(mockTimestamp);
+-
+-        const quiz = {
+-          answerType: "boolean" as const,
+-          solution: undefined as unknown as BooleanSolutionData,
+-        };
+-        const result = suggestAnswerTypeSolutionConsistencyPatches(quiz);
+-        expect(result).toEqual([
+-          {
+-            solution: {
+-              id: `solution-${mockTimestamp}`,
+-              value: false,
+-            },
+-          },
+-        ]);
+-
+-        vi.restoreAllMocks();
+-      });
+-
+-      it("should not suggest patches when answerType and solution are consistent", () => {
+-        const quiz = {
+-          answerType: "boolean" as const,
+-          solution: { id: "solution-123", value: true },
+-        };
+-        const result = suggestAnswerTypeSolutionConsistencyPatches(quiz);
+-        expect(result).toEqual([]);
+-      });
+-
+-      it("should not suggest patches when no answerType or solution", () => {
+-        const quiz = {};
+-        const result = suggestAnswerTypeSolutionConsistencyPatches(quiz);
+-        expect(result).toEqual([]);
+-      });
+-
+-      describe("Patch Application", () => {
+-        it("should apply answerType consistency patch correctly", () => {
+-          const input = {
+-            ...validQuizInput,
+-            answerType: "single_choice" as "boolean",
+-          };
+-          const patches = suggestAnswerTypeSolutionConsistencyPatches(input);
+-          const patched = applyEntityPatch(input, patches.at(0) ?? {});
+-
+-          expect(patched.answerType).toBe("boolean");
+-        });
+-
+-        it("should apply solution consistency patch correctly", () => {
+-          const mockTimestamp = 1234567890;
+-          vi.spyOn(Date, "now").mockReturnValue(mockTimestamp);
+-
+-          const input = {
+-            ...validQuizInput,
+-            solution: undefined as unknown as BooleanSolutionData,
+-          };
+-          const patches = suggestAnswerTypeSolutionConsistencyPatches(input);
+-          const patched = applyEntityPatch(input, patches.at(0) ?? {});
+-
+-          expect(patched.solution).toEqual({
+-            id: `solution-${mockTimestamp}`,
+-            value: false,
+-          });
+-
+-          vi.restoreAllMocks();
+-        });
+-      });
+-    });
+-  });
+-
+   describe("Integrated Patch Suggester", () => {
+     describe("suggestQuizPatches", () => {
+       it("should return empty array for non-object input", () => {
+         const issues: Issue[] = [
+```
+
+## Hint
+
+ミューテータ "BlockStatement" による置換。
+
+## Instruction
+
+このサバイブ・ミューテーションを失敗させる最小テストを設計してください。

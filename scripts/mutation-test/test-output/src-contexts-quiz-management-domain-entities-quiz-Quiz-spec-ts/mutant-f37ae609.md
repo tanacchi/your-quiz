@@ -1,0 +1,579 @@
+# Mutant f37ae609 Report
+
+**File**: src/contexts/quiz-management/domain/entities/quiz/Quiz.spec.ts
+**Mutator**: BlockStatement
+**Original ID**: 1095
+**Stable ID**: f37ae609
+**Location**: L252:33–L795:4
+
+## Diff
+
+```diff
+Index: src/contexts/quiz-management/domain/entities/quiz/Quiz.spec.ts
+===================================================================
+--- src/contexts/quiz-management/domain/entities/quiz/Quiz.spec.ts	original
++++ src/contexts/quiz-management/domain/entities/quiz/Quiz.spec.ts	mutated #1095
+@@ -248,553 +248,10 @@
+       });
+     });
+   });
+ 
+-  describe("Draft Usage", () => {
+-    it("should work with Draft pattern", () => {
+-      const draft = new Quiz.Draft();
+-      draft.update("question", "Draft question: Is this true?");
+-      draft.with({
+-        answerType: "boolean",
+-        solution: {
+-          id: "sol-draft",
+-          value: false,
+-        },
+-        id: "quiz-draft",
+-        creatorId: "creator-draft",
+-        status: "pending_approval",
+-        createdAt: "2023-12-01 10:00:00",
+-      });
++  describe("Draft Usage", () => {});
+ 
+-      expect(draft.hasErrors()).toBe(false);
+-
+-      const entityResult = draft.commit();
+-      expect(entityResult.isOk()).toBe(true);
+-
+-      if (entityResult.isOk()) {
+-        const quizEntity = entityResult.value;
+-        expect(quizEntity.get("question")).toBe(
+-          "Draft question: Is this true?",
+-        );
+-        expect(quizEntity.get("answerType")).toBe("boolean");
+-        expect(quizEntity.getSolution().get("value")).toBe(false);
+-      }
+-    });
+-
+-    it("should handle validation errors in draft", () => {
+-      const draft = new Quiz.Draft();
+-      draft.update("question", ""); // Invalid
+-      draft.update("answerType", "boolean");
+-
+-      expect(draft.hasErrors()).toBe(true);
+-
+-      const entityResult = draft.commit();
+-      expect(entityResult.isErr()).toBe(true);
+-    });
+-
+-    it("should provide patches for draft errors", () => {
+-      const draft = new Quiz.Draft();
+-      draft.update("question", "  "); // Whitespace only
+-      draft.update("answerType", "bool" as unknown as "boolean"); // Typo for testing
+-
+-      expect(draft.hasErrors()).toBe(true);
+-
+-      const patches = draft.getPatches();
+-      expect(patches.length).toBeGreaterThan(0);
+-    });
+-
+-    describe("Quiz.fromDraft Method", () => {
+-      describe("Successful Conversion", () => {
+-        it("should create Quiz entity from valid draft", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-from-draft",
+-            question: "Is Rust a systems programming language?",
+-            answerType: "boolean",
+-            solution: {
+-              id: "solution-rust",
+-              value: true,
+-            },
+-            explanation:
+-              "Rust is designed for systems programming with memory safety",
+-            status: "pending_approval",
+-            creatorId: "creator-rust",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          const result = Quiz.fromDraft(draft);
+-          expect(result.isOk()).toBe(true);
+-
+-          if (result.isOk()) {
+-            const quiz = result.value;
+-            expect(quiz.get("id")).toBe("quiz-from-draft");
+-            expect(quiz.get("question")).toBe(
+-              "Is Rust a systems programming language?",
+-            );
+-            expect(quiz.get("answerType")).toBe("boolean");
+-            expect(quiz.getSolution().get("value")).toBe(true);
+-            expect(quiz.get("explanation")).toBe(
+-              "Rust is designed for systems programming with memory safety",
+-            );
+-            expect(quiz.get("status")).toBe("pending_approval");
+-          }
+-        });
+-
+-        it("should work with incrementally built draft", () => {
+-          const draft = new Quiz.Draft();
+-
+-          // Build draft step by step
+-          draft.update("id", "quiz-incremental");
+-          draft.update("question", "Can TypeScript catch runtime errors?");
+-          draft.update("answerType", "boolean");
+-          draft.update("solution", {
+-            id: "solution-ts",
+-            value: false,
+-          });
+-          draft.update("status", "pending_approval");
+-          draft.update("creatorId", "creator-ts");
+-          draft.update("createdAt", "2023-12-01 10:00:00");
+-
+-          expect(draft.hasErrors()).toBe(false);
+-
+-          const result = Quiz.fromDraft(draft);
+-          expect(result.isOk()).toBe(true);
+-
+-          if (result.isOk()) {
+-            const quiz = result.value;
+-            expect(quiz.get("question")).toBe(
+-              "Can TypeScript catch runtime errors?",
+-            );
+-            expect(quiz.getSolution().get("value")).toBe(false);
+-          }
+-        });
+-
+-        it("should create quiz with business logic methods working", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-business",
+-            question: "Is this quiz ready for approval?",
+-            answerType: "boolean",
+-            solution: { id: "sol-business", value: true },
+-            status: "pending_approval",
+-            creatorId: "creator-business",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          const result = Quiz.fromDraft(draft);
+-          expect(result.isOk()).toBe(true);
+-
+-          if (result.isOk()) {
+-            const quiz = result.value;
+-            expect(quiz.canBeUpdated()).toBe(true);
+-            expect(quiz.canBeDeleted()).toBe(true);
+-
+-            // Test approval workflow
+-            const approvedResult = quiz.approve("2023-12-02 10:00:00");
+-            expect(approvedResult.isOk()).toBe(true);
+-
+-            if (approvedResult.isOk()) {
+-              const approvedQuiz = approvedResult.value;
+-              expect(approvedQuiz.get("status")).toBe("approved");
+-              expect(approvedQuiz.canBeUpdated()).toBe(false);
+-            }
+-          }
+-        });
+-      });
+-
+-      describe("Error Handling", () => {
+-        it("should handle invalid draft data", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-invalid",
+-            question: "", // Invalid empty question
+-            answerType: "boolean",
+-            solution: { id: "sol-invalid", value: true },
+-            status: "pending_approval",
+-            creatorId: "creator-invalid",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          const result = Quiz.fromDraft(draft);
+-          expect(result.isErr()).toBe(true);
+-
+-          if (result.isErr()) {
+-            expect(result.error.issues).toHaveLength(1);
+-            expect(result.error.issues[0]?.path[0]).toBe("question");
+-            expect(result.error.patches.length).toBeGreaterThan(0);
+-          }
+-        });
+-
+-        it("should handle missing required fields", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-missing",
+-            question: "Valid question?",
+-            answerType: "boolean",
+-            // Missing solution
+-            status: "pending_approval",
+-            creatorId: "creator-missing",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          const result = Quiz.fromDraft(draft);
+-          expect(result.isErr()).toBe(true);
+-
+-          if (result.isErr()) {
+-            const solutionIssue = result.error.issues.find(
+-              (issue) => issue.path[0] === "solution",
+-            );
+-            expect(solutionIssue).toBeDefined();
+-          }
+-        });
+-
+-        it("should handle cross-field validation errors", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-cross-validation",
+-            question: "Valid question?",
+-            answerType: "boolean",
+-            solution: { id: "sol-cross", value: true },
+-            status: "approved", // Invalid without approvedAt
+-            creatorId: "creator-cross",
+-            createdAt: "2023-12-01 10:00:00",
+-            // Missing approvedAt for approved status
+-          });
+-
+-          const result = Quiz.fromDraft(draft);
+-          expect(result.isErr()).toBe(true);
+-
+-          if (result.isErr()) {
+-            const approvedAtIssue = result.error.issues.find(
+-              (issue) => issue.path[0] === "approvedAt",
+-            );
+-            expect(approvedAtIssue).toBeDefined();
+-          }
+-        });
+-      });
+-
+-      describe("Patch System Integration", () => {
+-        it("should work with patch application using applyPatches", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-patches",
+-            question: "   ", // Invalid whitespace-only question
+-            answerType: "bool" as unknown as "boolean", // Invalid answerType
+-            solution: { id: "sol-patches", value: true },
+-            status: "pending_approval", // Valid status
+-            creatorId: "creator-patches",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          expect(draft.hasErrors()).toBe(true);
+-
+-          // Get patches and apply them using applyPatches method
+-          const patches = draft.getPatches();
+-          expect(patches.length).toBeGreaterThan(0);
+-
+-          draft.applyPatches(patches);
+-
+-          // After applying patches, errors should be reduced or fixed
+-          const postPatchResult = Quiz.fromDraft(draft);
+-
+-          // The patches should improve the validation state
+-          if (postPatchResult.isErr()) {
+-            // If still errors, they should be fewer than before
+-            expect(postPatchResult.error.issues.length).toBeLessThan(3);
+-          } else {
+-            // Or completely fixed
+-            expect(postPatchResult.isOk()).toBe(true);
+-          }
+-        });
+-
+-        it("should handle multiple patch applications", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-multi-patches",
+-            question: "  ",
+-            answerType: "bool" as unknown as "boolean",
+-            solution: { id: "sol-multi-null", value: true },
+-            status: "pending_approval",
+-            creatorId: "creator-multi",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          let iterationCount = 0;
+-          const maxIterations = 5;
+-
+-          // Apply patches iteratively until no more errors or max iterations
+-          while (draft.hasErrors() && iterationCount < maxIterations) {
+-            const patches = draft.getPatches();
+-            if (patches.length === 0) break;
+-
+-            draft.applyPatches(patches);
+-            iterationCount++;
+-          }
+-
+-          expect(iterationCount).toBeLessThanOrEqual(maxIterations);
+-
+-          // Should eventually reach a stable state
+-          const finalResult = Quiz.fromDraft(draft);
+-
+-          // Either successful or with manageable number of errors
+-          if (finalResult.isErr()) {
+-            expect(finalResult.error.issues.length).toBeLessThanOrEqual(2);
+-          }
+-        });
+-
+-        it("should preserve valid fields when applying patches", () => {
+-          const draft = new Quiz.Draft();
+-          const validData = {
+-            id: "quiz-preserve",
+-            question: "Valid question to preserve?",
+-            answerType: "boolean" as const,
+-            solution: { id: "sol-preserve", value: true },
+-            status: "pending_approval" as const,
+-            creatorId: "creator-preserve",
+-            createdAt: "2023-12-01 10:00:00",
+-          };
+-
+-          draft.with({
+-            ...validData,
+-            explanation: undefined, // This might trigger patches in some cases
+-          });
+-
+-          const originalQuestion = draft.get("question");
+-          const originalId = draft.get("id");
+-          const originalSolution = draft.get("solution");
+-
+-          if (draft.hasErrors()) {
+-            const patches = draft.getPatches();
+-            draft.applyPatches(patches);
+-          }
+-
+-          // Valid fields should be preserved
+-          expect(draft.get("question")).toBe(originalQuestion);
+-          expect(draft.get("id")).toBe(originalId);
+-          expect(draft.get("solution")).toEqual(originalSolution);
+-        });
+-      });
+-
+-      describe("Edge Cases", () => {
+-        it("should handle empty draft", () => {
+-          const draft = new Quiz.Draft();
+-
+-          const result = Quiz.fromDraft(draft);
+-          expect(result.isErr()).toBe(true);
+-
+-          if (result.isErr()) {
+-            // Should have multiple validation errors for missing required fields
+-            expect(result.error.issues.length).toBeGreaterThan(0);
+-            expect(result.error.patches.length).toBeGreaterThan(0);
+-          }
+-        });
+-
+-        it("should handle partially filled draft", () => {
+-          const draft = new Quiz.Draft();
+-          draft.update("question", "Partial question?");
+-          draft.update("answerType", "boolean");
+-          // Missing other required fields
+-
+-          const result = Quiz.fromDraft(draft);
+-          expect(result.isErr()).toBe(true);
+-
+-          if (result.isErr()) {
+-            // Should suggest patches for missing fields
+-            expect(result.error.patches.length).toBeGreaterThan(0);
+-          }
+-        });
+-
+-        it("should be equivalent to draft.commit()", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-equivalent",
+-            question: "Are fromDraft and commit equivalent?",
+-            answerType: "boolean",
+-            solution: { id: "sol-equivalent", value: true },
+-            status: "pending_approval",
+-            creatorId: "creator-equivalent",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          const fromDraftResult = Quiz.fromDraft(draft);
+-          const commitResult = draft.commit();
+-
+-          // Both methods should return identical results
+-          expect(fromDraftResult.isOk()).toBe(commitResult.isOk());
+-
+-          if (fromDraftResult.isOk() && commitResult.isOk()) {
+-            const fromDraftQuiz = fromDraftResult.value;
+-            const commitQuiz = commitResult.value;
+-
+-            expect(fromDraftQuiz.get("id")).toBe(commitQuiz.get("id"));
+-            expect(fromDraftQuiz.get("question")).toBe(
+-              commitQuiz.get("question"),
+-            );
+-            expect(fromDraftQuiz.get("answerType")).toBe(
+-              commitQuiz.get("answerType"),
+-            );
+-            expect(fromDraftQuiz.getSolution().get("value")).toBe(
+-              commitQuiz.getSolution().get("value"),
+-            );
+-          }
+-        });
+-      });
+-    });
+-
+-    describe("DraftBase Methods", () => {
+-      describe("applyPatches method", () => {
+-        it("should apply single patch correctly", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-single-patch",
+-            question: "   ", // Whitespace only - will need patch
+-            answerType: "boolean",
+-            solution: { id: "sol-single", value: true },
+-            status: "pending_approval",
+-            creatorId: "creator-single",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          expect(draft.hasErrors()).toBe(true);
+-
+-          const patches = draft.getPatches();
+-          const questionPatch = patches.find(
+-            (patch) =>
+-              typeof patch === "object" &&
+-              patch !== null &&
+-              "question" in patch,
+-          );
+-          expect(questionPatch).toBeDefined();
+-
+-          if (questionPatch) {
+-            draft.applyPatches([questionPatch]);
+-
+-            // After applying the question patch, question should be fixed
+-            const updatedQuestion = draft.get("question");
+-            expect(updatedQuestion).not.toBe("   ");
+-            expect(typeof updatedQuestion).toBe("string");
+-            if (typeof updatedQuestion === "string") {
+-              expect(updatedQuestion.trim().length).toBeGreaterThan(0);
+-            }
+-          }
+-        });
+-
+-        it("should apply multiple patches correctly", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-multi-patch",
+-            question: "  ", // Invalid
+-            answerType: "bool" as unknown as "boolean", // Invalid
+-            solution: { id: "sol-multi", value: true },
+-            status: "pending_approval", // Invalid
+-            creatorId: "creator-multi",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          const initialErrorCount = draft.getIssues().length;
+-          expect(initialErrorCount).toBeGreaterThan(0);
+-
+-          const patches = draft.getPatches();
+-          expect(patches.length).toBeGreaterThan(0);
+-
+-          draft.applyPatches(patches);
+-
+-          // After applying all patches, error count should be reduced
+-          const finalErrorCount = draft.getIssues().length;
+-          expect(finalErrorCount).toBeLessThanOrEqual(initialErrorCount);
+-        });
+-
+-        it("should handle empty patches array", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-empty-patches",
+-            question: "Valid question?",
+-            answerType: "boolean",
+-            solution: { id: "sol-empty", value: true },
+-            status: "pending_approval",
+-            creatorId: "creator-empty",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          const originalState = { ...draft.state };
+-
+-          // Apply empty patches array
+-          draft.applyPatches([]);
+-
+-          // State should remain unchanged
+-          expect(draft.state).toEqual(originalState);
+-        });
+-
+-        it("should automatically revalidate after applying patches", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-revalidate",
+-            question: "", // Invalid
+-            answerType: "boolean",
+-            solution: { id: "sol-revalidate", value: true },
+-            status: "pending_approval",
+-            creatorId: "creator-revalidate",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          expect(draft.hasErrors()).toBe(true);
+-
+-          const patches = draft.getPatches();
+-          draft.applyPatches(patches);
+-
+-          // applyPatches should trigger revalidation automatically
+-          const issuesAfterPatches = draft.getIssues();
+-          expect(Array.isArray(issuesAfterPatches)).toBe(true);
+-        });
+-
+-        it("should work with object patches", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-object-patch",
+-            question: "Object patch test?",
+-            answerType: "boolean",
+-            solution: { id: "sol-obj", value: true },
+-            status: "pending_approval",
+-            creatorId: "creator-obj",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          // Create an object patch that modifies explanation
+-          const objectPatch = {
+-            explanation: "Added by object patch",
+-          };
+-
+-          draft.applyPatches([objectPatch]);
+-
+-          expect(draft.get("explanation")).toBe("Added by object patch");
+-        });
+-
+-        it("should handle patch application errors gracefully", () => {
+-          const draft = new Quiz.Draft();
+-          draft.with({
+-            id: "quiz-patch-error",
+-            question: "Patch error test?",
+-            answerType: "boolean",
+-            solution: { id: "sol-error", value: true },
+-            status: "pending_approval",
+-            creatorId: "creator-error",
+-            createdAt: "2023-12-01 10:00:00",
+-          });
+-
+-          // Should not crash when empty patches array is provided
+-          expect(() => {
+-            draft.applyPatches([]);
+-          }).not.toThrow();
+-
+-          // Should not crash when valid patch is provided
+-          expect(() => {
+-            draft.applyPatches([{ explanation: "Test explanation" }]);
+-          }).not.toThrow();
+-        });
+-      });
+-    });
+-  });
+-
+   describe("Patch System", () => {
+     it("should suggest question fixes", () => {
+       const result = Quiz.from({
+         ...validQuizData,
+```
+
+## Hint
+
+ミューテータ "BlockStatement" による置換。
+
+## Instruction
+
+このサバイブ・ミューテーションを失敗させる最小テストを設計してください。

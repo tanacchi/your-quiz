@@ -1,0 +1,35 @@
+# Mutant 7f9ad189 Report
+
+**File**: src/contexts/quiz-management/domain/entities/tag/tag-schema.spec.ts
+**Mutator**: ConditionalExpression
+**Original ID**: 7382
+**Stable ID**: 7f9ad189
+**Location**: L617:11–L617:25
+
+## Diff
+
+```diff
+Index: src/contexts/quiz-management/domain/entities/tag/tag-schema.spec.ts
+===================================================================
+--- src/contexts/quiz-management/domain/entities/tag/tag-schema.spec.ts	original
++++ src/contexts/quiz-management/domain/entities/tag/tag-schema.spec.ts	mutated #7382
+@@ -613,9 +613,9 @@
+ 
+       const result = TagSchema.safeParse(unicodeTag);
+       expect(result.success).toBe(true);
+ 
+-      if (result.success) {
++      if (false) {
+         expect(result.data.name).toContain("C++");
+         expect(result.data.name).toContain("プログラミング");
+         expect(result.data.name).toContain("🚀");
+       }
+```
+
+## Hint
+
+条件式が変更されています。
+
+## Instruction
+
+このサバイブ・ミューテーションを失敗させる最小テストを設計してください。
