@@ -94,10 +94,11 @@ export class ListQuizzesUseCase {
         );
       })
       .map((result) => ({
-        ...result,
         items: result.items.map((quizSummary) =>
           this.toQuizListItem(quizSummary),
         ),
+        totalCount: result.totalCount,
+        hasMore: result.hasMore,
       }));
   }
 }

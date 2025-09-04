@@ -6,7 +6,8 @@
     "configFile": "vitest.config.ts"
   },
   "plugins": ["@stryker-mutator/vitest-runner"],
-  "mutate": ["src/shared/**/*.ts"],
+  "mutate": ["src/contexts/quiz-management/infrastructure/mappers/*.ts"],
+  "ignorePatterns": ["**/*.spec.ts"],
   "coverageAnalysis": "perTest",
   "reporters": ["progress", "json"],
   "jsonReporter": {
