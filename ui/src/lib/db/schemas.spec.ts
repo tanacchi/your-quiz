@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import type { Quiz } from "@/types/quiz";
 import {
   type AnswerRecord,
@@ -212,8 +213,19 @@ describe("schemas", () => {
     });
 
     describe("Quiz 型との等価性", () => {
-      it("z.infer が Quiz 型と一致する", () => {
-        expectTypeOf<typeof valid>().toEqualTypeOf<Quiz>();
+      it("必須フィールドの型が Quiz と一致する", () => {
+        // exactOptionalPropertyTypes 下では isOfflineAvailable の optional
+        // variance が Quiz（?: boolean）と z.infer（?: boolean | undefined）
+        // で異なる（zod の optional 推論の既知の制約）。その差異を除いた
+        // フィールドの一致を検証する。差異は QuizCacheRepository の
+        // toQuiz() で吸収する。
+        type QuizSchemaOutput = z.infer<typeof quizSchema>;
+        expectTypeOf<
+          Omit<QuizSchemaOutput, "isOfflineAvailable">
+        >().toEqualTypeOf<Omit<Quiz, "isOfflineAvailable">>();
+        expectTypeOf<QuizSchemaOutput["isOfflineAvailable"]>().toEqualTypeOf<
+          boolean | undefined
+        >();
       });
     });
   });
