@@ -43,7 +43,7 @@ Your QuizアプリケーションにおけるバックエンドAPIの包括的�
 
 ```text
 UI Flow: ホーム → 一覧 → 回答 → 結果
-API Flow: GET /api/quiz/v1/learning/published → POST /api/quiz/v1/learning/decks → GET /api/user/v1/sessions/:id → PUT /api/quiz/v1/learning/sessions/:id/answers
+API Flow: GET /api/quiz/v1/learning/published → POST /api/quiz/v1/learning/decks → GET /api/user/v1/sessions/:id → POST /api/quiz/v1/learning/sessions/:id/answers
 ```
 
 ### クイズ作成フロー
