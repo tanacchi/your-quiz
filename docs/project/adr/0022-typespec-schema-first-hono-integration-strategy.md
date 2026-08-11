@@ -172,7 +172,7 @@ Quiz APIの開発において、TypeSpecによるスキーマファースト開�
    
    const quizSchema = z.object({
      question: z.string(),
-     answerType: z.enum(["boolean", "free_text"]),
+     answerType: z.enum(["boolean", "free_text", "single_choice", "multiple_choice"]),
    }) satisfies z.ZodType<QuizRequest>;
    ```
 

@@ -250,7 +250,8 @@ GET    /api/quiz/v1/manage/drafts/mine
 ```typescript
 interface CreateDraftRequest {
   question?: string;
-  correctAnswer?: boolean;
+  answerType?: 'boolean' | 'free_text' | 'single_choice' | 'multiple_choice';
+  solution?: BooleanSolution | FreeTextSolution | SingleChoiceSolution | MultipleChoiceSolution;
   explanation?: string;
   tags?: string[];
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
