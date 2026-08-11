@@ -59,11 +59,7 @@
 - **UI変更**: Tinder UIからクリック式UIへの対応
 - **レスポンシブデザイン**: PC・タブレット画面サイズへの最適化
 
-### PWA（Progressive Web App）化
-
-- **実装時期**: 中期的な技術改善
-- **メリット**: オフライン対応、アプリライクな体験
-- **技術要件**: Service Worker、Cache API
+> PWA（Progressive Web App）化・オフライン同期は将来作業ではなく中核機能である（ADR-0003、ADR-0013、`docs/project/ui-design/1.00_overview.md`）。
 
 ## 5. コンテンツ管理機能
 
