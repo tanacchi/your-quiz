@@ -14,7 +14,7 @@ describe.todo("GetQuizUseCase", () => {
   let useCase: GetQuizUseCase;
   let mockRepository: IQuizRepository;
 
-  const mockQuizWithSolution: components["schemas"]["QuizWithSolution"] = {
+  const mockQuizWithSolution: components["schemas"]["QuizResponse"] = {
     id: "quiz-123",
     question: "What is TypeScript?",
     answerType: "single_choice",
@@ -79,7 +79,7 @@ describe.todo("GetQuizUseCase", () => {
 
       test("should handle quiz without optional fields", async () => {
         // Arrange
-        const minimalQuiz: components["schemas"]["QuizWithSolution"] = {
+        const minimalQuiz: components["schemas"]["QuizResponse"] = {
           id: "quiz-456",
           question: "Is JavaScript a programming language?",
           answerType: "boolean",

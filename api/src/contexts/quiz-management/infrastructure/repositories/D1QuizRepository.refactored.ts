@@ -8,9 +8,9 @@ import type { components } from "../../../../shared/types";
 import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import { D1QuizSummaryMapper } from "../mappers/D1QuizSummaryMapper";
+import { isQuizRow as isMapperQuizRow } from "../mappers/d1-types";
 import { D1QueryBuilder } from "./D1QueryBuilder";
 import { SolutionHandler } from "./SolutionHandler";
-import type { QuizRow } from "./types";
 import { isBasicQuizInfo, isCountResult, isQuizRow } from "./types";
 
 /**
@@ -44,16 +44,18 @@ export class D1QuizRepository implements IQuizRepository {
     return this.solutionHandler
       .createSolution(this.db, solution)
       .andThen((solutionId) => {
+        const explanation = quiz.get("explanation");
+        const approvedAt = quiz.get("approvedAt");
         const quizData = {
           id: quiz.get("id"),
           question: quiz.get("question"),
           answerType: quiz.get("answerType"),
           solutionId,
-          explanation: quiz.get("explanation"),
           status: quiz.get("status"),
           creatorId: quiz.get("creatorId"),
           createdAt: quiz.get("createdAt"),
-          approvedAt: quiz.get("approvedAt"),
+          ...(typeof explanation === "string" && { explanation }),
+          ...(typeof approvedAt === "string" && { approvedAt }),
         };
 
         const { sql, params } =
@@ -85,7 +87,7 @@ export class D1QuizRepository implements IQuizRepository {
    */
   findById(
     id: string,
-  ): ResultAsync<components["schemas"]["QuizWithSolution"], RepositoryError> {
+  ): ResultAsync<components["schemas"]["QuizResponse"], RepositoryError> {
     const { sql, params } =
       this.queryBuilder.buildFindByIdWithSolutionQuery(id);
 
@@ -147,7 +149,7 @@ export class D1QuizRepository implements IQuizRepository {
    */
   findMany(
     options: {
-      status?: components["schemas"]["QuizStatus"];
+      status?: components["schemas"]["QuizStatus"][];
       creatorId?: string | undefined;
       ids?: string[];
       limit?: number;
@@ -194,7 +196,7 @@ export class D1QuizRepository implements IQuizRepository {
       this.db
         .prepare(dataSql)
         .bind(...dataParams)
-        .all<QuizRow>(),
+        .all<Record<string, unknown>>(),
       (error) =>
         RepositoryErrorFactory.findFailed(
           "Quiz",
@@ -216,11 +218,11 @@ export class D1QuizRepository implements IQuizRepository {
           );
         }
 
-        const totalCount = (countResult as { total: number }).total;
+        const totalCount = countResult.total;
 
         // QuizSummaryエンティティへの変換
         const mappingResult = D1QuizSummaryMapper.fromRows(
-          dataResult.results.filter(isQuizRow),
+          dataResult.results.filter(isMapperQuizRow),
         );
 
         if (mappingResult.isErr()) {
@@ -325,7 +327,7 @@ export class D1QuizRepository implements IQuizRepository {
                 : new Error("Failed to fetch updated quiz"),
             ),
         ).andThen((updatedRow) => {
-          if (!updatedRow || !isQuizRow(updatedRow)) {
+          if (!updatedRow || !isMapperQuizRow(updatedRow)) {
             return ResultAsync.fromSafePromise(
               Promise.reject(
                 RepositoryErrorFactory.findFailed(

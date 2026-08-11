@@ -19,18 +19,13 @@ describe.todo("CreateQuizUseCase", () => {
     answerType: "single_choice",
     solution: {
       type: "single_choice",
-      id: "solution-1",
       choices: [
         {
-          id: "choice-1",
-          solutionId: "solution-1",
           text: "A programming language",
           orderIndex: 0,
           isCorrect: true,
         },
         {
-          id: "choice-2",
-          solutionId: "solution-1",
           text: "A framework",
           orderIndex: 1,
           isCorrect: false,
@@ -116,7 +111,6 @@ describe.todo("CreateQuizUseCase", () => {
           answerType: "boolean",
           solution: {
             type: "boolean",
-            id: "solution-2",
             value: true,
           },
         };
@@ -293,12 +287,12 @@ describe.todo("CreateQuizUseCase", () => {
         const result1 = await useCase.execute({
           question: "First question",
           answerType: "boolean",
-          solution: { type: "boolean", id: "solution-1", value: true },
+          solution: { type: "boolean", value: true },
         });
         const result2 = await useCase.execute({
           question: "Second question",
           answerType: "boolean",
-          solution: { type: "boolean", id: "solution-2", value: false },
+          solution: { type: "boolean", value: false },
         });
 
         // Assert

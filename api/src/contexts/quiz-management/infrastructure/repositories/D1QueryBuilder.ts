@@ -12,7 +12,7 @@ export namespace D1QueryBuilder {
    * クイズ検索用のSQLクエリとパラメータを構築
    */
   export function buildFindQuery(options: {
-    status?: components["schemas"]["QuizStatus"];
+    status?: components["schemas"]["QuizStatus"][];
     creatorId?: string | undefined;
     ids?: string[];
     limit?: number;
@@ -22,9 +22,11 @@ export namespace D1QueryBuilder {
     const params: D1QueryParam[] = [];
 
     // WHERE条件の構築
-    if (options.status) {
-      conditions.push("q.status = ?");
-      params.push(options.status);
+    if (options.status && options.status.length > 0) {
+      conditions.push(
+        `q.status IN (${options.status.map(() => "?").join(", ")})`,
+      );
+      params.push(...options.status);
     }
     if (options.creatorId) {
       conditions.push("q.creator_id = ?");
@@ -59,7 +61,7 @@ export namespace D1QueryBuilder {
    * クイズ件数取得用のSQLクエリとパラメータを構築
    */
   export function buildCountQuery(options: {
-    status?: components["schemas"]["QuizStatus"];
+    status?: components["schemas"]["QuizStatus"][];
     creatorId?: string | undefined;
     ids?: string[];
   }): { sql: string; params: D1QueryParam[] } {
@@ -67,9 +69,11 @@ export namespace D1QueryBuilder {
     const params: D1QueryParam[] = [];
 
     // WHERE条件の構築（findQueryと同じロジック）
-    if (options.status) {
-      conditions.push("q.status = ?");
-      params.push(options.status);
+    if (options.status && options.status.length > 0) {
+      conditions.push(
+        `q.status IN (${options.status.map(() => "?").join(", ")})`,
+      );
+      params.push(...options.status);
     }
     if (options.creatorId) {
       conditions.push("q.creator_id = ?");

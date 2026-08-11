@@ -130,7 +130,7 @@ export namespace SolutionHandler {
   /**
    * 選択肢を作成する
    */
-  function _createChoices(
+  export function createChoices(
     db: D1Database,
     solutionId: string,
     choices: components["schemas"]["Choice"][],
@@ -265,7 +265,9 @@ export namespace SolutionHandler {
   /**
    * QuizRowデータからSolutionオブジェクトにマッピングする
    */
-  function _mapRowToSolution(row: QuizRow): components["schemas"]["Solution"] {
+  export function mapRowToSolution(
+    row: QuizRow,
+  ): components["schemas"]["Solution"] {
     if (!isValidAnswerType(row.answer_type)) {
       throw new Error(`Invalid answer type: ${row.answer_type}`);
     }
@@ -333,7 +335,7 @@ export namespace SolutionHandler {
   /**
    * JSON文字列から選択肢配列をパースする
    */
-  function _parseChoices(
+  export function parseChoices(
     choicesJson?: string,
   ): components["schemas"]["Choice"][] {
     if (!choicesJson) {
@@ -370,9 +372,12 @@ export namespace SolutionHandler {
    */
   export function mapRowToQuizWithSolution(
     row: QuizRow,
-  ): components["schemas"]["QuizWithSolution"] {
+  ): components["schemas"]["QuizResponse"] {
     if (!isValidQuizStatus(row.status)) {
       throw new Error(`Invalid quiz status: ${row.status}`);
+    }
+    if (!isValidAnswerType(row.answer_type)) {
+      throw new Error(`Invalid answer type: ${row.answer_type}`);
     }
 
     const solution = SolutionHandler.mapRowToSolution(row);

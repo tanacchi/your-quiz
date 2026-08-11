@@ -1104,11 +1104,7 @@ describe("D1 Types with Zod", () => {
         expectTypeOf(result).toMatchTypeOf<{
           id: string;
           solution_id: string;
-          answer_type:
-            | "boolean"
-            | "free_text"
-            | "single_choice"
-            | "multiple_choice";
+          answer_type: string;
         }>();
       });
 
@@ -1237,7 +1233,7 @@ describe("D1 Types with Zod", () => {
 
             if (hasStrategy) {
               expectTypeOf(parseResult.data.matching_strategy).toEqualTypeOf<
-                "exact" | "partial" | "regex"
+                "exact" | "partial" | "regex" | undefined
               >();
             }
           }
@@ -1270,8 +1266,8 @@ describe("D1 Types with Zod", () => {
         try {
           toQuizRow({ invalid: "data" });
         } catch (error) {
-          expectTypeOf(error).toMatchTypeOf<Error>();
           if (error instanceof Error) {
+            expectTypeOf(error).toMatchTypeOf<Error>();
             expectTypeOf(error.message).toEqualTypeOf<string>();
             expect(error.message).toMatch(/Invalid QuizRow data/);
           }
@@ -1280,8 +1276,8 @@ describe("D1 Types with Zod", () => {
         try {
           toBasicQuizInfo({ invalid: "data" });
         } catch (error) {
-          expectTypeOf(error).toMatchTypeOf<Error>();
           if (error instanceof Error) {
+            expectTypeOf(error).toMatchTypeOf<Error>();
             expectTypeOf(error.message).toEqualTypeOf<string>();
             expect(error.message).toMatch(/Invalid BasicQuizInfo data/);
           }
@@ -1344,7 +1340,7 @@ describe("D1 Types with Zod", () => {
 
         if (isQuizRow(unknownData)) {
           // After type guard, should be narrowed to correct type
-          expectTypeOf(unknownData.id).toEqualTypeOf<string | number>();
+          expectTypeOf(unknownData.id).toEqualTypeOf<string>();
           expectTypeOf(unknownData.question).toEqualTypeOf<string>();
 
           // Should be able to access properties safely

@@ -41,7 +41,7 @@ describe.todo("ListQuizzesUseCase", () => {
   };
 
   const validQuery: ListQuizzesQuery = {
-    status: "approved",
+    status: ["approved"],
     limit: 10,
     offset: 0,
   };
@@ -130,7 +130,7 @@ describe.todo("ListQuizzesUseCase", () => {
           });
           expect(result.value.items[1]?.explanation).toBeUndefined();
           expect(result.value.items[1]?.approvedAt).toBeUndefined();
-          expect(result.value.items[1]?.tags).toBeUndefined();
+          expect(result.value.items[1]?.tagIds).toHaveLength(0);
         }
         expect(mockRepository.findMany).toHaveBeenCalledOnce();
       });
@@ -138,9 +138,9 @@ describe.todo("ListQuizzesUseCase", () => {
       test("should handle query with all parameters", async () => {
         // Arrange
         const complexQuery: ListQuizzesQuery = {
-          status: "pending_approval",
+          status: ["pending_approval"],
           creatorId: "user-456",
-          ids: ["quiz-1", "quiz-2"],
+          quizId: ["quiz-1", "quiz-2"],
           limit: 20,
           offset: 10,
         };
@@ -323,7 +323,9 @@ describe.todo("ListQuizzesUseCase", () => {
           // Assert
           expect(result.isOk()).toBe(true);
           if (result.isOk()) {
-            expect(result.value.items[0]?.solution).toEqual(expectedSolution);
+            expect(result.value.items[0]).toMatchObject({
+              solution: expectedSolution,
+            });
           }
         },
       );
@@ -380,7 +382,7 @@ describe.todo("ListQuizzesUseCase", () => {
           const item = result.value.items[0];
           expect(item?.explanation).toBe("Full explanation");
           expect(item?.approvedAt).toBe("2024-01-02 12:00:00");
-          expect(item?.tags).toEqual(["tag1", "tag2", "tag3"]);
+          expect(item?.tagIds).toEqual(["tag1", "tag2", "tag3"]);
         }
       });
 
@@ -411,7 +413,7 @@ describe.todo("ListQuizzesUseCase", () => {
           const item = result.value.items[0];
           expect(item?.explanation).toBeUndefined();
           expect(item?.approvedAt).toBeUndefined();
-          expect(item?.tags).toBeUndefined();
+          expect(item?.tagIds).toHaveLength(0);
         }
       });
     });

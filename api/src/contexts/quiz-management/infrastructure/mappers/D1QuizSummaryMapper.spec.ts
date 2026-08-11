@@ -3,6 +3,26 @@ import { InternalServerError } from "../../../../shared/errors";
 import { D1QuizSummaryMapper } from "./D1QuizSummaryMapper";
 import type { QuizRow } from "./d1-types";
 
+function isFlexibleQuizRow(data: unknown): data is QuizRow {
+  if (typeof data !== "object" || data === null) return false;
+  return (
+    "id" in data &&
+    "question" in data &&
+    "answer_type" in data &&
+    "solution_id" in data &&
+    "status" in data &&
+    "creator_id" in data &&
+    "created_at" in data
+  );
+}
+
+function toQuizRowForTest(data: Record<string, unknown>): QuizRow {
+  if (!isFlexibleQuizRow(data)) {
+    throw new Error("Test data missing required QuizRow keys");
+  }
+  return data;
+}
+
 describe("D1QuizSummaryMapper", () => {
   const validQuizRow: QuizRow = {
     id: "quiz-123",
@@ -96,7 +116,11 @@ describe("D1QuizSummaryMapper", () => {
         // Arrange
         const rowWithAnswerType: QuizRow = {
           ...validQuizRow,
-          answer_type: answerType,
+          answer_type: answerType as
+            | "boolean"
+            | "free_text"
+            | "single_choice"
+            | "multiple_choice",
         };
 
         // Act
@@ -117,7 +141,7 @@ describe("D1QuizSummaryMapper", () => {
         // Arrange
         const rowWithStatus: QuizRow = {
           ...validQuizRow,
-          status,
+          status: status as "pending_approval" | "approved" | "rejected",
         };
 
         // Act
@@ -161,10 +185,10 @@ describe("D1QuizSummaryMapper", () => {
     describe("when QuizSummary creation fails", () => {
       test("should return InternalServerError for invalid data", () => {
         // Arrange - Create row with invalid answerType that would fail QuizSummary validation
-        const invalidRow: QuizRow = {
+        const invalidRow = {
           ...validQuizRow,
           answer_type: "invalid_type",
-        };
+        } as unknown as QuizRow;
 
         // Act
         const result = D1QuizSummaryMapper.fromRow(invalidRow);
@@ -182,10 +206,10 @@ describe("D1QuizSummaryMapper", () => {
 
       test("should return InternalServerError for invalid status", () => {
         // Arrange
-        const invalidRow: QuizRow = {
+        const invalidRow = {
           ...validQuizRow,
           status: "invalid_status",
-        };
+        } as unknown as QuizRow;
 
         // Act
         const result = D1QuizSummaryMapper.fromRow(invalidRow);
@@ -205,10 +229,10 @@ describe("D1QuizSummaryMapper", () => {
     describe("ArrowFunction mutation tests", () => {
       test("should ensure error mapping function creates proper InternalServerError", () => {
         // Arrange - Invalid answerType that will cause QuizSummary.from to fail
-        const invalidRow: QuizRow = {
+        const invalidRow = {
           ...validQuizRow,
           answer_type: "completely_invalid_type",
-        };
+        } as unknown as QuizRow;
 
         // Act
         const result = D1QuizSummaryMapper.fromRow(invalidRow);
@@ -225,16 +249,16 @@ describe("D1QuizSummaryMapper", () => {
             "Failed to create QuizSummary from row data",
           );
           expect(typeof result.error.details).toBe("string");
-          expect(result.error.details.length).toBeGreaterThan(0);
+          expect(result.error.details?.length).toBeGreaterThan(0);
         }
       });
 
       test("should verify error transformation logic in mapErr", () => {
         // Arrange - Another invalid case to test error mapping
-        const invalidRow: QuizRow = {
+        const invalidRow = {
           ...validQuizRow,
           status: "unknown_status_value",
-        };
+        } as unknown as QuizRow;
 
         // Act
         const result = D1QuizSummaryMapper.fromRow(invalidRow);
@@ -368,9 +392,9 @@ describe("D1QuizSummaryMapper", () => {
           expect(result.value.every((item) => typeof item === "object")).toBe(
             true,
           );
-          expect(result.value[0].get("id")).toBe("quiz-123");
-          expect(result.value[1].get("id")).toBe("quiz-456");
-          expect(result.value[2].get("id")).toBe("quiz-789");
+          expect(result.value[0]?.get("id")).toBe("quiz-123");
+          expect(result.value[1]?.get("id")).toBe("quiz-456");
+          expect(result.value[2]?.get("id")).toBe("quiz-789");
         }
       });
 
@@ -393,7 +417,7 @@ describe("D1QuizSummaryMapper", () => {
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
           expect(result.value).toHaveLength(1);
-          expect(result.value[0].get("id")).toBe("quiz-123");
+          expect(result.value[0]?.get("id")).toBe("quiz-123");
         }
       });
     });
@@ -427,7 +451,7 @@ describe("D1QuizSummaryMapper", () => {
           validQuizRow,
           { ...validQuizRow, question: "" }, // Invalid row 2
           { ...validQuizRow, id: "quiz-456" },
-          { ...validQuizRow, answer_type: "" }, // Invalid row 4
+          toQuizRowForTest({ ...validQuizRow, answer_type: "" }), // Invalid row 4
         ];
 
         // Act
@@ -450,7 +474,7 @@ describe("D1QuizSummaryMapper", () => {
         const allInvalidRows: QuizRow[] = [
           { ...validQuizRow, id: "" },
           { ...validQuizRow, question: "" },
-          { ...validQuizRow, answer_type: "" },
+          toQuizRowForTest({ ...validQuizRow, answer_type: "" }),
         ];
 
         // Act
@@ -485,8 +509,8 @@ describe("D1QuizSummaryMapper", () => {
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
           expect(result.value).toHaveLength(1000);
-          expect(result.value[0].get("id")).toBe("quiz-0");
-          expect(result.value[999].get("id")).toBe("quiz-999");
+          expect(result.value[0]?.get("id")).toBe("quiz-0");
+          expect(result.value[999]?.get("id")).toBe("quiz-999");
         }
       });
 
@@ -605,7 +629,7 @@ describe("D1QuizSummaryMapper", () => {
             expect(result.value).not.toContain("Stryker was here");
             expect(result.value[0]).toBeDefined();
             expect(typeof result.value[0]).toBe("object");
-            expect(result.value[0].get("id")).toBe("quiz-123");
+            expect(result.value[0]?.get("id")).toBe("quiz-123");
           }
         });
 
@@ -647,9 +671,9 @@ describe("D1QuizSummaryMapper", () => {
           expect(result.isOk()).toBe(true);
           if (result.isOk()) {
             expect(result.value).toHaveLength(3);
-            expect(result.value[0].get("id")).toBe("quiz-1");
-            expect(result.value[1].get("id")).toBe("quiz-2");
-            expect(result.value[2].get("id")).toBe("quiz-3");
+            expect(result.value[0]?.get("id")).toBe("quiz-1");
+            expect(result.value[1]?.get("id")).toBe("quiz-2");
+            expect(result.value[2]?.get("id")).toBe("quiz-3");
             // Each item should be properly processed, not empty
             result.value.forEach((item) => {
               expect(item.get("question")).toBeDefined();
@@ -677,10 +701,10 @@ describe("D1QuizSummaryMapper", () => {
           expect(result.isOk()).toBe(true);
           if (result.isOk()) {
             expect(result.value).toHaveLength(2);
-            expect(result.value[0].get("question")).toBe("Question 1");
-            expect(result.value[0].get("answerType")).toBe("boolean");
-            expect(result.value[1].get("question")).toBe("Question 2");
-            expect(result.value[1].get("answerType")).toBe("free_text");
+            expect(result.value[0]?.get("question")).toBe("Question 1");
+            expect(result.value[0]?.get("answerType")).toBe("boolean");
+            expect(result.value[1]?.get("question")).toBe("Question 2");
+            expect(result.value[1]?.get("answerType")).toBe("free_text");
           }
         });
 
@@ -690,7 +714,7 @@ describe("D1QuizSummaryMapper", () => {
             { ...validQuizRow, id: "" }, // Error row 0
             { ...validQuizRow, question: "" }, // Error row 1
             validQuizRow, // Valid row 2
-            { ...validQuizRow, status: "" }, // Error row 3
+            toQuizRowForTest({ ...validQuizRow, status: "" }), // Error row 3
           ];
 
           // Act
@@ -821,7 +845,9 @@ describe("D1QuizSummaryMapper", () => {
           };
 
           // Act
-          const result = D1QuizSummaryMapper.fromRow(problematicRow as QuizRow);
+          const result = D1QuizSummaryMapper.fromRow(
+            toQuizRowForTest(problematicRow),
+          );
 
           // Assert
           // LogicalOperator変異対策: filter内の && が || に変異されても失敗するテスト

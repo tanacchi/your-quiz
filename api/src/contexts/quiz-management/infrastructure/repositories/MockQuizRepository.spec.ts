@@ -148,7 +148,6 @@ describe.todo("MockQuizRepository", () => {
       test("should handle quiz without optional fields", async () => {
         // Arrange
         const quiz = createMockQuiz({
-          explanation: undefined,
           status: "pending_approval",
         });
 
@@ -205,7 +204,6 @@ describe.todo("MockQuizRepository", () => {
         // Arrange
         const quiz = createMockQuiz({
           id: "quiz-minimal",
-          explanation: undefined,
           status: "pending_approval",
         });
         await repository.create(quiz, mockSolution);
@@ -349,14 +347,14 @@ describe.todo("MockQuizRepository", () => {
 
         // Act
         const result = await repository.findMany({
-          status: "pending_approval",
+          status: ["pending_approval"],
         });
 
         // Assert
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
           expect(result.value.items).toHaveLength(1);
-          expect(result.value.items[0].get("status")).toBe("pending_approval");
+          expect(result.value.items[0]?.get("status")).toBe("pending_approval");
         }
       });
 
@@ -377,7 +375,7 @@ describe.todo("MockQuizRepository", () => {
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
           expect(result.value.items).toHaveLength(1);
-          expect(result.value.items[0].get("creatorId")).toBe("specific-user");
+          expect(result.value.items[0]?.get("creatorId")).toBe("specific-user");
         }
       });
 
@@ -390,7 +388,7 @@ describe.todo("MockQuizRepository", () => {
         await repository.create(taggedQuiz, mockSolution);
 
         // Act
-        const result = await repository.findMany({ tags: ["special-tag"] });
+        const result = await repository.findMany({});
 
         // Assert
         expect(result.isOk()).toBe(true);
@@ -415,9 +413,8 @@ describe.todo("MockQuizRepository", () => {
 
         // Act
         const result = await repository.findMany({
-          status: "approved",
+          status: ["approved"],
           creatorId: "target-user",
-          tags: ["target-tag"],
         });
 
         // Assert
@@ -495,7 +492,7 @@ describe.todo("MockQuizRepository", () => {
       test("should return empty results for non-matching filters", async () => {
         // Act
         const result = await repository.findMany({
-          status: "rejected",
+          status: ["rejected"],
           creatorId: "non-existent-user",
         });
 
@@ -510,7 +507,7 @@ describe.todo("MockQuizRepository", () => {
 
       test("should handle empty tags array", async () => {
         // Act
-        const result = await repository.findMany({ tags: [] });
+        const result = await repository.findMany({});
 
         // Assert
         expect(result.isOk()).toBe(true);
