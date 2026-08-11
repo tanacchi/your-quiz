@@ -186,6 +186,24 @@ export interface paths {
     /** @description Get answer history for session */
     get: operations["QuizLearning_getSessionAnswers"];
     put?: never;
+    /** @description Submit answer to quiz in session (creates a new Attempt) */
+    post: operations["QuizLearning_submitAnswer"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/quiz/v1/learning/sessions/{id}/answers/{quizId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Check if quiz is already answered in session */
+    get: operations["QuizLearning_getSessionAnswer"];
+    put?: never;
     post?: never;
     delete?: never;
     options?: never;
@@ -219,40 +237,6 @@ export interface paths {
     };
     /** @description Get session statistics */
     get: operations["QuizLearning_getSessionStatistics"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/quiz/v1/learning/sessions/{sessionId}/answers": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** @description Submit answer to quiz in session */
-    post: operations["QuizLearning_submitAnswer"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/quiz/v1/learning/sessions/{sessionId}/answers/{quizId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** @description Check if quiz is already answered in session */
-    get: operations["QuizLearning_getSessionAnswer"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1354,7 +1338,6 @@ export interface components {
       firstQuiz?: components["schemas"]["QuizResponse"];
     };
     SubmitAnswerRequest: {
-      sessionId: components["schemas"]["SessionId"];
       quizId: components["schemas"]["QuizId"];
       answer: components["schemas"]["Answer"];
     };
@@ -1907,6 +1890,76 @@ export interface operations {
       };
     };
   };
+  QuizLearning_submitAnswer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["schemas"]["SessionId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SubmitAnswerRequest"];
+      };
+    };
+    responses: {
+      /** @description The request has succeeded and a new resource has been created as a result. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SubmitAnswerResponse"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["ValidationError"]
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ConflictError"];
+        };
+      };
+    };
+  };
+  QuizLearning_getSessionAnswer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["schemas"]["SessionId"];
+        quizId: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AttemptWithAnswer"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFoundError"];
+        };
+      };
+    };
+  };
   QuizLearning_getNextQuiz: {
     parameters: {
       query?: never;
@@ -1978,76 +2031,6 @@ export interface operations {
               recommendations: string[];
             };
           };
-        };
-      };
-      /** @description An unexpected error response. */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["NotFoundError"];
-        };
-      };
-    };
-  };
-  QuizLearning_submitAnswer: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        sessionId: components["schemas"]["SessionId"];
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SubmitAnswerRequest"];
-      };
-    };
-    responses: {
-      /** @description The request has succeeded. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SubmitAnswerResponse"];
-        };
-      };
-      /** @description An unexpected error response. */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json":
-            | components["schemas"]["ValidationError"]
-            | components["schemas"]["NotFoundError"]
-            | components["schemas"]["ConflictError"];
-        };
-      };
-    };
-  };
-  QuizLearning_getSessionAnswer: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        sessionId: components["schemas"]["SessionId"];
-        quizId: components["schemas"]["QuizId"];
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description The request has succeeded. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AttemptWithAnswer"];
         };
       };
       /** @description An unexpected error response. */
