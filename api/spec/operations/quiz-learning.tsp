@@ -87,7 +87,7 @@ interface QuizLearning {
   getSession(@path id: SessionId): QuizSessionWithProgress | NotFoundError;
 
   /** Update session (mark completed, etc.) */
-  @patch
+  @patch(#{ implicitOptionality: false })
   @route("/sessions/{id}")
   updateSession(@path id: SessionId, @body request: UpdateSessionRequest): QuizSessionWithProgress | NotFoundError | ValidationError;
 
@@ -107,10 +107,13 @@ interface QuizLearning {
 
   // Answer Submission
 
-  /** Submit answer to quiz in session */
+  /** Submit answer to quiz in session (creates a new Attempt) */
   @post
-  @route("/sessions/{sessionId}/answers")
-  submitAnswer(@path sessionId: SessionId, @body request: SubmitAnswerRequest): SubmitAnswerResponse | ValidationError | NotFoundError | ConflictError;
+  @route("/sessions/{id}/answers")
+  submitAnswer(@path id: SessionId, @body request: SubmitAnswerRequest): {
+    @statusCode statusCode: 201;
+    ...SubmitAnswerResponse;
+  } | ValidationError | NotFoundError | ConflictError;
 
   /** Get answer history for session */
   @get
@@ -119,8 +122,8 @@ interface QuizLearning {
 
   /** Check if quiz is already answered in session */
   @get
-  @route("/sessions/{sessionId}/answers/{quizId}")
-  getSessionAnswer(@path sessionId: SessionId, @path quizId: QuizId): AttemptWithAnswer | NotFoundError;
+  @route("/sessions/{id}/answers/{quizId}")
+  getSessionAnswer(@path id: SessionId, @path quizId: QuizId): AttemptWithAnswer | NotFoundError;
 
   // Learning Statistics
 
