@@ -18,17 +18,48 @@ export class D1QuizSummaryMapper {
    * @returns QuizSummaryエンティティ、またはマッピングエラー
    */
   static fromRow(row: QuizRow): Result<QuizSummary, AppError> {
+    // 必須フィールドの検証（solution_idは空文字列でも有効）
+    const requiredFields = [
+      "id",
+      "question",
+      "answer_type",
+      "status",
+      "creator_id",
+      "created_at",
+    ] as const;
+    const missingFields = requiredFields.filter(
+      (field) => !row[field] || row[field] === "",
+    );
+
+    if (missingFields.length > 0) {
+      return err(
+        new InternalServerError(
+          "Internal server error",
+          `Missing required fields: ${missingFields.join(", ")}`,
+        ),
+      );
+    }
+
     // QuizSummaryエンティティの作成データを準備
     const createData = {
       id: String(row.id),
       question: row.question,
       answerType: row.answer_type,
-      solutionId: String(row.solution_id),
-      explanation: row.explanation || undefined,
+      solutionId:
+        row.solution_id && row.solution_id !== ""
+          ? String(row.solution_id)
+          : "placeholder",
+      explanation:
+        row.explanation && row.explanation !== null
+          ? row.explanation
+          : undefined,
       status: row.status,
       creatorId: String(row.creator_id),
       createdAt: row.created_at,
-      approvedAt: row.approved_at || undefined,
+      approvedAt:
+        row.approved_at && row.approved_at !== null
+          ? row.approved_at
+          : undefined,
       tagIds: [],
     };
 
@@ -38,6 +69,7 @@ export class D1QuizSummaryMapper {
     return quizSummaryResult.mapErr(
       (error) =>
         new InternalServerError(
+          "Internal server error",
           `Failed to create QuizSummary from row data: ${JSON.stringify(error)}`,
         ),
     );
@@ -66,6 +98,7 @@ export class D1QuizSummaryMapper {
     if (errors.length > 0) {
       return err(
         new InternalServerError(
+          "Internal server error",
           `Failed to map ${errors.length}/${rows.length} rows: ${errors.map((e) => e.message).join("; ")}`,
         ),
       );

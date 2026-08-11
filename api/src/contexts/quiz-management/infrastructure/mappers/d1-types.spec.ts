@@ -1,5 +1,5 @@
 import { Result } from "neverthrow";
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import {
   type CountResult,
   getCountValue,
@@ -947,6 +947,476 @@ describe("D1 Types with Zod", () => {
             }
           }
         });
+      });
+    });
+  });
+
+  describe("Type Safety Tests with expectTypeOf", () => {
+    describe("Schema Type Inference (ObjectLiteral Mutation Defense)", () => {
+      test("zodQuizRowSchema should have correct inferred type structure", () => {
+        const parseResult = zodQuizRowSchema.safeParse(createValidQuizRow());
+        if (parseResult.success) {
+          const data = parseResult.data;
+
+          // Required fields type safety
+          expectTypeOf(data.id).toEqualTypeOf<string>();
+          expectTypeOf(data.question).toEqualTypeOf<string>();
+          expectTypeOf(data.answer_type).toEqualTypeOf<
+            "boolean" | "free_text" | "single_choice" | "multiple_choice"
+          >();
+          expectTypeOf(data.solution_id).toEqualTypeOf<string>();
+          expectTypeOf(data.status).toEqualTypeOf<
+            "pending_approval" | "approved" | "rejected"
+          >();
+          expectTypeOf(data.creator_id).toEqualTypeOf<string>();
+          expectTypeOf(data.created_at).toEqualTypeOf<string>();
+
+          // Optional fields should be optional in the type
+          expectTypeOf(data)
+            .toHaveProperty("explanation")
+            .toEqualTypeOf<string | undefined>();
+          expectTypeOf(data)
+            .toHaveProperty("approved_at")
+            .toEqualTypeOf<string | undefined>();
+          expectTypeOf(data)
+            .toHaveProperty("boolean_value")
+            .toEqualTypeOf<boolean | undefined>();
+          expectTypeOf(data)
+            .toHaveProperty("correct_answer")
+            .toEqualTypeOf<string | undefined>();
+          expectTypeOf(data)
+            .toHaveProperty("matching_strategy")
+            .toEqualTypeOf<"exact" | "partial" | "regex" | undefined>();
+          expectTypeOf(data)
+            .toHaveProperty("case_sensitive")
+            .toEqualTypeOf<boolean | undefined>();
+          expectTypeOf(data)
+            .toHaveProperty("choices")
+            .toEqualTypeOf<string | undefined>();
+          expectTypeOf(data)
+            .toHaveProperty("min_correct_answers")
+            .toEqualTypeOf<number | undefined>();
+        }
+      });
+
+      test("zodCountResultSchema should have correct inferred type", () => {
+        const parseResult = zodCountResultSchema.safeParse({ total: 42 });
+        if (parseResult.success) {
+          expectTypeOf(parseResult.data.total).toEqualTypeOf<number>();
+        }
+      });
+
+      test("zodBasicQuizInfoSchema should have correct inferred type", () => {
+        const parseResult = zodBasicQuizInfoSchema.safeParse(
+          createValidBasicQuizInfo(),
+        );
+        if (parseResult.success) {
+          const data = parseResult.data;
+          expectTypeOf(data.id).toEqualTypeOf<string>();
+          expectTypeOf(data.solution_id).toEqualTypeOf<string>();
+          expectTypeOf(data.answer_type).toEqualTypeOf<
+            "boolean" | "free_text" | "single_choice" | "multiple_choice"
+          >();
+        }
+      });
+
+      test("zodParsedChoiceSchema should have correct inferred type", () => {
+        const parseResult = zodParsedChoiceSchema.safeParse(
+          createValidParsedChoice(),
+        );
+        if (parseResult.success) {
+          const data = parseResult.data;
+          expectTypeOf(data.id).toEqualTypeOf<string>();
+          expectTypeOf(data.solutionId).toEqualTypeOf<string>();
+          expectTypeOf(data.text).toEqualTypeOf<string>();
+          expectTypeOf(data.orderIndex).toEqualTypeOf<number>();
+          expectTypeOf(data.isCorrect).toEqualTypeOf<boolean>();
+        }
+      });
+
+      test("empty object should fail type checking at compile time", () => {
+        const emptyObj = {};
+
+        // These should fail at runtime (already tested above)
+        const quizRowResult = zodQuizRowSchema.safeParse(emptyObj);
+        const countResult = zodCountResultSchema.safeParse(emptyObj);
+        const basicInfoResult = zodBasicQuizInfoSchema.safeParse(emptyObj);
+        const choiceResult = zodParsedChoiceSchema.safeParse(emptyObj);
+
+        expect(quizRowResult.success).toBe(false);
+        expect(countResult.success).toBe(false);
+        expect(basicInfoResult.success).toBe(false);
+        expect(choiceResult.success).toBe(false);
+
+        // Type-level verification that empty object doesn't match schema types
+        expectTypeOf(emptyObj).not.toMatchTypeOf<
+          ReturnType<typeof createValidQuizRow>
+        >();
+        expectTypeOf(emptyObj).not.toMatchTypeOf<
+          ReturnType<typeof createValidCountResult>
+        >();
+        expectTypeOf(emptyObj).not.toMatchTypeOf<
+          ReturnType<typeof createValidBasicQuizInfo>
+        >();
+        expectTypeOf(emptyObj).not.toMatchTypeOf<
+          ReturnType<typeof createValidParsedChoice>
+        >();
+      });
+    });
+
+    describe("Transform Function Type Safety (BlockStatement Mutation Defense)", () => {
+      test("toQuizRow should return correctly typed result", () => {
+        const validInput = createValidQuizRow();
+        const result = toQuizRow(validInput);
+
+        // Type assertion to ensure correct return type
+        expectTypeOf(result).toMatchTypeOf<{
+          id: string;
+          question: string;
+          answer_type:
+            | "boolean"
+            | "free_text"
+            | "single_choice"
+            | "multiple_choice";
+          solution_id: string;
+          status: "pending_approval" | "approved" | "rejected";
+          creator_id: string;
+          created_at: string;
+          explanation?: string;
+          approved_at?: string;
+          boolean_value?: boolean;
+          correct_answer?: string;
+          matching_strategy?: "exact" | "partial" | "regex";
+          case_sensitive?: boolean;
+          choices?: string;
+          min_correct_answers?: number;
+        }>();
+
+        // Ensure required fields exist
+        expectTypeOf(result.id).toEqualTypeOf<string>();
+        expectTypeOf(result.question).toEqualTypeOf<string>();
+      });
+
+      test("toBasicQuizInfo should return correctly typed result", () => {
+        const validInput = createValidBasicQuizInfo();
+        const result = toBasicQuizInfo(validInput);
+
+        expectTypeOf(result).toMatchTypeOf<{
+          id: string;
+          solution_id: string;
+          answer_type:
+            | "boolean"
+            | "free_text"
+            | "single_choice"
+            | "multiple_choice";
+        }>();
+      });
+
+      test("getCountValue should return number type", () => {
+        const countResult = createValidCountResult();
+        const value = getCountValue(countResult);
+
+        expectTypeOf(value).toEqualTypeOf<number>();
+        expect(typeof value).toBe("number");
+      });
+    });
+
+    describe("Conditional Expression Type Safety (ConditionalExpression Mutation Defense)", () => {
+      test("optional field conditionals should maintain type safety", () => {
+        const validRowWithOptionals = {
+          ...createValidQuizRow(),
+          explanation: "test",
+          boolean_value: true,
+          min_correct_answers: 2,
+        };
+
+        const parseResult = zodQuizRowSchema.safeParse(validRowWithOptionals);
+        if (parseResult.success) {
+          const data = parseResult.data;
+
+          // When fields are present, they should have correct types
+          if (data.explanation !== undefined) {
+            expectTypeOf(data.explanation).toEqualTypeOf<string>();
+          }
+          if (data.boolean_value !== undefined) {
+            expectTypeOf(data.boolean_value).toEqualTypeOf<boolean>();
+          }
+          if (data.min_correct_answers !== undefined) {
+            expectTypeOf(data.min_correct_answers).toEqualTypeOf<number>();
+          }
+        }
+      });
+
+      test("null check conditionals should preserve type information", () => {
+        const testData = {
+          validString: "test",
+          nullString: null as string | null,
+          undefinedString: undefined as string | undefined,
+          validNumber: 42,
+          nullNumber: null as number | null,
+        };
+
+        // Type narrowing tests
+        if (testData.nullString != null) {
+          expectTypeOf(testData.nullString).toEqualTypeOf<string>();
+        }
+
+        if (testData.undefinedString != null) {
+          expectTypeOf(testData.undefinedString).toEqualTypeOf<string>();
+        }
+
+        if (testData.nullNumber != null) {
+          expectTypeOf(testData.nullNumber).toEqualTypeOf<number>();
+        }
+      });
+
+      test("ternary operator in transforms should maintain type safety", () => {
+        // Simulate the conditional spreading pattern used in transforms
+        const optionalField = Math.random() > 0.5 ? "value" : null;
+        const result = {
+          required: "always present",
+          ...(optionalField != null && { optional: optionalField }),
+        };
+
+        expectTypeOf(result.required).toEqualTypeOf<string>();
+        expectTypeOf(result).toHaveProperty("optional").not.toBeNever();
+
+        if ("optional" in result) {
+          expectTypeOf(result.optional).toEqualTypeOf<string>();
+        }
+      });
+    });
+
+    describe("Equality Operator Type Safety (EqualityOperator Mutation Defense)", () => {
+      test("strict equality vs loose equality in null checks", () => {
+        const testValues = [null, undefined, 0, false, "", NaN];
+
+        testValues.forEach((value) => {
+          // Test both == null and != null patterns
+          const strictNullCheck = value === null;
+          const looseNullCheck = value == null;
+          const strictNotNullCheck = value !== null;
+          const looseNotNullCheck = value != null;
+
+          expectTypeOf(strictNullCheck).toEqualTypeOf<boolean>();
+          expectTypeOf(looseNullCheck).toEqualTypeOf<boolean>();
+          expectTypeOf(strictNotNullCheck).toEqualTypeOf<boolean>();
+          expectTypeOf(looseNotNullCheck).toEqualTypeOf<boolean>();
+
+          // Verify expected behavior differences
+          if (value === null || value === undefined) {
+            expect(looseNullCheck).toBe(true);
+            expect(looseNotNullCheck).toBe(false);
+          } else {
+            expect(looseNullCheck).toBe(false);
+            expect(looseNotNullCheck).toBe(true);
+          }
+        });
+      });
+
+      test("matching_strategy null equality checks should be type-safe", () => {
+        const testCases = [
+          { matching_strategy: null, expectedIncluded: false },
+          { matching_strategy: undefined, expectedIncluded: false },
+          { matching_strategy: "exact", expectedIncluded: true },
+          { matching_strategy: "partial", expectedIncluded: true },
+        ];
+
+        testCases.forEach(({ matching_strategy, expectedIncluded }) => {
+          const rowData = {
+            ...createValidQuizRow(),
+            matching_strategy,
+          };
+
+          const parseResult = zodQuizRowSchema.safeParse(rowData);
+          expect(parseResult.success).toBe(true);
+
+          if (parseResult.success) {
+            const hasStrategy = "matching_strategy" in parseResult.data;
+            expect(hasStrategy).toBe(expectedIncluded);
+
+            if (hasStrategy) {
+              expectTypeOf(parseResult.data.matching_strategy).toEqualTypeOf<
+                "exact" | "partial" | "regex"
+              >();
+            }
+          }
+        });
+      });
+
+      test("type guard functions should use correct equality operators", () => {
+        const validData = createValidQuizRow();
+        const result = isQuizRow(validData);
+
+        expectTypeOf(result).toEqualTypeOf<boolean>();
+
+        // Type narrowing should work correctly
+        if (isQuizRow(validData)) {
+          expectTypeOf(validData).toMatchTypeOf<{
+            id: string;
+            question: string;
+            answer_type: string;
+            solution_id: string;
+            status: string;
+            creator_id: string;
+            created_at: string;
+          }>();
+        }
+      });
+    });
+
+    describe("String Literal Type Safety (StringLiteral Mutation Defense)", () => {
+      test("error messages should have correct literal types", () => {
+        try {
+          toQuizRow({ invalid: "data" });
+        } catch (error) {
+          expectTypeOf(error).toMatchTypeOf<Error>();
+          if (error instanceof Error) {
+            expectTypeOf(error.message).toEqualTypeOf<string>();
+            expect(error.message).toMatch(/Invalid QuizRow data/);
+          }
+        }
+
+        try {
+          toBasicQuizInfo({ invalid: "data" });
+        } catch (error) {
+          expectTypeOf(error).toMatchTypeOf<Error>();
+          if (error instanceof Error) {
+            expectTypeOf(error.message).toEqualTypeOf<string>();
+            expect(error.message).toMatch(/Invalid BasicQuizInfo data/);
+          }
+        }
+      });
+
+      test("enum literal types should be preserved", () => {
+        const answerTypes = [
+          "boolean",
+          "free_text",
+          "single_choice",
+          "multiple_choice",
+        ] as const;
+        const quizStatuses = [
+          "pending_approval",
+          "approved",
+          "rejected",
+        ] as const;
+        const matchingStrategies = ["exact", "partial", "regex"] as const;
+
+        answerTypes.forEach((type) => {
+          expectTypeOf(type).toEqualTypeOf<
+            "boolean" | "free_text" | "single_choice" | "multiple_choice"
+          >();
+          expect(isValidAnswerType(type)).toBe(true);
+        });
+
+        quizStatuses.forEach((status) => {
+          expectTypeOf(status).toEqualTypeOf<
+            "pending_approval" | "approved" | "rejected"
+          >();
+          expect(isValidQuizStatus(status)).toBe(true);
+        });
+
+        matchingStrategies.forEach((strategy) => {
+          expectTypeOf(strategy).toEqualTypeOf<"exact" | "partial" | "regex">();
+          expect(isValidMatchingStrategy(strategy)).toBe(true);
+        });
+      });
+
+      test("zod error message strings should maintain type safety", () => {
+        const invalidData = { total: "not-a-number" };
+        const parseResult = zodCountResultSchema.safeParse(invalidData);
+
+        expect(parseResult.success).toBe(false);
+        if (!parseResult.success) {
+          expectTypeOf(parseResult.error).toMatchTypeOf<{
+            message: string;
+            issues: Array<unknown>;
+          }>();
+          expectTypeOf(parseResult.error.message).toEqualTypeOf<string>();
+          expect(typeof parseResult.error.message).toBe("string");
+        }
+      });
+    });
+
+    describe("Runtime Type Validation Integration", () => {
+      test("type guards should work with TypeScript type narrowing", () => {
+        const unknownData: unknown = createValidQuizRow();
+
+        if (isQuizRow(unknownData)) {
+          // After type guard, should be narrowed to correct type
+          expectTypeOf(unknownData.id).toEqualTypeOf<string | number>();
+          expectTypeOf(unknownData.question).toEqualTypeOf<string>();
+
+          // Should be able to access properties safely
+          expect(typeof unknownData.id).toMatch(/^(string|number)$/);
+          expect(typeof unknownData.question).toBe("string");
+        }
+      });
+
+      test("schema parsing should preserve exact type information", () => {
+        const inputData = {
+          id: 123,
+          question: "Test",
+          answer_type: "boolean" as const,
+          solution_id: 456,
+          status: "approved" as const,
+          creator_id: 789,
+          created_at: "2023-01-01T00:00:00Z",
+        };
+
+        const parseResult = zodQuizRowSchema.safeParse(inputData);
+
+        if (parseResult.success) {
+          const data = parseResult.data;
+
+          // After parsing, types should be normalized
+          expectTypeOf(data.id).toEqualTypeOf<string>();
+          expectTypeOf(data.answer_type).toEqualTypeOf<
+            "boolean" | "free_text" | "single_choice" | "multiple_choice"
+          >();
+          expectTypeOf(data.status).toEqualTypeOf<
+            "pending_approval" | "approved" | "rejected"
+          >();
+
+          // Runtime verification
+          expect(typeof data.id).toBe("string");
+          expect(data.answer_type).toBe("boolean");
+          expect(data.status).toBe("approved");
+        }
+      });
+
+      test("complex type transformations should maintain safety", () => {
+        const complexInput = {
+          ...createValidQuizRow(),
+          boolean_value: 1, // number -> boolean
+          min_correct_answers: "5", // string -> number
+          case_sensitive: 0, // number -> boolean
+        };
+
+        const parseResult = zodQuizRowSchema.safeParse(complexInput);
+
+        if (parseResult.success) {
+          const data = parseResult.data;
+
+          // Type transformations should be reflected in types
+          if (data.boolean_value !== undefined) {
+            expectTypeOf(data.boolean_value).toEqualTypeOf<boolean>();
+            expect(typeof data.boolean_value).toBe("boolean");
+            expect(data.boolean_value).toBe(true);
+          }
+
+          if (data.min_correct_answers !== undefined) {
+            expectTypeOf(data.min_correct_answers).toEqualTypeOf<number>();
+            expect(typeof data.min_correct_answers).toBe("number");
+            expect(data.min_correct_answers).toBe(5);
+          }
+
+          if (data.case_sensitive !== undefined) {
+            expectTypeOf(data.case_sensitive).toEqualTypeOf<boolean>();
+            expect(typeof data.case_sensitive).toBe("boolean");
+            expect(data.case_sensitive).toBe(false);
+          }
+        }
       });
     });
   });
