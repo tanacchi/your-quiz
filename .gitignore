@@ -48,6 +48,7 @@ cmake-build-*/
 .AppleDouble
 .LSOverride
 Icon
+!ui/src/components/atoms/Icon/
 ._*
 .DocumentRevisions-V100
 .fseventsd
