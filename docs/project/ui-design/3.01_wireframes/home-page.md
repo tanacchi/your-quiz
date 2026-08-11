@@ -25,7 +25,7 @@ graph TD
     end
     
     subgraph "Header Section (60px)"
-        A --> A1[Your Quiz Logo]
+        A --> A1[QuizPocket Logo]
         A --> A2[検索アイコン]
         A --> A3[設定アイコン]
     end
@@ -78,7 +78,7 @@ graph TD
     end
     
     subgraph "Header (60px)"
-        A --> A1["🏠 Your Quiz"]
+        A --> A1["🏠 QuizPocket"]
         A --> A2["🔍 Search"]
         A --> A3["⚙️ Settings"]
     end
@@ -120,7 +120,7 @@ graph TD
     D --> E[初回クイズ推奨]
     
     subgraph "Welcome Screen"
-        B --> B1["🎉 Your Quizへようこそ!<br/>気軽にクイズで学習しよう"]
+        B --> B1["🎉 QuizPocketへようこそ!<br/>気軽にクイズで学習しよう"]
     end
     
     subgraph "Tutorial Carousel"
