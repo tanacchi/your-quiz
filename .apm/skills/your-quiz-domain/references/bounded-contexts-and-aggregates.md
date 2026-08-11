@@ -4,7 +4,7 @@
 
 ## コンテキストマップ
 
-```
+```text
 [Quiz Management] ──Published Language──→ [Quiz Learning]
 [User Session]    ──Customer/Supplier──→  [Quiz Learning]
 [Quiz Learning]   ──Customer/Supplier──→  [Offline Sync]
@@ -128,7 +128,7 @@ class InvariantViolationError extends DomainError {
 
 ## ディレクトリ構造（実装時の指針）
 
-```
+```text
 src/
 ├── contexts/
 │   ├── quiz-management/

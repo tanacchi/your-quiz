@@ -46,24 +46,28 @@ compatibility: Requires access to docs/project/ddd-design/ in this repository.
 ## 主要集約 サマリー
 
 ### Quiz Aggregate（権威的）
+
 - **責務**: クイズ内容の品質保証・承認フロー・ライフサイクル管理
 - **状態遷移**: 投稿 → 承認 → 公開（強一貫性）
 - **設計決定**: 単一エンティティ集約（クイズ≠回答の分離）
 - 詳細 → `docs/project/ddd-design/2.08_aggregate-design/`
 
 ### Learning Session Aggregate（中核）
+
 - **責務**: 学習体験・回答履歴・学習進捗計算
 - **設計決定**: 複合集約（Session + Answer の一体管理）、結果整合性
 - **パフォーマンス**: 高頻度アクセス、CQRS 的クエリ分離
 - 詳細 → `docs/project/ddd-design/2.08_aggregate-design/`
 
 ### User Session Aggregate（支援的）
+
 - **責務**: 匿名ユーザー識別・セッション管理・作成者権限制御
 - **設計決定**: 軽量集約、プライバシー重視（個人情報なし）
 - **VO**: `DeviceFingerprint`, `CreatorId`
 - 詳細 → `docs/project/ddd-design/2.08_aggregate-design/`
 
 ### Sync Session Aggregate（技術的）
+
 - **責務**: オフライン/オンライン同期・データ競合解決・整合性保証
 - **設計決定**: 技術集約、横断的関心事（全データが同期対象）
 - 詳細 → `docs/project/ddd-design/2.08_aggregate-design/`

@@ -2,7 +2,7 @@
 
 ## docs/project/** — source of truth
 
-```
+```text
 docs/project/
 ├── adr/                        # ADR（アーキテクチャ決定記録）25件
 │   ├── 0001-architecture-pattern.md
@@ -54,7 +54,7 @@ docs/project/
 
 ## docs/instructions/project/ — 実装ルール（your-quiz-api skill が吸収）
 
-```
+```text
 docs/instructions/project/
 ├── api-implementation-rules.md   # 実装必須ルール（neverthrow/Zod パターン）
 ├── api-implementation-samples.md # 実装サンプルコード
@@ -65,7 +65,7 @@ docs/instructions/project/
 
 ## .apm/skills/ — project skill 層（このリポジトリ）
 
-```
+```text
 .apm/skills/
 ├── your-quiz-project-knowledge/  # 横断索引（本 skill）
 ├── your-quiz-api/                # API catalog・実装ルール

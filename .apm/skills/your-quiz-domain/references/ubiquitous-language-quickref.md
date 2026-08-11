@@ -41,17 +41,21 @@
 ## コンテキスト別の主要用語
 
 ### Quiz Management Context
+
 `Quiz`, `Question`, `Solution`, `Explanation`, `Tag`, `Creator`, `Administrator`,
 `Draft`, `PendingApproval`, `Approved`, `Rejected`
 
 ### Quiz Learning Context
+
 `Deck`, `QuizSession`, `Attempt`, `AttemptHistory`, `CorrectJudgment`, `Filter`,
 `SwipeGesture`, `SaveSearchResults`
 
 ### User Session Context
+
 `AnonymousUser`, `Creator`, `CreatorIdentification`, `DeviceFingerprint`
 
 ### Offline Sync Context
+
 `OfflineMode`, `Synchronization`, `SyncItem`, `ConflictResolution`
 
 ## 制約・不変条件
