@@ -4,7 +4,8 @@
     "**/tmp/**",
     "**/dist/**",
     "./.serena/**",
-    "**/mutation-analysis/**"
+    "**/mutation-analysis/**",
+    "./skills/**"
   ],
   "config": {
     "default": true,
