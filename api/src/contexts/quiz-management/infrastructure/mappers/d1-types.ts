@@ -41,35 +41,24 @@ export const zodQuizRowSchema = z
     question: z.string(),
     answer_type: zodAnswerTypeSchema,
     solution_id: d1IdSchema,
-    explanation: z.string().nullable().optional(),
+    explanation: z.string().nullish(),
     status: zodQuizStatusSchema,
     creator_id: d1IdSchema,
     created_at: z.string(),
-    approved_at: z.string().nullable().optional(),
+    approved_at: z.string().nullish(),
     // ソリューション関連のフィールド
     boolean_value: z
       .union([z.boolean(), z.number()])
       .transform(Boolean)
-      .nullable()
-      .optional(),
-    correct_answer: z.string().nullable().optional(),
-    matching_strategy: zodMatchingStrategySchema.nullable().optional(),
+      .nullish(),
+    correct_answer: z.string().nullish(),
+    matching_strategy: zodMatchingStrategySchema.nullish(),
     case_sensitive: z
       .union([z.boolean(), z.number()])
       .transform(Boolean)
-      .nullable()
-      .optional(),
-    choices: z.string().nullable().optional(),
-    min_correct_answers: z
-      .union([
-        z.number(),
-        z
-          .string()
-          .refine((val) => !Number.isNaN(Number(val)), "Must be a valid number")
-          .transform(Number),
-      ])
-      .nullable()
-      .optional(),
+      .nullish(),
+    choices: z.string().nullish(),
+    min_correct_answers: z.coerce.number().nullish(),
   })
   .transform((data) => {
     // null/undefined の optional フィールドは除外
@@ -106,13 +95,7 @@ export const zodQuizRowSchema = z
  * D1の COUNT クエリ結果スキーマ
  */
 export const zodCountResultSchema = z.object({
-  total: z.union([
-    z.number(),
-    z
-      .string()
-      .refine((val) => !Number.isNaN(Number(val)), "Must be a valid number")
-      .transform(Number),
-  ]),
+  total: z.coerce.number(),
 });
 
 /**
@@ -131,13 +114,7 @@ export const zodParsedChoiceSchema = z.object({
   id: z.string(),
   solutionId: z.string(),
   text: z.string(),
-  orderIndex: z.union([
-    z.number(),
-    z
-      .string()
-      .refine((val) => !Number.isNaN(Number(val)), "Must be a valid number")
-      .transform(Number),
-  ]),
+  orderIndex: z.coerce.number(),
   isCorrect: z.boolean(),
 });
 
