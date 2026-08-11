@@ -2,7 +2,7 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 **Mutator**: ArrayDeclaration
-**Original ID**: 27
+**Original ID**: 64
 **Stable ID**: 1fa07562
 **Location**: L15:28–L15:52
 
@@ -12,7 +12,7 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #27
++++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #64
 @@ -11,9 +11,9 @@
  
  /**

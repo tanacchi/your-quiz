@@ -2,9 +2,9 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts
 **Mutator**: BlockStatement
-**Original ID**: 14
+**Original ID**: 50
 **Stable ID**: e599e4e2
-**Location**: L56:48–L64:6
+**Location**: L70:48–L78:6
 
 ## Diff
 
@@ -12,8 +12,8 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts	mutated #14
-@@ -52,18 +52,10 @@
++++ src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts	mutated #50
+@@ -66,18 +66,10 @@
    static fromRows(rows: QuizRow[]): Result<QuizSummary[], AppError> {
      const results: QuizSummary[] = [];
      const errors: Error[] = [];
@@ -32,7 +32,7 @@ Index: src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.t
      if (errors.length > 0) {
        return err(
          new InternalServerError(
-           `Failed to map ${errors.length}/${rows.length} rows: ${errors.map((e) => e.message).join("; ")}`,
+           "Internal server error",
 ```
 
 ## Hint

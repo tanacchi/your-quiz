@@ -2,7 +2,7 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 **Mutator**: StringLiteral
-**Original ID**: 40
+**Original ID**: 77
 **Stable ID**: e7c34560
 **Location**: L33:70–L33:77
 
@@ -12,7 +12,7 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #40
++++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #77
 @@ -29,9 +29,9 @@
    "approved",
    "rejected",

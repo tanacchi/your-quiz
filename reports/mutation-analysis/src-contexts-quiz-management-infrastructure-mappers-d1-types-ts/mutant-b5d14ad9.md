@@ -2,9 +2,9 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 **Mutator**: ObjectLiteral
-**Original ID**: 49
+**Original ID**: 82
 **Stable ID**: b5d14ad9
-**Location**: L76:20–L100:6
+**Location**: L65:20–L89:6
 
 ## Diff
 
@@ -12,9 +12,9 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #49
-@@ -72,33 +72,9 @@
-       .optional(),
++++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #82
+@@ -61,33 +61,9 @@
+     min_correct_answers: z.coerce.number().nullish(),
    })
    .transform((data) => {
      // null/undefined の optional フィールドは除外

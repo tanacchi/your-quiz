@@ -2,9 +2,9 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts
 **Mutator**: ConditionalExpression
-**Original ID**: 16
+**Original ID**: 52
 **Stable ID**: 4f7c5e5f
-**Location**: L59:11–L59:32
+**Location**: L73:11–L73:32
 
 ## Diff
 
@@ -12,8 +12,8 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts	mutated #16
-@@ -55,9 +55,9 @@
++++ src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts	mutated #52
+@@ -69,9 +69,9 @@
  
      for (const [index, row] of rows.entries()) {
        const mappingResult = D1QuizSummaryMapper.fromRow(row);

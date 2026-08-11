@@ -2,9 +2,9 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 **Mutator**: LogicalOperator
-**Original ID**: 70
+**Original ID**: 103
 **Stable ID**: 816bb3f1
-**Location**: L87:11–L89:8
+**Location**: L76:11–L78:8
 
 ## Diff
 
@@ -12,8 +12,8 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #70
-@@ -83,11 +83,11 @@
++++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #103
+@@ -72,11 +72,11 @@
        created_at: data.created_at,
        ...(data.explanation != null && { explanation: data.explanation }),
        ...(data.approved_at != null && { approved_at: data.approved_at }),

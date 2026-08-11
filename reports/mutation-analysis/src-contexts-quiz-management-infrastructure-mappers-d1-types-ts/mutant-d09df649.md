@@ -2,9 +2,9 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 **Mutator**: ConditionalExpression
-**Original ID**: 71
+**Original ID**: 104
 **Stable ID**: d09df649
-**Location**: L87:11–L87:38
+**Location**: L76:11–L76:38
 
 ## Diff
 
@@ -12,8 +12,8 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #71
-@@ -83,9 +83,9 @@
++++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #104
+@@ -72,9 +72,9 @@
        created_at: data.created_at,
        ...(data.explanation != null && { explanation: data.explanation }),
        ...(data.approved_at != null && { approved_at: data.approved_at }),

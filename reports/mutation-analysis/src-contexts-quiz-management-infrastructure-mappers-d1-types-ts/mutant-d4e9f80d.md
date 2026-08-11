@@ -2,7 +2,7 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 **Mutator**: StringLiteral
-**Original ID**: 36
+**Original ID**: 73
 **Stable ID**: d4e9f80d
 **Location**: L30:3–L30:13
 
@@ -12,7 +12,7 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #36
++++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #73
 @@ -26,9 +26,9 @@
  
  export const zodQuizStatusSchema = z.enum([

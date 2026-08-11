@@ -2,7 +2,7 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 **Mutator**: StringLiteral
-**Original ID**: 34
+**Original ID**: 71
 **Stable ID**: f64341ed
 **Location**: L28:3–L28:21
 
@@ -12,7 +12,7 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #34
++++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #71
 @@ -24,9 +24,9 @@
    "multiple_choice",
  ]);

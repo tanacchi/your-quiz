@@ -2,9 +2,9 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts
 **Mutator**: ArrayDeclaration
-**Original ID**: 12
+**Original ID**: 48
 **Stable ID**: 924b4b17
-**Location**: L53:36–L53:38
+**Location**: L67:36–L67:38
 
 ## Diff
 
@@ -12,8 +12,8 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts	mutated #12
-@@ -49,9 +49,9 @@
++++ src/contexts/quiz-management/infrastructure/mappers/D1QuizSummaryMapper.ts	mutated #48
+@@ -63,9 +63,9 @@
     * @param rows - D1データベースから取得したクイズ行データの配列
     * @returns QuizSummaryエンティティ配列、またはマッピングエラー
     */

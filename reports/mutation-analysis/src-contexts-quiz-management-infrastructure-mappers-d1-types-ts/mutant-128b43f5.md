@@ -2,7 +2,7 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 **Mutator**: StringLiteral
-**Original ID**: 30
+**Original ID**: 67
 **Stable ID**: 128b43f5
 **Location**: L22:3–L22:14
 
@@ -12,7 +12,7 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #30
++++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #67
 @@ -18,9 +18,9 @@
   * 列挙型スキーマ
   */

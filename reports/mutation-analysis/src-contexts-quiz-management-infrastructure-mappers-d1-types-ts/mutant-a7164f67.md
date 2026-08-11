@@ -2,7 +2,7 @@
 
 **File**: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 **Mutator**: StringLiteral
-**Original ID**: 32
+**Original ID**: 69
 **Stable ID**: a7164f67
 **Location**: L24:3–L24:20
 
@@ -12,7 +12,7 @@
 Index: src/contexts/quiz-management/infrastructure/mappers/d1-types.ts
 ===================================================================
 --- src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	original
-+++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #32
++++ src/contexts/quiz-management/infrastructure/mappers/d1-types.ts	mutated #69
 @@ -20,9 +20,9 @@
  export const zodAnswerTypeSchema = z.enum([
    "boolean",
