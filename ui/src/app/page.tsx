@@ -1,25 +1,26 @@
+import Link from "next/link";
+import { MobilePageTemplate } from "@/components/templates/MobilePageTemplate";
+
 export default function Home() {
   return (
-    <main className="flex-1 flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md flex flex-row gap-6 mt-10 justify-center">
+    <MobilePageTemplate>
+      <div className="flex flex-row gap-6 mt-10 justify-center">
         {/* 作る（左）: 白地＋オレンジ文字・枠 */}
-        <button
-          type="button"
+        <Link
+          href="/create"
           className="flex-1 py-10 rounded-2xl bg-white text-xl font-bold border-2 border-base shadow-lg hover:bg-base-light transition flex flex-col items-center focus:outline-none"
         >
           <span className="text-xs font-semibold opacity-80">問題を</span>
-          <span className="text-2xl font-bold tracking-wide text-wide">
-            作る
-          </span>
-        </button>
+          <span className="text-2xl font-bold tracking-wide">作る</span>
+        </Link>
         {/* 解く（右）: オレンジ地＋白文字 */}
-        <button
-          type="button"
+        <Link
+          href="/quiz"
           className="flex-1 py-10 rounded-2xl bg-base text-white text-xl font-bold shadow-lg hover:bg-base-dark transition flex flex-col items-center focus:outline-none"
         >
           <span className="text-xs font-semibold opacity-80">問題を</span>
           <span className="text-2xl font-bold tracking-wide">解く</span>
-        </button>
+        </Link>
       </div>
 
       {/* Pocket Motif Illustration */}
@@ -38,6 +39,6 @@ export default function Home() {
           <circle cx="32" cy="28" r="2" fill="#d15d34" />
         </svg>
       </div>
-    </main>
+    </MobilePageTemplate>
   );
 }
