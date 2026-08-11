@@ -1,15 +1,20 @@
 import Link from "next/link";
+import { useId } from "react";
 
 export default function CreatePage() {
+  const questionId = useId();
+  const explanationId = useId();
+  const tagsId = useId();
+
   return (
     <div>
       <h1>クイズ作成</h1>
 
       <form>
         <div>
-          <label htmlFor="question">問題文 (500文字以内)</label>
+          <label htmlFor={questionId}>問題文 (500文字以内)</label>
           <textarea
-            id="question"
+            id={questionId}
             placeholder="問題を入力してください"
           ></textarea>
         </div>
@@ -27,17 +32,17 @@ export default function CreatePage() {
         </div>
 
         <div>
-          <label htmlFor="explanation">解説 (任意, 1000文字以内)</label>
+          <label htmlFor={explanationId}>解説 (任意, 1000文字以内)</label>
           <textarea
-            id="explanation"
+            id={explanationId}
             placeholder="解説を入力してください"
           ></textarea>
         </div>
 
         <div>
-          <label htmlFor="tags">タグ</label>
+          <label htmlFor={tagsId}>タグ</label>
           <input
-            id="tags"
+            id={tagsId}
             type="text"
             placeholder="タグを入力 (例: 数学, 基礎)"
           />
