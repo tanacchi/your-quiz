@@ -2,7 +2,7 @@
 
 ## ステータス
 
-**承認済み** - Chanfana不採用。型の厳格性とTypeSpecスキーマファースト原則を優先し、純粋なHono + TypeSpec生成型の組み合わせを採用。
+Accepted
 
 ## 文脈
 
