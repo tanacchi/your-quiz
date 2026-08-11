@@ -87,7 +87,7 @@ interface QuizLearning {
   getSession(@path id: SessionId): QuizSessionWithProgress | NotFoundError;
 
   /** Update session (mark completed, etc.) */
-  @put
+  @patch
   @route("/sessions/{id}")
   updateSession(@path id: SessionId, @body request: UpdateSessionRequest): QuizSessionWithProgress | NotFoundError | ValidationError;
 
