@@ -35,31 +35,34 @@ export const quizCreationData = {
         solution: {
           type: "single_choice",
           id: "sol-single-1",
-          correctChoiceId: "choice-tokyo",
           choices: [
             {
               id: "choice-tokyo",
               solutionId: "sol-single-1",
               text: "Tokyo",
               orderIndex: 1,
+              isCorrect: true,
             },
             {
               id: "choice-osaka",
               solutionId: "sol-single-1",
               text: "Osaka",
               orderIndex: 2,
+              isCorrect: false,
             },
             {
               id: "choice-kyoto",
               solutionId: "sol-single-1",
               text: "Kyoto",
               orderIndex: 3,
+              isCorrect: false,
             },
             {
               id: "choice-yokohama",
               solutionId: "sol-single-1",
               text: "Yokohama",
               orderIndex: 4,
+              isCorrect: false,
             },
           ],
         },
@@ -81,7 +84,6 @@ export const quizCreationData = {
         solution: {
           type: "multiple_choice",
           id: "sol-multi-1",
-          correctChoiceIds: ["choice-typing", "choice-interfaces"],
           minCorrectAnswers: 2,
           choices: [
             {
@@ -89,24 +91,28 @@ export const quizCreationData = {
               solutionId: "sol-multi-1",
               text: "Static typing",
               orderIndex: 1,
+              isCorrect: true,
             },
             {
               id: "choice-interfaces",
               solutionId: "sol-multi-1",
               text: "Interfaces",
               orderIndex: 2,
+              isCorrect: true,
             },
             {
               id: "choice-dynamic",
               solutionId: "sol-multi-1",
               text: "Dynamic typing",
               orderIndex: 3,
+              isCorrect: false,
             },
             {
               id: "choice-runtime",
               solutionId: "sol-multi-1",
               text: "Runtime checks",
               orderIndex: 4,
+              isCorrect: false,
             },
           ],
         },
@@ -374,8 +380,7 @@ export const quizCreationData = {
         solution: {
           type: "single_choice",
           id: "sol-missing-3",
-          correctChoiceId: "choice-1",
-          // Missing required 'choices' array
+          // Missing required 'choices' array - this will cause validation error
         },
       },
       expectedStatus: 400,
@@ -386,7 +391,7 @@ export const quizCreationData = {
     },
     {
       description:
-        "Multiple choice solution missing correctChoiceIds - Multiple choice型でcorrectChoiceIds欠如",
+        "Multiple choice solution missing isCorrect fields - Multiple choice型でisCorrectフィールド欠如",
       endpoint: "/api/quiz/v1/manage/quizzes",
       method: "POST",
       input: {
@@ -402,16 +407,16 @@ export const quizCreationData = {
               solutionId: "sol-missing-4",
               text: "Option 1",
               orderIndex: 1,
+              // Missing required 'isCorrect' field
             },
           ],
-          // Missing required 'correctChoiceIds' array
         },
       },
       expectedStatus: 400,
       expected: {
         errorType: "missing_required_field",
         errorMessage:
-          "Solution type 'multiple_choice' requires 'correctChoiceIds' array",
+          "Solution type 'multiple_choice' requires 'isCorrect' field in choices",
       },
     },
     {
@@ -449,7 +454,6 @@ export const quizCreationData = {
         solution: {
           type: "multiple_choice", // but solution type is multiple_choice
           id: "sol-type-mismatch-2",
-          correctChoiceIds: ["choice-1", "choice-2"],
           minCorrectAnswers: 1,
           choices: [
             {
@@ -457,12 +461,14 @@ export const quizCreationData = {
               solutionId: "sol-type-mismatch-2",
               text: "Option 1",
               orderIndex: 1,
+              isCorrect: true,
             },
             {
               id: "choice-2",
               solutionId: "sol-type-mismatch-2",
               text: "Option 2",
               orderIndex: 2,
+              isCorrect: true,
             },
           ],
         },
