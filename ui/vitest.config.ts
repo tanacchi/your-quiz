@@ -23,7 +23,11 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "html", "lcov"],
       reportsDirectory: "reports/coverage",
-      include: ["src/components/**/*.{ts,tsx}"],
+      include: [
+        "src/components/**/*.{ts,tsx}",
+        "src/store/**/*.{ts,tsx}",
+        "src/providers/**/*.{ts,tsx}",
+      ],
       exclude: [
         "src/**/*.d.ts",
         "src/**/*.test.{ts,tsx}",

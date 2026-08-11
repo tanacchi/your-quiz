@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AppLayout } from "@/components/templates/AppLayout";
+import { JotaiProvider } from "@/providers";
 
 export const metadata: Metadata = {
   title: "QuizPocket",
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className="bg-base-light font-['Noto_Sans_JP','Inter',sans-serif]">
-        <AppLayout>{children}</AppLayout>
+        <JotaiProvider>
+          <AppLayout>{children}</AppLayout>
+        </JotaiProvider>
       </body>
     </html>
   );
