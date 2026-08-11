@@ -14,7 +14,7 @@
 ```http
 POST   /api/quiz/v1/manage/quizzes
 GET    /api/quiz/v1/manage/quizzes/:id
-PUT    /api/quiz/v1/manage/quizzes/:id
+PATCH  /api/quiz/v1/manage/quizzes/:id
 DELETE /api/quiz/v1/manage/quizzes/:id
 GET    /api/quiz/v1/manage/quizzes
 
@@ -234,7 +234,7 @@ type Choice = {
 
 ```http
 POST   /api/quiz/v1/manage/drafts
-PUT    /api/quiz/v1/manage/drafts/:id
+PATCH  /api/quiz/v1/manage/drafts/:id
 DELETE /api/quiz/v1/manage/drafts/:id
 GET    /api/quiz/v1/manage/drafts/mine
 ```
@@ -299,7 +299,7 @@ interface GetDraftsResponse {
 
 ```http
 POST   /api/quiz/v1/manage/approvals
-PUT    /api/quiz/v1/manage/approvals/:id
+PATCH  /api/quiz/v1/manage/approvals/:id
 GET    /api/quiz/v1/manage/pending
 GET    /api/quiz/v1/manage/approval-status/:quizId
 ```
@@ -321,9 +321,11 @@ interface CreateApprovalRequest {
 }
 ```
 
-#### PUT /api/quiz/v1/manage/approvals/:id
+#### PATCH /api/quiz/v1/manage/approvals/:id
 
-**目的**: 承認処理（管理者権限必要）
+**目的**: 承認レコード（`ApprovalRequest`）自体の部分更新（管理者権限必要）
+
+**役割分担**: クイズの状態遷移（承認・却下）自体は `POST /api/quiz/v1/manage/quizzes/:id/approve` `/reject`（1.1節、動詞API）が正とする。本エンドポイントは、その判断結果を承認レコードへ反映する部分更新用途に限定する。
 
 **対応UI**: 管理者画面（将来実装）
 

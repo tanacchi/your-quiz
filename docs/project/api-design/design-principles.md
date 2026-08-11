@@ -96,14 +96,15 @@ APIのURL構造は、DDDの境界づけられたコンテキストを明確に�
 GET     /resource              # 一覧取得
 GET     /resource/{id}         # 詳細取得
 POST    /resource              # 新規作成
-PUT     /resource/{id}         # 全体更新
-PATCH   /resource/{id}         # 部分更新
+PATCH   /resource/{id}         # リソース更新（部分更新）
 DELETE  /resource/{id}         # 削除
 
 # 複雑なビジネスロジック（動詞API）
 POST    /resource/{id}/approve  # 承認処理
 POST    /resource/{id}/publish  # 公開処理
 ```
+
+更新は`PATCH`に統一し、全体置換の`PUT`は採用しない（クライアントが常に全フィールドを送信する前提を置かないため）。
 
 ### 2. レスポンス設計
 

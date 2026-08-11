@@ -98,7 +98,7 @@ interface CreateDeckResponse {
 ```http
 POST   /api/quiz/v1/learning/sessions
 GET    /api/quiz/v1/learning/sessions/:id
-PUT    /api/quiz/v1/learning/sessions/:id
+PATCH  /api/quiz/v1/learning/sessions/:id
 
 # 動詞API (セッション制御)
 POST   /api/quiz/v1/learning/sessions/:id/complete
@@ -182,7 +182,7 @@ POST   /api/quiz/v1/learning/sessions/:id/resume
 ```http
 POST   /api/quiz/v1/learning/sessions/:id/answers
 GET    /api/quiz/v1/learning/answers/:id
-PUT    /api/quiz/v1/learning/answers/:id/offline-sync
+PATCH  /api/quiz/v1/learning/answers/:id/offline-sync
 ```
 
 #### POST /api/quiz/v1/learning/sessions/:id/answers
