@@ -108,7 +108,7 @@ interface QuizLearning {
   // Answer Submission
 
   /** Submit answer to quiz in session */
-  @put
+  @post
   @route("/sessions/{sessionId}/answers")
   submitAnswer(@path sessionId: SessionId, @body request: SubmitAnswerRequest): SubmitAnswerResponse | ValidationError | NotFoundError | ConflictError;
 
