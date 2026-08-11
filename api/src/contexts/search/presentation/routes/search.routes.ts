@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import type { CloudflareBindings } from "../../../../shared/types";
+import type { AppEnv } from "../../../../shared/types";
 import { SearchQuizzesUseCase } from "../../application/use-cases/SearchQuizzesUseCase";
 import { MockSearchRepository } from "../../infrastructure/repositories/MockSearchRepository";
 import { SearchController } from "../controllers/SearchController";
@@ -10,7 +10,7 @@ const searchQuizzesUseCase = new SearchQuizzesUseCase(searchRepository);
 const searchController = new SearchController(searchQuizzesUseCase);
 
 // Search ルーティング
-export const searchRoutes = new Hono<{ Bindings: CloudflareBindings }>();
+export const searchRoutes = new Hono<AppEnv>();
 
 // Quiz Search endpoint
 searchRoutes.get("/quizzes", (c) => searchController.searchQuizzes(c));

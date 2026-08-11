@@ -1,17 +1,11 @@
-import type { Context } from "hono";
 import qs from "qs";
-import type { CloudflareBindings } from "../../../../shared/types";
+import type { AppContext } from "../../../../shared/types";
 import { validateWithZod } from "../../../../shared/utils/validation";
 import type {
   SearchQuizzesUseCase,
   SearchQuizzesUseCaseError,
 } from "../../application/use-cases/SearchQuizzesUseCase";
 import { SearchQuerySchema } from "../schemas/search-query.schema";
-
-/**
- * アプリケーションコンテキスト型
- */
-type AppContext = Context<{ Bindings: CloudflareBindings }>;
 
 /**
  * 検索コントローラ
