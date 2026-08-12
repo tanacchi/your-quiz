@@ -31,13 +31,6 @@ feature/password-reset-email         # 「パスワードを忘れた時に再�
 feature/add-multer-dependency        # 技術的な実装詳細
 ```
 
-### 4. 500行PR制限
-
-```bash
-# PR作成前の差分行数確認
-git diff --numstat origin/main | awk '{sum+=$1+$2} END {print "Total changes:", sum, "lines"}'
-```
-
 ## 絶対禁止事項
 
 ### pre-commitフック無効化

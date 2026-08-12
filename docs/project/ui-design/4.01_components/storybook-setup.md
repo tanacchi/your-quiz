@@ -2,7 +2,7 @@
 
 ## 概要
 
-Your QuizアプリのUIコンポーネント開発・レビュー・ドキュメント化のためのStorybook環境構築手順です。コンポーネント駆動開発（CDD）を実現し、atoms/molecules/organisms/templates の全コンポーネントを単体で描画・比較できるようにします。
+QuizPocketアプリのUIコンポーネント開発・レビュー・ドキュメント化のためのStorybook環境構築手順です。コンポーネント駆動開発（CDD）を実現し、atoms/molecules/organisms/templates の全コンポーネントを単体で描画・比較できるようにします。
 
 > 本ドキュメントは issue #42 の実装（Storybook 10 / `@storybook/nextjs-vite`）に合わせて更新しています。実際の設定ファイルは `ui/.storybook/` を正とします。
 

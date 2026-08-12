@@ -122,19 +122,19 @@ Honoフレームワークとの最高の親和性、エッジ実行によるコ�
 
 ```toml
 # wrangler.toml
-name = "your-quiz-api"
+name = "quizpocket-api"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
 [env.development]
-name = "your-quiz-api-dev"
+name = "quizpocket-api-dev"
 
 [env.production]
-name = "your-quiz-api"
+name = "quizpocket-api"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "your-quiz-db"
+database_name = "quizpocket-db"
 database_id = "your-database-id"
 
 [vars]

@@ -183,7 +183,7 @@ GET    /api/sync/v1/conflicts
 ```http
 GET    /api/sync/v1/conflicts
 POST   /api/sync/v1/resolve-conflicts
-PUT    /api/sync/v1/conflicts/:conflictId
+PATCH  /api/sync/v1/conflicts/:conflictId
 ```
 
 #### GET /api/sync/v1/conflicts
