@@ -29,6 +29,7 @@ export default defineConfig({
         "src/lib/**/*.{ts,tsx}",
         "src/store/**/*.{ts,tsx}",
         "src/providers/**/*.{ts,tsx}",
+        "src/types/**/*.{ts,tsx}",
       ],
       exclude: [
         "src/**/*.d.ts",
