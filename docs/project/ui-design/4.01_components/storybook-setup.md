@@ -2,7 +2,7 @@
 
 ## 概要
 
-Your QuizアプリのUIコンポーネント開発・テスト・ドキュメント化のためのStorybook環境構築手順です。コンポーネント駆動開発（CDD）を実現し、デザインシステムとの整合性を保ちながら効率的なUI開発を行います。
+QuizPocketアプリのUIコンポーネント開発・テスト・ドキュメント化のためのStorybook環境構築手順です。コンポーネント駆動開発（CDD）を実現し、デザインシステムとの整合性を保ちながら効率的なUI開発を行います。
 
 ## 参照ドキュメント
 
@@ -183,8 +183,8 @@ import { create } from '@storybook/theming/create';
 
 export default create({
   base: 'light',
-  brandTitle: 'Your Quiz Design System',
-  brandUrl: 'https://your-quiz.example.com',
+  brandTitle: 'QuizPocket Design System',
+  brandUrl: 'https://quizpocket.example.com',
   brandImage: './logo.svg',
   brandTarget: '_self',
 
@@ -679,9 +679,9 @@ import { Meta } from '@storybook/blocks';
 
 <Meta title="Introduction" />
 
-# Your Quiz Design System
+# QuizPocket Design System
 
-Your Quizアプリケーションのデザインシステムとコンポーネントライブラリです。
+QuizPocketアプリケーションのデザインシステムとコンポーネントライブラリです。
 
 ## 概要
 
@@ -735,7 +735,7 @@ import { Meta, ColorPalette, ColorItem } from '@storybook/blocks';
 
 # カラーパレット
 
-Your Quizアプリで使用するカラーシステムです。
+QuizPocketアプリで使用するカラーシステムです。
 
 ## Primary Colors
 
