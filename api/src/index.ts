@@ -27,7 +27,7 @@ import type { AppEnv } from "./shared/types";
 const app = new Hono<AppEnv>();
 
 /**
- * 匿名ユーザー識別ミドルウェア（issue #44 / ADR-0024）
+ * 匿名ユーザー識別ミドルウェア（issue #44 / ADR-0026）
  *
  * 全リクエストに `userFingerprint`（UUID v4）を付与する。
  * ルート登録より前に登録し、全エンドポイントに適用されるようにする。

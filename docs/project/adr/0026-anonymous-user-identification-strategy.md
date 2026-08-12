@@ -1,4 +1,4 @@
-# ADR-0024: Anonymous User Identification Strategy
+# ADR-0026: Anonymous User Identification Strategy
 
 ## Status
 

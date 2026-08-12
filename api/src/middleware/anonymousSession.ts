@@ -3,7 +3,7 @@ import { createMiddleware } from "hono/factory";
 import { userFingerprintSchema } from "../shared/schemas";
 import type { AppEnv } from "../shared/types";
 
-/** Cookie名。DB上は `UserIdentity.anonymous_id` にマップされる（ADR-0024参照） */
+/** Cookie名。DB上は `UserIdentity.anonymous_id` にマップされる（ADR-0026参照） */
 const COOKIE_NAME = "quiz_fingerprint";
 
 /** Cookieの最大寿命（400日）。主要ブラウザのCookie有効期限上限に合わせる */
@@ -50,7 +50,7 @@ const extractFromCookie = (
 };
 
 /**
- * 匿名ユーザー識別ミドルウェア（issue #44 / ADR-0024）
+ * 匿名ユーザー識別ミドルウェア（issue #44 / ADR-0026）
  *
  * Authorizationヘッダー > Cookie > 新規発行 の優先順位で
  * `userFingerprint`（UUID v4文字列）を決定し、`c.var.userFingerprint` にセットする。

@@ -1,7 +1,7 @@
 import { spec } from "pactum";
 
 // Anonymous Session BDD Tests - 匿名セッションBDDテスト
-// issue #44 / ADR-0024: Cookie + UUID v4 + Hono middleware + 遅延解決
+// issue #44 / ADR-0026: Cookie + UUID v4 + Hono middleware + 遅延解決
 // Endpoint: すべての API リクエスト（ここでは D1 非依存の /health を利用）
 //
 // dev-mock env（D1バインディングなし・USE_MOCK_DB=true）で動作するため、

@@ -21,7 +21,7 @@ export type CloudflareBindings = {
  *
  * - `userFingerprint`: Cookie / Authorization ヘッダーから取得、または
  *   新規発行された匿名ユーザーの識別子（UUID v4）。DB上の永続化先は
- *   `UserIdentity.anonymous_id`（ADR-0024参照）。
+ *   `UserIdentity.anonymous_id`（ADR-0026参照）。
  */
 export type AppVariables = {
   userFingerprint: string;
