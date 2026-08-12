@@ -98,7 +98,7 @@ interface CreateDeckResponse {
 ```http
 POST   /api/quiz/v1/learning/sessions
 GET    /api/quiz/v1/learning/sessions/:id
-PUT    /api/quiz/v1/learning/sessions/:id
+PATCH  /api/quiz/v1/learning/sessions/:id
 
 # 動詞API (セッション制御)
 POST   /api/quiz/v1/learning/sessions/:id/complete
@@ -173,7 +173,7 @@ POST   /api/quiz/v1/learning/sessions/:id/resume
 | previousAnswer | object | 前問結果(解説表示用) |
 | previousAnswer.quizId | string | 問題ID |
 | previousAnswer.userAnswer | boolean | ユーザー回答 |
-| previousAnswer.correctAnswer | boolean | 正解 |
+| previousAnswer.correctAnswer | Solution | 解答種別（answerType）に応じた正解データ |
 | previousAnswer.isCorrect | boolean | 正解フラグ |
 | previousAnswer.explanation | string | 解説文 |
 
@@ -182,7 +182,7 @@ POST   /api/quiz/v1/learning/sessions/:id/resume
 ```http
 POST   /api/quiz/v1/learning/sessions/:id/answers
 GET    /api/quiz/v1/learning/answers/:id
-PUT    /api/quiz/v1/learning/answers/:id/offline-sync
+PATCH  /api/quiz/v1/learning/answers/:id/offline-sync
 ```
 
 #### POST /api/quiz/v1/learning/sessions/:id/answers
@@ -214,7 +214,7 @@ PUT    /api/quiz/v1/learning/answers/:id/offline-sync
 | answer | object | 回答結果 |
 | answer.id | string | 回答ID |
 | answer.isCorrect | boolean | 正解フラグ |
-| answer.correctAnswer | boolean | 正解 |
+| answer.correctAnswer | Solution | 解答種別（answerType）に応じた正解データ |
 | answer.explanation | string | 解説文 |
 | answer.responseTimeMs | number | 回答時間(ミリ秒) |
 | session | object | セッション更新情報 |

@@ -2,7 +2,7 @@
 
 ## ステータス
 
-**承認済み** - Chanfana不採用。型の厳格性とTypeSpecスキーマファースト原則を優先し、純粋なHono + TypeSpec生成型の組み合わせを採用。
+Accepted
 
 ## 文脈
 
@@ -172,7 +172,7 @@ Quiz APIの開発において、TypeSpecによるスキーマファースト開�
    
    const quizSchema = z.object({
      question: z.string(),
-     answerType: z.enum(["boolean", "free_text"]),
+     answerType: z.enum(["boolean", "free_text", "single_choice", "multiple_choice"]),
    }) satisfies z.ZodType<QuizRequest>;
    ```
 

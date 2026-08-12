@@ -2,7 +2,7 @@
 
 ## 概要
 
-Your Quiz APIのTypeScript SDKを自動生成し、型安全で開発効率の高いクライアント開発を実現するための戦略を定義します。
+QuizPocket APIのTypeScript SDKを自動生成し、型安全で開発効率の高いクライアント開発を実現するための戦略を定義します。
 
 ## 技術スタック
 
@@ -54,7 +54,7 @@ export function isMultipleChoiceSolution(solution: Solution): solution is Extrac
 
 ```typescript
 // SDK使用例
-import { QuizManagementAPI, isBooleanSolution, isFreeTextSolution } from '@your-quiz/sdk';
+import { QuizManagementAPI, isBooleanSolution, isFreeTextSolution } from '@quizpocket/sdk';
 
 const api = new QuizManagementAPI();
 

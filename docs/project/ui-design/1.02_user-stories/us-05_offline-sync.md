@@ -31,7 +31,7 @@ graph TD
         D[📱 オフラインで利用可能]
         E[キャッシュ済み: 45問]
         F[同期待ち回答: 3件]
-        G[ストレージ使用量: 12MB/50MB]
+        G[ストレージ使用量: 12MB/100MB]
     end
 
     subgraph "Action Buttons"
@@ -54,7 +54,7 @@ graph TD
 
 - **事前ダウンロード**: 最大100問まで・圧縮効率考慮
 - **同期競合**: Last-Write-Winsによる単純化処理
-- **データ保持**: 最大50MB・自動クリーンアップ
+- **データ保持**: 最大100MB・自動クリーンアップ
 - **エラー処理**: 同期失敗時の手動再試行機能
 
 ## オフライン検出・通知
@@ -110,7 +110,7 @@ graph TD
     end
 
     subgraph "Storage Management"
-        D --> J[最大容量: 50MB]
+        D --> J[最大容量: 100MB]
         D --> K[現在使用量: 12MB]
         D --> L[古いデータ自動削除]
     end
@@ -241,8 +241,8 @@ flowchart TD
 graph TD
     subgraph "Storage Overview"
         A[ストレージ使用状況]
-        A --> B[合計: 12MB / 50MB]
-        A --> C[使用率: 24%]
+        A --> B[合計: 12MB / 100MB]
+        A --> C[使用率: 12%]
     end
 
     subgraph "Data Breakdown"

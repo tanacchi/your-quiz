@@ -54,8 +54,10 @@ model AttemptWithAnswer {
 }
 
 // Request/Response models
+// Note: sessionId is intentionally omitted — it is already carried by the
+// @path parameter on submitAnswer, and duplicating it in the body would
+// leave the sessionId vs. path-id consistency undefined on mismatch.
 model SubmitAnswerRequest {
-  sessionId: SessionId;
   quizId: QuizId;
   answer: Answer;
 }

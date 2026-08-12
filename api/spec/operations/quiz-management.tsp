@@ -168,7 +168,7 @@ interface QuizManagement {
     - **管理業務**: 作成者変更や大幅な内容修正
     - **品質向上**: 解説の充実化やタグ分類の見直し
     """)
-  @patch
+  @patch(#{ implicitOptionality: false })
   @route("/quizzes/{id}")
   updateQuiz(
     @doc("更新対象のクイズID（UUID形式）")

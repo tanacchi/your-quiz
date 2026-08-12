@@ -1,8 +1,8 @@
-# ライブラリ使用ガイド（Your Quiz プロジェクト）
+# ライブラリ使用ガイド（QuizPocket プロジェクト）
 
 ## 概要
 
-Your Quizプロジェクトで採用しているライブラリの正しい使用方法、バージョン指定、禁止パターンと代替案を定義します。
+QuizPocketプロジェクトで採用しているライブラリの正しい使用方法、バージョン指定、禁止パターンと代替案を定義します。
 
 ## 採用ライブラリ一覧
 
@@ -252,7 +252,7 @@ pnpm cf-typegen
 
 ```toml
 # wrangler.toml
-name = "your-quiz-api"
+name = "quizpocket-api"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
@@ -261,7 +261,7 @@ vars = { ENVIRONMENT = "production" }
 
 [[env.production.d1_databases]]
 binding = "DB"
-database_name = "your-quiz-prod"
+database_name = "quizpocket-prod"
 database_id = "xxx"
 ```
 
