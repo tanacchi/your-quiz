@@ -1,8 +1,8 @@
-# API実装ルール（Your Quiz プロジェクト）
+# API実装ルール（QuizPocket プロジェクト）
 
 ## 概要
 
-Your QuizプロジェクトにおけるAPI実装の標準ルールを定義します。TypeScript + Hono + neverthrow + TypeSpecを組み合わせた型安全で保守性の高い実装を目標とします。
+QuizPocketプロジェクトにおけるAPI実装の標準ルールを定義します。TypeScript + Hono + neverthrow + TypeSpecを組み合わせた型安全で保守性の高い実装を目標とします。
 
 ## 必須技術スタック
 

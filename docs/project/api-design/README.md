@@ -2,7 +2,7 @@
 
 ## 目的
 
-Your QuizアプリケーションにおけるバックエンドAPIの包括的設計を定義し、フロントエンドUIとドメインロジックを効率的に結合するアーキテクチャを提供する。
+QuizPocketアプリケーションにおけるバックエンドAPIの包括的設計を定義し、フロントエンドUIとドメインロジックを効率的に結合するアーキテクチャを提供する。
 
 ## 参照ドキュメント
 
@@ -50,7 +50,7 @@ API Flow: GET /api/quiz/v1/learning/published → POST /api/quiz/v1/learning/dec
 
 ```text
 UI Flow: Create → フォーム → プレビュー → 投稿完了
-API Flow: POST /api/quiz/v1/manage/drafts → PUT /api/quiz/v1/manage/drafts/:id → POST /api/quiz/v1/manage/quizzes/submit
+API Flow: POST /api/quiz/v1/manage/drafts → PATCH /api/quiz/v1/manage/drafts/:id → POST /api/quiz/v1/manage/quizzes/submit
 ```
 
 ### 検索・発見フロー

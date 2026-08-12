@@ -2,7 +2,7 @@
 
 ## 概要
 
-Your QuizアプリのUI開発・保守における、MCP（Model Context Protocol）とLLM（Large Language Model）を活用した自動化システムの設計・運用設定です。コンポーネント生成、ドキュメント更新、テスト作成、品質チェックの自動化を実現します。
+QuizPocketアプリのUI開発・保守における、MCP（Model Context Protocol）とLLM（Large Language Model）を活用した自動化システムの設計・運用設定です。コンポーネント生成、ドキュメント更新、テスト作成、品質チェックの自動化を実現します。
 
 ## 参照ドキュメント
 
@@ -616,7 +616,7 @@ export const {{componentName}}: React.FC<{{componentName}}Props> = ({
 ```markdown
 # UI Design Agent Instructions
 
-You are a UI design specialist for the Your Quiz application. Your role is to:
+You are a UI design specialist for the QuizPocket application. Your role is to:
 
 1. **Component Generation**: Generate React components based on wireframes and design system
 2. **Design System Maintenance**: Keep design tokens and documentation up-to-date

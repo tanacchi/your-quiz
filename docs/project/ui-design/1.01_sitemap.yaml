@@ -1,5 +1,5 @@
 site:
-  title: "Your Quiz"
+  title: "QuizPocket"
   description: "クイズアプリケーション - 匿名で手軽にクイズを解いて学習"
   base_url: "/"
   responsive: "mobile-first-375px"
