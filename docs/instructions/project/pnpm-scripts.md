@@ -21,6 +21,8 @@
 | `format:md` | - | Markdownファイルの自動修正 |
 | `format:biome` | - | BiomeによるJavaScript/TypeScriptの自動修正 |
 | `prepare` | - | Huskyのセットアップ（Git hooksの設定） |
+| `storybook` | - | UI の Storybook 開発サーバー起動（`ui storybook` に委譲） |
+| `storybook:build` | - | UI の Storybook 静的ビルド（`ui storybook:build` に委譲） |
 | `mutation-test` | - | Mutation testing実行（API配下のvalidation.tsを対象） |
 | `mutation-report` | - | Mutation testing結果の分析レポート生成（除外適用後・JSONLとMarkdown） |
 
@@ -54,6 +56,8 @@
 | `dev` | - | Next.js開発サーバーの起動（ホットリロード付き） |
 | `build` | - | Next.jsプロダクションビルドの実行 |
 | `start` | - | プロダクションビルドサーバーの起動 |
+| `storybook` | - | Storybook 開発サーバーの起動（`http://localhost:6006`） |
+| `storybook:build` | - | Storybook 静的ビルド（成果物: `ui/storybook-static`） |
 
 ## よく使用するコマンド例
 

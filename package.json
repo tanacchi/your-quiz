@@ -30,6 +30,8 @@
     "lint:biome": "biome check",
     "lint:md": "sh ./scripts/lint-md.sh",
     "prepare": "husky",
+    "storybook": "pnpm --filter ui storybook",
+    "storybook:build": "pnpm --filter ui storybook:build",
     "test": "run-p test:*",
     "test:api": "pnpm --filter api test",
     "test:ui": "pnpm --filter ui test",
