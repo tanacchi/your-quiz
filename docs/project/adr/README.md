@@ -30,6 +30,7 @@
 | [0022](0022-typespec-schema-first-hono-integration-strategy.md) | TypeSpecスキーマファースト開発におけるHono統合ライブラリ選択 | Accepted | 2025-08-06 | Chanfana不採用、純粋なHono + TypeSpec生成型を採用 |
 | [0023](0023-bdd-framework-migration-pactum.md) | BDDフレームワーク移行（PactumJS） | Accepted | 2025-08-08 | Cucumber.jsからPactumJS + Jestへ移行 |
 | [0024](0024-accessibility-policy.md) | アクセシビリティ方針（WCAG 2.1 AA目標） | Proposed | 2025-08-11 | WCAG 2.1 レベルAAを目標として確定 |
+| [0025](0025-update-endpoint-http-method-policy.md) | 更新系エンドポイントのHTTPメソッド方針 | Proposed | 2026-08-12 | TypeSpec/Hono実装層でのPATCH/POST判断基準を確定 |
 
 ## ステータス定義
 
