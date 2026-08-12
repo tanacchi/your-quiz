@@ -1,8 +1,8 @@
-# API実装ガイド（Your Quiz プロジェクト）
+# API実装ガイド（QuizPocket プロジェクト）
 
 ## 概要
 
-Your QuizプロジェクトにおけるAPI実装のための包括的なガイドです。TypeScript + Hono + neverthrow + TypeSpecを使用した型安全で保守性の高いAPI開発を支援します。
+QuizPocketプロジェクトにおけるAPI実装のための包括的なガイドです。TypeScript + Hono + neverthrow + TypeSpecを使用した型安全で保守性の高いAPI開発を支援します。
 
 ## ドキュメント構成
 

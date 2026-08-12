@@ -1,6 +1,6 @@
 # API Catalog Directory
 
-Your Quiz アプリケーションの包括的なAPI仕様書を、ドメイン別に整理したディレクトリです。
+QuizPocket アプリケーションの包括的なAPI仕様書を、ドメイン別に整理したディレクトリです。
 
 ## ファイル構成
 

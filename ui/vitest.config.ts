@@ -18,13 +18,15 @@ export default defineConfig({
     // jest-domマッチャーのセットアップ
     setupFiles: ["./src/test/setup.ts"],
 
-    // カバレッジ設定（スケルトン段階は低めのしきい値から段階導入）
+    // カバレッジ設定（スケルトン段階は低めのしきい値から段階導入。
+    // src/lib/db は TDD 対象のためコアロジックとして95%を要求する）
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
       reportsDirectory: "reports/coverage",
       include: [
         "src/components/**/*.{ts,tsx}",
+        "src/lib/**/*.{ts,tsx}",
         "src/store/**/*.{ts,tsx}",
         "src/providers/**/*.{ts,tsx}",
       ],
@@ -33,13 +35,18 @@ export default defineConfig({
         "src/**/*.test.{ts,tsx}",
         "src/**/*.spec.{ts,tsx}",
         "src/**/*.stories.{ts,tsx}",
+        "src/lib/db/index.ts",
       ],
       thresholds: {
-        global: {
-          lines: 60,
-          functions: 60,
-          branches: 60,
-          statements: 60,
+        lines: 60,
+        functions: 60,
+        branches: 60,
+        statements: 60,
+        "**/src/lib/db/**": {
+          lines: 95,
+          functions: 95,
+          branches: 95,
+          statements: 95,
         },
       },
     },

@@ -44,9 +44,9 @@ graph TB
 
 | 概念 | 上位概念 | 定義 | 根拠文書 |
 |------|----------|------|----------|
-| **Quiz（クイズ）** | Content Management | ◯×問題形式の学習コンテンツ | requirements-quiz.md:10 |
+| **Quiz（クイズ）** | Content Management | 4種類の解答形式（真偽・自由記述・単一選択・複数選択）に対応した学習コンテンツ | requirements-quiz.md:10 |
 | **Question（問題文）** | Quiz | クイズの問いかけ部分（500文字以内） | requirements-quiz.md:11 |
-| **Correct Answer（正解）** | Quiz | ◯または×の2択正解 | requirements-quiz.md:12 |
+| **Correct Answer（正解）** | Quiz | 解答形式（answerType）に応じた正解データ（ADR-0021） | requirements-quiz.md:12 |
 | **Explanation（解説）** | Quiz | 正解理由の説明（1000文字以内、任意） | requirements-quiz.md:13 |
 | **Tag（タグ）** | Quiz | クイズの分類・検索用ラベル | requirements-quiz.md:14 |
 | **Quiz Status（クイズ状態）** | Quiz | 承認フロー上の状態（承認待ち・承認済み・拒否） | requirements-quiz.md:20 |
@@ -56,7 +56,7 @@ graph TB
 | 概念 | 上位概念 | 定義 | 根拠文書 |
 |------|----------|------|----------|
 | **Learning Session（学習セッション）** | Learning Experience | 連続的な学習活動の単位 | user-story-quiz.md:5 |
-| **Answer（回答）** | Learning Session | ユーザーの◯×選択と正誤結果 | user-story-quiz.md:8 |
+| **Answer（回答）** | Learning Session | ユーザーの解答（解答形式に応じたデータ）と正誤結果 | user-story-quiz.md:8 |
 | **Answer History（回答履歴）** | Learning Session | 過去の回答記録集合 | user-story-quiz.md:15 |
 | **Learning Progress（学習進捗）** | Learning Experience | 学習成果の定量的指標 | user-story-quiz.md:16 |
 | **Swipe Gesture（スワイプ操作）** | Learning Session | 右◯・左×の直感的回答方法 | user-story-quiz.md:8 |

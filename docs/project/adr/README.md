@@ -21,11 +21,16 @@
 | [0013](0013-frontend-hosting.md) | フロントエンドホスティング選定 | Accepted | 2025-07-27 | Vercel採用決定 |
 | [0014](0014-api-hosting.md) | APIホスティング選定（詳細） | Accepted | 2025-07-27 | Cloudflare Workers詳細設定 |
 | [0015](0015-api-query-language.md) | APIクエリ言語選定 | Accepted | 2025-07-27 | REST API採用決定 |
-| [0016](0016-bounded-context-division.md) | 境界づけられたコンテキスト分割決定 | Proposed | 2025-07-28 | 4つのコンテキスト分割採用 |
-| [0017](0017-aggregate-design.md) | 集約設計とルート決定 | Proposed | 2025-07-28 | 4つの集約設計採用 |
-| [0018](0018-domain-service-extraction.md) | ドメインサービス抽出決定 | Proposed | 2025-07-28 | 4つのドメインサービス抽出 |
-| [0019](0019-repository-pattern-adoption.md) | リポジトリパターン採用決定 | Proposed | 2025-07-28 | 集約単位リポジトリ採用 |
+| [0016](0016-bounded-context-division.md) | 境界づけられたコンテキスト分割決定 | Accepted | 2025-07-28 | 4つのコンテキスト分割採用 |
+| [0017](0017-aggregate-design.md) | 集約設計とルート決定 | Accepted | 2025-07-28 | 4つの集約設計採用 |
+| [0018](0018-domain-service-extraction.md) | ドメインサービス抽出決定 | Accepted | 2025-07-28 | 4つのドメインサービス抽出 |
+| [0019](0019-repository-pattern-adoption.md) | リポジトリパターン採用決定 | Accepted | 2025-07-28 | 集約単位リポジトリ採用 |
 | [0020](0020-bdd-testing-framework.md) | BDDテスティングフレームワーク選定 | Proposed | 2025-01-31 | Cucumber.js + Vitest採用決定 |
+| [0021](0021-quiz-solution-api-response-strategy.md) | クイズSolution APIレスポンス戦略 | Proposed | 2025-08-04 | Discriminated Union型 + Field Selection採用 |
+| [0022](0022-typespec-schema-first-hono-integration-strategy.md) | TypeSpecスキーマファースト開発におけるHono統合ライブラリ選択 | Accepted | 2025-08-06 | Chanfana不採用、純粋なHono + TypeSpec生成型を採用 |
+| [0023](0023-bdd-framework-migration-pactum.md) | BDDフレームワーク移行（PactumJS） | Accepted | 2025-08-08 | Cucumber.jsからPactumJS + Jestへ移行 |
+| [0024](0024-accessibility-policy.md) | アクセシビリティ方針（WCAG 2.1 AA目標） | Proposed | 2025-08-11 | WCAG 2.1 レベルAAを目標として確定 |
+| [0025](0025-update-endpoint-http-method-policy.md) | 更新系エンドポイントのHTTPメソッド方針 | Proposed | 2026-08-12 | TypeSpec/Hono実装層でのPATCH/POST判断基準を確定 |
 
 ## ステータス定義
 
@@ -36,7 +41,7 @@
 
 ## ADR作成ガイドライン
 
-新しいADRを作成する場合は、[docs/instructions/shared/workflow/adr-management.md](docs/instructions/shared/workflow/adr-management.md) の標準テンプレートを使用してください。
+新しいADRを作成する場合は、[ADR管理手順書](../../instructions/shared/workflow/00.04_adr-management.md) の標準テンプレートを使用してください。
 
 ### 作成手順
 
@@ -54,12 +59,12 @@
 
 ## 関連ドキュメント
 
-- [ADR管理手順書](docs/instructions/shared/workflow/adr-management.md)
-- [技術選定比較表](docs/project/architecture/tech-selection.md)
-- [システム概要](docs/project/architecture/system-overview.md)
+- [ADR管理手順書](../../instructions/shared/workflow/00.04_adr-management.md)
+- [技術選定比較表](../architecture/tech-selection.md)
+- [システム概要](../architecture/system-overview.md)
 
 ---
 
 **作成日**: 2025-07-28  
-**最終更新**: 2025-07-28  
+**最終更新**: 2025-08-11  
 **管理者**: [@tanacchi](https://github.com/tanacchi)

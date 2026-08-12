@@ -320,7 +320,7 @@ interface AnswerAndContinueResponse {
   answerResult: {
     isCorrect: boolean;
     explanation: string;
-    correctAnswer: boolean;
+    correctAnswer: BooleanSolution | FreeTextSolution | SingleChoiceSolution | MultipleChoiceSolution;
   };
   sessionProgress: {
     currentIndex: number;

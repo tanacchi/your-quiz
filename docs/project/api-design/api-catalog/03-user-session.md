@@ -13,7 +13,7 @@
 ```http
 POST   /api/user/v1/sessions
 GET    /api/user/v1/sessions/current
-PUT    /api/user/v1/sessions/current
+PATCH  /api/user/v1/sessions/current
 DELETE /api/user/v1/sessions/current
 
 # 動詞API (セッション制御)
@@ -111,7 +111,7 @@ interface GetCurrentSessionResponse {
 
 ```http
 GET    /api/user/v1/profile/me
-PUT    /api/user/v1/profile/me
+PATCH  /api/user/v1/profile/me
 GET    /api/user/v1/permissions
 DELETE /api/user/v1/profile/me
 POST   /api/user/v1/profile/me/export-data
@@ -152,7 +152,7 @@ interface GetMeResponse {
 }
 ```
 
-#### PUT /api/user/v1/profile/me
+#### PATCH /api/user/v1/profile/me
 
 **目的**: ユーザー設定・プリファレンス更新
 
@@ -182,7 +182,7 @@ interface UpdateMeRequest {
 ```http
 POST   /api/user/v1/creator/claims
 GET    /api/user/v1/creator/my-quizzes
-PUT    /api/user/v1/creator/claims/:quizId
+PATCH  /api/user/v1/creator/claims/:quizId
 DELETE /api/user/v1/creator/claims/:quizId
 ```
 
