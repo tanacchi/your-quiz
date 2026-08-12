@@ -26,6 +26,9 @@
 | [0018](0018-domain-service-extraction.md) | ドメインサービス抽出決定 | Proposed | 2025-07-28 | 4つのドメインサービス抽出 |
 | [0019](0019-repository-pattern-adoption.md) | リポジトリパターン採用決定 | Proposed | 2025-07-28 | 集約単位リポジトリ採用 |
 | [0020](0020-bdd-testing-framework.md) | BDDテスティングフレームワーク選定 | Proposed | 2025-01-31 | Cucumber.js + Vitest採用決定 |
+| [0025](0025-update-endpoint-http-method-policy.md) | 更新系エンドポイントのHTTPメソッド方針 | Proposed | 2026-08-12 | TypeSpec/Hono実装層でのPATCH/POST判断基準を確定 |
+
+> **注記**: 0021〜0024は本PR時点で他PRにより並行して番号確保・追加作業中のため、このテーブルは0025のみ追記している。マージ順によっては本テーブルの手動コンフリクト解消が必要。
 
 ## ステータス定義
 

@@ -59,7 +59,7 @@ interface UserSession {
   getUserAccount(@path id: UserAccountId): UserAccount | NotFoundError;
   
   /** Update user account */
-  @put
+  @patch(#{ implicitOptionality: false })
   @route("/accounts/{id}")
   updateUserAccount(@path id: UserAccountId, @body request: UpdateUserAccountRequest): UserAccount | NotFoundError | ValidationError;
   
