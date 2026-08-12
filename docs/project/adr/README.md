@@ -32,6 +32,7 @@
 | [0024](0024-accessibility-policy.md) | アクセシビリティ方針（WCAG 2.1 AA目標） | Proposed | 2025-08-11 | WCAG 2.1 レベルAAを目標として確定 |
 | [0025](0025-update-endpoint-http-method-policy.md) | 更新系エンドポイントのHTTPメソッド方針 | Proposed | 2026-08-12 | TypeSpec/Hono実装層でのPATCH/POST判断基準を確定 |
 | [0026](0026-anonymous-user-identification-strategy.md) | 匿名ユーザー識別方式選定 | Proposed | 2026-08-11 | Cookie + UUID v4 + ミドルウェア + 遅延解決採用 |
+| [0027](0027-search-full-text-strategy.md) | Search 本番実装の全文検索方式選定 | Proposed | 2026-08-13 | 日本語短語検索の実用性を優先しLIKE方式を採用（FTS5は不採用） |
 
 ## ステータス定義
 
@@ -67,5 +68,5 @@
 ---
 
 **作成日**: 2025-07-28  
-**最終更新**: 2025-08-11  
+**最終更新**: 2026-08-13  
 **管理者**: [@tanacchi](https://github.com/tanacchi)
