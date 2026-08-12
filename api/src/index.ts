@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { quizRoutes } from "./contexts/quiz-management/presentation/routes/quiz.routes";
 import { searchRoutes } from "./contexts/search/presentation/routes/search.routes";
-import type { CloudflareBindings } from "./shared/types";
+import { anonymousSession } from "./middleware/anonymousSession";
+import type { AppEnv } from "./shared/types";
 
 /**
  * Your Quiz API アプリケーション
@@ -23,7 +24,15 @@ import type { CloudflareBindings } from "./shared/types";
  * Cloudflare Workersのバインディングを含むHonoアプリケーションです。
  * 全てのAPIルートとミドルウェアがここに設定されます。
  */
-const app = new Hono<{ Bindings: CloudflareBindings }>();
+const app = new Hono<AppEnv>();
+
+/**
+ * 匿名ユーザー識別ミドルウェア（issue #44 / ADR-0026）
+ *
+ * 全リクエストに `userFingerprint`（UUID v4）を付与する。
+ * ルート登録より前に登録し、全エンドポイントに適用されるようにする。
+ */
+app.use("*", anonymousSession);
 
 /**
  * API ルートの設定

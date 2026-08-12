@@ -31,6 +31,7 @@
 | [0023](0023-bdd-framework-migration-pactum.md) | BDDフレームワーク移行（PactumJS） | Accepted | 2025-08-08 | Cucumber.jsからPactumJS + Jestへ移行 |
 | [0024](0024-accessibility-policy.md) | アクセシビリティ方針（WCAG 2.1 AA目標） | Proposed | 2025-08-11 | WCAG 2.1 レベルAAを目標として確定 |
 | [0025](0025-update-endpoint-http-method-policy.md) | 更新系エンドポイントのHTTPメソッド方針 | Proposed | 2026-08-12 | TypeSpec/Hono実装層でのPATCH/POST判断基準を確定 |
+| [0026](0026-anonymous-user-identification-strategy.md) | 匿名ユーザー識別方式選定 | Proposed | 2026-08-11 | Cookie + UUID v4 + ミドルウェア + 遅延解決採用 |
 
 ## ステータス定義
 

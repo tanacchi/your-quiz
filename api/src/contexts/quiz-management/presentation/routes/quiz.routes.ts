@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { createQuizRepository } from "../../../../infrastructure/repositories/QuizRepositoryFactory";
-import type { CloudflareBindings } from "../../../../shared/types";
+import type { AppEnv, CloudflareBindings } from "../../../../shared/types";
 import {
   CreateQuizUseCase,
   GetQuizUseCase,
@@ -9,7 +9,7 @@ import {
 import { QuizController } from "../controllers/QuizController";
 
 // Quiz Management ルーティング
-export const quizRoutes = new Hono<{ Bindings: CloudflareBindings }>();
+export const quizRoutes = new Hono<AppEnv>();
 
 /**
  * クイズコントローラーのファクトリー関数
