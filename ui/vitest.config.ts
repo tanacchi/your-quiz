@@ -27,6 +27,8 @@ export default defineConfig({
       include: [
         "src/components/**/*.{ts,tsx}",
         "src/lib/**/*.{ts,tsx}",
+        "src/store/**/*.{ts,tsx}",
+        "src/providers/**/*.{ts,tsx}",
         "src/types/**/*.{ts,tsx}",
       ],
       exclude: [
