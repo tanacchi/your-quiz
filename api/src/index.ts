@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { learningRoutes } from "./contexts/quiz-learning/presentation/routes/learning.routes";
 import { quizRoutes } from "./contexts/quiz-management/presentation/routes/quiz.routes";
 import { searchRoutes } from "./contexts/search/presentation/routes/search.routes";
 import { anonymousSession } from "./middleware/anonymousSession";
@@ -39,9 +40,11 @@ app.use("*", anonymousSession);
  *
  * クイズ管理関連のルートを /api/quiz/v1/manage パスにマウントします。
  * 検索関連のルートを /api/search/v1 パスにマウントします。
+ * 学習（Deck管理）関連のルートを /api/quiz/v1/learning パスにマウントします。
  */
 app.route("/api/quiz/v1/manage", quizRoutes);
 app.route("/api/search/v1", searchRoutes);
+app.route("/api/quiz/v1/learning", learningRoutes);
 
 /**
  * ヘルスチェックエンドポイント
