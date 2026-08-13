@@ -72,6 +72,13 @@ model CreateDeckFromSearchRequest {
   description?: string;
 }
 
+// Deck部分更新リクエスト（ADR-0025のPATCH方針に準拠、ADR-0027参照）
+model UpdateDeckRequest {
+  name?: string;
+  description?: string;
+  quizIds?: QuizId[];
+}
+
 model StartSessionRequest {
   deckId: DeckId;
   deviceFingerprint: string;
@@ -87,6 +94,7 @@ model UpdateSessionRequest {
   isCompleted?: boolean;
 }
 
-model DeckListResponse extends PaginationResponse<DeckWithQuizzes> {}
+// 一覧では問題本体は含めず軽量なDeckのみ返す（詳細はgetDeckで取得。ADR-0027参照）
+model DeckListResponse extends PaginationResponse<Deck> {}
 
 model SessionListResponse extends PaginationResponse<QuizSessionWithProgress> {}
