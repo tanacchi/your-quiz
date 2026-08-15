@@ -76,6 +76,8 @@ export class QuizController {
       solution: body.solution,
       explanation: body.explanation,
       tags: body.tags,
+      creatorId: c.var.userFingerprint,
+      isDraft: body.isDraft,
     });
 
     if (result.isErr()) {
