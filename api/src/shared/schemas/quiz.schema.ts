@@ -64,12 +64,19 @@ export const createQuizSchema = z
  */
 export const updateQuizSchema = z
   .object({
-    question: z.string().min(1).optional(),
-    explanation: z.string().optional(),
+    // 上限はquiz-management.tspのcreateQuiz doc（問題文500文字/解説1000文字）
+    // およびdomain/entities/quiz/quiz-schema.tsのQuizSchemaと揃える
+    question: z.string().min(1).max(500).optional(),
+    explanation: z.string().max(1000).optional(),
   })
   .refine(
     (data) => data.question !== undefined || data.explanation !== undefined,
-    { message: "At least one of question or explanation must be provided" },
+    {
+      message: "At least one of question or explanation must be provided",
+      // pathを指定しないとissueがルート([])に付き、createValidationErrorが
+      // fieldErrorsに空文字キー("")を生成してしまう
+      path: ["question"],
+    },
   );
 
 /**

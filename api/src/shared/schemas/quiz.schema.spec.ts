@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createValidationError } from "../errors/factories";
 import {
   approvalRequestSchema,
   createQuizSchema,
@@ -80,6 +81,49 @@ describe("quiz.schema", () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).not.toHaveProperty("answerType");
+      }
+    });
+
+    it("questionは500文字を超えると失敗する(quiz-management.tsp/domain quiz-schema.tsと同じ上限)", () => {
+      const result = updateQuizSchema.safeParse({
+        question: "Q".repeat(501),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("questionは500文字ちょうどなら成功する", () => {
+      const result = updateQuizSchema.safeParse({
+        question: "Q".repeat(500),
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("explanationは1000文字を超えると失敗する", () => {
+      const result = updateQuizSchema.safeParse({
+        explanation: "E".repeat(1001),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("explanationは1000文字ちょうどなら成功する", () => {
+      const result = updateQuizSchema.safeParse({
+        explanation: "E".repeat(1000),
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("どちらも無しの場合、fieldErrorsに空文字キーが混入しない(A-7回帰)", () => {
+      const result = updateQuizSchema.safeParse({});
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const validationError = createValidationError(result.error);
+        // toHaveProperty("")は空文字キーを正しく扱えないため、Object.keysで検証する
+        expect(Object.keys(validationError.fieldErrors ?? {})).not.toContain(
+          "",
+        );
+        expect(Object.keys(validationError.fieldErrors ?? {})).toContain(
+          "question",
+        );
       }
     });
   });
