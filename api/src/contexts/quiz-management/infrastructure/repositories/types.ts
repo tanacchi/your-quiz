@@ -199,8 +199,19 @@ export function isValidAnswerType(
  */
 export function isValidQuizStatus(
   value: string,
-): value is "pending_approval" | "approved" | "rejected" {
-  return ["pending_approval", "approved", "rejected"].includes(value);
+): value is
+  | "draft"
+  | "pending_approval"
+  | "approved"
+  | "rejected"
+  | "published" {
+  return [
+    "draft",
+    "pending_approval",
+    "approved",
+    "rejected",
+    "published",
+  ].includes(value);
 }
 
 /**

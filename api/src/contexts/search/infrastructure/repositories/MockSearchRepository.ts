@@ -1,5 +1,6 @@
 import { err, ok, type Result } from "neverthrow";
 import { loadSearchQuizFixtures } from "../../../../shared/fixtures";
+import type { components } from "../../../../types/generated/api";
 import type { SearchQuizzesQuery } from "../../domain/entities/SearchQuizzesQuery";
 import type {
   ISearchRepository,
@@ -21,7 +22,7 @@ export class MockSearchRepository implements ISearchRepository {
     answerType: "boolean" | "free_text" | "single_choice" | "multiple_choice";
     solutionId: string;
     explanation?: string;
-    status: "pending_approval" | "approved" | "rejected";
+    status: components["schemas"]["QuizStatus"];
     creatorId: string;
     createdAt: string;
     approvedAt?: string;
@@ -51,10 +52,7 @@ export class MockSearchRepository implements ISearchRepository {
           | "multiple_choice",
         solutionId: quiz.get("solutionId"),
         ...(explanation && { explanation }),
-        status: quiz.get("status") as
-          | "pending_approval"
-          | "approved"
-          | "rejected",
+        status: quiz.get("status") as components["schemas"]["QuizStatus"],
         creatorId: quiz.get("creatorId"),
         createdAt: quiz.get("createdAt"),
         ...(approvedAt && { approvedAt }),
