@@ -10,6 +10,13 @@ import {
 } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
 import {
+  CreatorId,
+  QuizId,
+  QuizSummary,
+  SolutionId,
+} from "../../domain/entities/quiz-summary/QuizSummary";
+import { TagIds } from "../../domain/entities/quiz-summary/quiz-summary-schema";
+import {
   QuizCreatorOnlyError,
   QuizNotFoundError,
   QuizStatusError,
@@ -40,6 +47,20 @@ describe("UpdateQuizUseCase", () => {
     ...overrides,
   });
 
+  // update()の戻り値はUseCaseが破棄して再findByIdするため内容は問わないが、
+  // `as never`を使わず型を満たす実インスタンスを用意する
+  const buildMockQuizSummary = (): QuizSummary =>
+    QuizSummary.build({
+      id: QuizId.parse("quiz-123"),
+      question: "What is TypeScript?",
+      answerType: "boolean",
+      solutionId: SolutionId.parse("solution-123"),
+      status: "pending_approval",
+      creatorId: CreatorId.parse("creator-123"),
+      createdAt: "2024-01-01 00:00:00",
+      tagIds: TagIds.parse([]),
+    });
+
   const validCommand: UpdateQuizCommand = {
     quizId: "quiz-123",
     requesterId: "creator-123",
@@ -65,7 +86,7 @@ describe("UpdateQuizUseCase", () => {
           createImmediateSuccess(buildQuizResponse()),
         );
         vi.mocked(mockRepository.update).mockReturnValue(
-          createImmediateSuccess({} as never),
+          createImmediateSuccess(buildMockQuizSummary()),
         );
         vi.mocked(mockRepository.findById).mockReturnValueOnce(
           createImmediateSuccess(
@@ -92,7 +113,7 @@ describe("UpdateQuizUseCase", () => {
           createImmediateSuccess(buildQuizResponse()),
         );
         vi.mocked(mockRepository.update).mockReturnValue(
-          createImmediateSuccess({} as never),
+          createImmediateSuccess(buildMockQuizSummary()),
         );
 
         // Act
@@ -116,7 +137,7 @@ describe("UpdateQuizUseCase", () => {
             createImmediateSuccess(buildQuizResponse({ status })),
           );
           vi.mocked(mockRepository.update).mockReturnValue(
-            createImmediateSuccess({} as never),
+            createImmediateSuccess(buildMockQuizSummary()),
           );
 
           // Act

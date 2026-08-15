@@ -45,14 +45,10 @@ export class MockSearchRepository implements ISearchRepository {
       return {
         id: quiz.get("id"),
         question: quiz.get("question"),
-        answerType: quiz.get("answerType") as
-          | "boolean"
-          | "free_text"
-          | "single_choice"
-          | "multiple_choice",
+        answerType: quiz.get("answerType"),
         solutionId: quiz.get("solutionId"),
         ...(explanation && { explanation }),
-        status: quiz.get("status") as components["schemas"]["QuizStatus"],
+        status: quiz.get("status"),
         creatorId: quiz.get("creatorId"),
         createdAt: quiz.get("createdAt"),
         ...(approvedAt && { approvedAt }),

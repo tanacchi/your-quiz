@@ -5,16 +5,17 @@ import {
   QuizSummary,
   SolutionId,
 } from "../../domain/entities/quiz-summary/QuizSummary";
+import type { QuizStatusValue } from "../../domain/entities/quiz-summary/quiz-status-transition";
 import { TagIds } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import { getSharedMockQuizStore, MockQuizStore } from "./MockQuizStore";
 
-const buildQuiz = (id: string, overrides: { status?: string } = {}) =>
+const buildQuiz = (id: string, overrides: { status?: QuizStatusValue } = {}) =>
   QuizSummary.build({
     id: QuizId.parse(id),
     question: `Question ${id}`,
     answerType: "single_choice",
     solutionId: SolutionId.parse(`solution-${id}`),
-    status: (overrides.status ?? "pending_approval") as never,
+    status: overrides.status ?? "pending_approval",
     creatorId: CreatorId.parse("creator-1"),
     createdAt: "2023-12-01 10:00:00",
     approvedAt:

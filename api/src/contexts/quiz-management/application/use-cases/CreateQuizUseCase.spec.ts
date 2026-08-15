@@ -384,6 +384,12 @@ describe("CreateQuizUseCase", () => {
           if (result.isOk()) {
             expect(result.value.status).toBe("pending_approval");
           }
+          // result.value.statusはmockQuizSummary.get()のエコーに過ぎず
+          // "pending_approval"固定なので、三項演算子を反転させても検出
+          // できない(T-5)。実際にリポジトリへ渡されたstatusを検証する。
+          const [passedQuiz] =
+            vi.mocked(mockRepository.create).mock.calls[0] ?? [];
+          expect(passedQuiz?.get("status")).toBe("pending_approval");
         },
       );
     });
