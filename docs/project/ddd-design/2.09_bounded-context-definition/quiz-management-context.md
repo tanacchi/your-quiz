@@ -37,9 +37,11 @@ interface Quiz {
 
 #### 主要な振る舞い
 
+> **注（ADR-0027）**: 以下は本コンテキストの目標設計（管理者ロール・`AdministratorId`・`rejectionReason` の永続化を含む）であり、issue #46 時点の暫定実装とは差分がある。暫定実装では管理者ロールが未実装のため `approve`/`reject`/`publish` は `NODE_ENV` ベースの暫定権限（`presentation/policies/moderation-policy.ts`）で代替し、`reviewerNotes`（拒否理由に相当）は記録先カラムが無く未使用。`create()` の `isDraft` 分岐、`submit`/`publish` の追加は ADR-0027 の正規フロー `draft → submit → pending_approval → (approved | rejected) → publish → published` を反映したもの。
+
 ```typescript
 class QuizAggregate {
-  // クイズ作成
+  // クイズ作成（ADR-0027: isDraftによりDraft/PendingApprovalを出し分ける）
   static create(command: CreateQuizCommand): Result<Quiz, DomainError> {
     // バリデーション
     const question = Question.create(command.questionText);
@@ -55,10 +57,24 @@ class QuizAggregate {
       correctAnswer: correctAnswer.value,
       explanation: command.explanation ? Explanation.create(command.explanation).value : undefined,
       tags: command.tags.map(tag => Tag.create(tag)).filter(t => t.isOk()).map(t => t.value),
-      status: QuizStatus.PendingApproval,
+      status: command.isDraft ? QuizStatus.Draft : QuizStatus.PendingApproval,
       creatorId: command.creatorId,
       createdAt: Timestamp.now()
     }));
+  }
+
+  // 承認申請（Draft/Rejected → PendingApproval、作成者限定）
+  submit(): Result<void, DomainError> {
+    if (this.status !== QuizStatus.Draft && this.status !== QuizStatus.Rejected) {
+      return err(new BusinessRuleError('draft/rejected状態のクイズのみ承認申請可能'));
+    }
+
+    this.status = QuizStatus.PendingApproval;
+
+    // ドメインイベント発行
+    this.addDomainEvent(new QuizSubmittedEvent(this.id, this.creatorId));
+
+    return ok(undefined);
   }
   
   // 承認処理
@@ -92,13 +108,27 @@ class QuizAggregate {
     
     return ok(undefined);
   }
+
+  // 公開処理（Approved → Published、管理者限定）
+  publish(administratorId: AdministratorId): Result<void, DomainError> {
+    if (this.status !== QuizStatus.Approved) {
+      return err(new BusinessRuleError('承認済み状態のクイズのみ公開可能'));
+    }
+
+    this.status = QuizStatus.Published;
+
+    // ドメインイベント発行
+    this.addDomainEvent(new QuizPublishedEvent(this.id, administratorId));
+
+    return ok(undefined);
+  }
   
   // 作成者確認
   isCreatedBy(creatorId: CreatorId): boolean {
     return this.creatorId.equals(creatorId);
   }
   
-  // 公開可能性確認
+  // 公開可能性確認（Publishedになった後は再びfalseに戻る。publishは冪等な操作ではない）
   isPublishable(): boolean {
     return this.status === QuizStatus.Approved;
   }
@@ -406,6 +436,17 @@ interface QuizRejectedEvent extends DomainEvent {
   readonly administratorId: AdministratorId;
   readonly reason: string;
   readonly rejectedAt: Timestamp;
+}
+```
+
+### QuizPublishedEvent
+
+```typescript
+interface QuizPublishedEvent extends DomainEvent {
+  readonly eventType: 'QuizPublished';
+  readonly quizId: QuizId;
+  readonly administratorId: AdministratorId;
+  readonly publishedAt: Timestamp;
 }
 ```
 
