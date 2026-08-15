@@ -89,7 +89,7 @@ export const errorScenarios = {
     {
       description: "Forbidden access - 作成者以外のアクセス",
       endpoint: "/api/quiz/v1/manage/quizzes/test-quiz-id",
-      method: "PUT",
+      method: "PATCH",
       headers: { "X-User-Id": "different-user" },
       input: { question: "Updated question?" },
       expectedStatus: 403,
@@ -98,7 +98,7 @@ export const errorScenarios = {
     {
       description: "Already approved quiz edit - 承認済みクイズの編集",
       endpoint: "/api/quiz/v1/manage/quizzes/approved-quiz-id",
-      method: "PUT",
+      method: "PATCH",
       headers: { "X-User-Id": "creator-user" },
       input: { question: "Updated question?" },
       expectedStatus: 403,
@@ -155,7 +155,7 @@ export const errorScenarios = {
     {
       description: "Repository update failure - リポジトリ更新失敗",
       endpoint: "/api/quiz/v1/manage/quizzes/test-quiz-id",
-      method: "PUT",
+      method: "PATCH",
       headers: {
         "X-User-Id": "creator-user",
         "_simulate-repository-failure": "UPDATE_FAILED",
