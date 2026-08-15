@@ -149,21 +149,29 @@ class Question {
 }
 ```
 
-#### QuizStatus（クイズ状態）
+#### QuizStatus（クイズ状態、ADR-0027で5値に拡張）
 
 ```typescript
 enum QuizStatusValue {
+  Draft = 'draft',
   PendingApproval = 'pending_approval',
   Approved = 'approved',
-  Rejected = 'rejected'
+  Rejected = 'rejected',
+  Published = 'published'
 }
 
 class QuizStatus {
   private constructor(readonly value: QuizStatusValue) {}
   
+  static readonly Draft = new QuizStatus(QuizStatusValue.Draft);
   static readonly PendingApproval = new QuizStatus(QuizStatusValue.PendingApproval);
   static readonly Approved = new QuizStatus(QuizStatusValue.Approved);
   static readonly Rejected = new QuizStatus(QuizStatusValue.Rejected);
+  static readonly Published = new QuizStatus(QuizStatusValue.Published);
+  
+  isDraft(): boolean {
+    return this.value === QuizStatusValue.Draft;
+  }
   
   isPendingApproval(): boolean {
     return this.value === QuizStatusValue.PendingApproval;
@@ -175,6 +183,10 @@ class QuizStatus {
   
   isRejected(): boolean {
     return this.value === QuizStatusValue.Rejected;
+  }
+  
+  isPublished(): boolean {
+    return this.value === QuizStatusValue.Published;
   }
   
   equals(other: QuizStatus): boolean {
@@ -403,7 +415,7 @@ interface QuizRejectedEvent extends DomainEvent {
 
 1. **問題文必須**: 問題文は必ず存在し、500文字以内
 2. **正解必須**: 正解は必ず◯または×のいずれか
-3. **ステータス遷移**: PendingApproval → (Approved | Rejected) のみ許可
+3. **ステータス遷移**（ADR-0027）: `Draft → submit → PendingApproval → (Approved | Rejected)`、`Rejected → submit → PendingApproval`（再申請）、`Approved → publish → Published` のみ許可。`Approved`/`Published` への更新・削除は不可
 4. **承認者必須**: 承認済みクイズには必ず承認者が存在
 5. **作成者不変**: 作成者IDは作成後変更不可
 6. **サニタイズ済み**: 問題文・解説はHTMLタグが除去済み
