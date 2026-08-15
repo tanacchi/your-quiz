@@ -1,3 +1,4 @@
+import { ValidationError } from "../../../../shared/errors";
 import {
   approvalRequestSchema,
   updateQuizSchema,
@@ -16,6 +17,19 @@ export type QuizWriteUseCases = {
   delete: Pick<DeleteQuizUseCase, "execute">;
   changeStatus: Pick<ChangeQuizStatusUseCase, "execute">;
 };
+
+/**
+ * approve/rejectのエンドポイントごとに許容される`decision`値。
+ *
+ * `decision`はエンドポイントのverb（URL）と冗長な必須フィールドだが、
+ * TypeSpec契約上は必須のため、verbと矛盾する値を送った場合は400で拒否する
+ * （黙って無視してverb側を正とすると「送ったのに逆の結果になる」という
+ * ADR-0027が自ら断罪したアンチパターンを踏むため）。
+ */
+const EXPECTED_DECISION_BY_ACTION = {
+  approve: "approved",
+  reject: "rejected",
+} as const satisfies Record<"approve" | "reject", string>;
 
 /**
  * クイズ書き込み系コントローラー
@@ -140,7 +154,7 @@ export class QuizWriteController {
   /** ApprovalRequestボディを持つ遷移（approve/reject）の共通処理 */
   private async handleTransitionWithBody(
     c: AppContext,
-    action: QuizTransitionAction,
+    action: "approve" | "reject",
   ) {
     const jsonResult = await parseJsonSafe(c.req);
     if (jsonResult.isErr()) {
@@ -161,10 +175,17 @@ export class QuizWriteController {
       return c.json(errorResponse.response, errorResponse.statusCode);
     }
 
-    return this.handleTransition(
-      c,
-      action,
-      validationResult.value.reviewerNotes,
-    );
+    const { decision, reviewerNotes } = validationResult.value;
+    const expectedDecision = EXPECTED_DECISION_BY_ACTION[action];
+    if (decision !== expectedDecision) {
+      const mismatchError = new ValidationError(
+        `decision must be "${expectedDecision}" for this endpoint, got "${decision}"`,
+        { decision: `Expected "${expectedDecision}"` },
+      );
+      const errorResponse = ControllerErrorHandler.handleError(mismatchError);
+      return c.json(errorResponse.response, errorResponse.statusCode);
+    }
+
+    return this.handleTransition(c, action, reviewerNotes);
   }
 }

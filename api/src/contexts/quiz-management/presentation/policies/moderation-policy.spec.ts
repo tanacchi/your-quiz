@@ -23,5 +23,24 @@ describe("moderation-policy", () => {
 
       expect(canModerate(env)).toBe(expected);
     });
+
+    // ADR-0027のリスク表「NODE_ENVの判定漏れにより本番でモデレーションAPIが
+    // 開いてしまう」対策として、許可リスト方式(fail-closed)であることを検証する。
+    // `!== "production"`という否定形の判定だとこれらは全てtrue(全開放)になる。
+    it.each([
+      ["undefined相当の空文字", ""],
+      ["先頭大文字違い", "Production"],
+      ["全て大文字", "PRODUCTION"],
+      ["略記のtypo", "prod"],
+      ["末尾空白混入", "development "],
+      ["完全に未知の値", "unknown"],
+    ])(
+      "想定外のNODE_ENV(%s: %j)はfalseを返す(fail-closed)",
+      (_label, nodeEnv) => {
+        const env = createMockEnv({ NODE_ENV: nodeEnv });
+
+        expect(canModerate(env)).toBe(false);
+      },
+    );
   });
 });

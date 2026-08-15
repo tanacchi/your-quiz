@@ -86,12 +86,17 @@ describe("QuizWriteController", () => {
       expect(res.status).toBe(200);
       const body = z.object({ question: z.string() }).parse(await res.json());
       expect(body.question).toBe("Updated");
-      expect(updateUseCase.execute).toHaveBeenCalledWith({
+      // explanationが未指定の場合、実装はキー自体を渡さない
+      // (exactOptionalPropertyTypes対応の条件付きスプレッド)。
+      // toHaveBeenCalledWithはundefined値のプロパティ有無を区別しないため、
+      // キーの非存在を明示的に検証する。
+      const [callArgs] = vi.mocked(updateUseCase.execute).mock.calls[0] ?? [];
+      expect(callArgs).toStrictEqual({
         quizId: "quiz-123",
         requesterId: "fp-test-user",
         question: "Updated",
-        explanation: undefined,
       });
+      expect(callArgs).not.toHaveProperty("explanation");
     });
 
     test("異常系: 空ボディは400を返す", async () => {
@@ -157,7 +162,7 @@ describe("QuizWriteController", () => {
   });
 
   describe("submitForApproval", () => {
-    test("正常系: 200でUseCaseの結果を返しisModeratorはfalseにならない前提でsubmitを渡す", async () => {
+    test("正常系: 200でUseCaseの結果を返す。submitはrequiresModeration=falseのためisModeratorの値に関わらず作成者確認に委ねられる", async () => {
       vi.mocked(changeStatusUseCase.execute).mockReturnValue(
         createImmediateSuccess(
           buildQuizResponse({ status: "pending_approval" }),
@@ -177,6 +182,10 @@ describe("QuizWriteController", () => {
           requesterId: "fp-test-user",
         }),
       );
+      // ボディを持たない遷移なのでreviewerNotesキー自体を渡さない
+      const [callArgs] =
+        vi.mocked(changeStatusUseCase.execute).mock.calls[0] ?? [];
+      expect(callArgs).not.toHaveProperty("reviewerNotes");
     });
   });
 
@@ -233,6 +242,18 @@ describe("QuizWriteController", () => {
       expect(res.status).toBe(400);
       expect(changeStatusUseCase.execute).not.toHaveBeenCalled();
     });
+
+    test("異常系: decision=rejectedを/approveに送ると400を返し、承認されない(S-2)", async () => {
+      const req = new Request("http://localhost/quizzes/quiz-123/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision: "rejected" }),
+      });
+      const res = await app.request(req, {}, mockEnv);
+
+      expect(res.status).toBe(400);
+      expect(changeStatusUseCase.execute).not.toHaveBeenCalled();
+    });
   });
 
   describe("rejectQuiz", () => {
@@ -244,14 +265,26 @@ describe("QuizWriteController", () => {
       const req = new Request("http://localhost/quizzes/quiz-123/reject", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ decision: "rejected" }),
+        body: JSON.stringify({ decision: "rejected", reviewerNotes: "NG" }),
       });
       const res = await app.request(req, {}, mockEnv);
 
       expect(res.status).toBe(200);
       expect(changeStatusUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({ action: "reject" }),
+        expect.objectContaining({ action: "reject", reviewerNotes: "NG" }),
       );
+    });
+
+    test("異常系: decision=approvedを/rejectに送ると400を返し、却下されない(S-2)", async () => {
+      const req = new Request("http://localhost/quizzes/quiz-123/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision: "approved" }),
+      });
+      const res = await app.request(req, {}, mockEnv);
+
+      expect(res.status).toBe(400);
+      expect(changeStatusUseCase.execute).not.toHaveBeenCalled();
     });
   });
 
