@@ -58,6 +58,17 @@ describe("quiz-repository-error-mapping", () => {
 
       expect(result).toBeInstanceOf(UseCaseInternalError);
     });
+
+    test("UseCaseInternalErrorはrepositoryError.detailsを引き継ぐ(.messageはInternalServerErrorで固定されるため)", () => {
+      const error = new CreateFailedError("Quiz", "Unknown error");
+
+      const result = mapFindErrorToUseCaseError("quiz-1", error);
+
+      expect(result).toBeInstanceOf(UseCaseInternalError);
+      if (result instanceof UseCaseInternalError) {
+        expect(result.details).toBe("Unknown error");
+      }
+    });
   });
 
   describe("mapUpdateErrorToUseCaseError", () => {
@@ -70,6 +81,22 @@ describe("quiz-repository-error-mapping", () => {
       if (result instanceof QuizUpdateFailedError) {
         expect(result.quizId).toBe("quiz-1");
       }
+    });
+
+    test("UpdateFailedErrorでdetailsに'not found'を含む場合はQuizNotFoundErrorを返す(Mock経路)", () => {
+      const error = new UpdateFailedError("Quiz", "Quiz not found: quiz-1");
+
+      const result = mapUpdateErrorToUseCaseError("quiz-1", error);
+
+      expect(result).toBeInstanceOf(QuizNotFoundError);
+    });
+
+    test("FindFailedErrorでdetailsに'not found'を含む場合はQuizNotFoundErrorを返す(D1経路: 更新後の再取得SELECTが空)", () => {
+      const error = new FindFailedError("Quiz", "Quiz not found: quiz-1");
+
+      const result = mapUpdateErrorToUseCaseError("quiz-1", error);
+
+      expect(result).toBeInstanceOf(QuizNotFoundError);
     });
 
     test("UpdateFailedError以外はUseCaseInternalErrorを返す", () => {
@@ -91,6 +118,22 @@ describe("quiz-repository-error-mapping", () => {
       if (result instanceof QuizDeletionFailedError) {
         expect(result.quizId).toBe("quiz-1");
       }
+    });
+
+    test("DeleteFailedErrorでdetailsに'not found'を含む場合はQuizNotFoundErrorを返す", () => {
+      const error = new DeleteFailedError("Quiz", "Quiz not found: quiz-1");
+
+      const result = mapDeleteErrorToUseCaseError("quiz-1", error);
+
+      expect(result).toBeInstanceOf(QuizNotFoundError);
+    });
+
+    test("FindFailedErrorでdetailsに'not found'を含む場合はQuizNotFoundErrorを返す", () => {
+      const error = new FindFailedError("Quiz", "Quiz not found: quiz-1");
+
+      const result = mapDeleteErrorToUseCaseError("quiz-1", error);
+
+      expect(result).toBeInstanceOf(QuizNotFoundError);
     });
 
     test("DeleteFailedError以外はUseCaseInternalErrorを返す", () => {

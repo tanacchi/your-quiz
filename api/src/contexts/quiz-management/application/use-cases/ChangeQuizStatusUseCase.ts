@@ -79,7 +79,11 @@ export class ChangeQuizStatusUseCase {
 
         if (!canTransition(quiz.status, command.action)) {
           return errAsync(
-            new QuizStatusError(command.quizId, quiz.status, rule.to),
+            new QuizStatusError(
+              command.quizId,
+              quiz.status,
+              rule.from.join(" or "),
+            ),
           );
         }
 

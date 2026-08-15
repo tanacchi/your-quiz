@@ -10,6 +10,13 @@ import {
 } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
 import {
+  CreatorId,
+  QuizId,
+  QuizSummary,
+  SolutionId,
+} from "../../domain/entities/quiz-summary/QuizSummary";
+import { TagIds } from "../../domain/entities/quiz-summary/quiz-summary-schema";
+import {
   QuizAdminOnlyError,
   QuizCreatorOnlyError,
   QuizNotFoundError,
@@ -44,6 +51,20 @@ describe("ChangeQuizStatusUseCase", () => {
     ...overrides,
   });
 
+  // update()の戻り値はUseCaseが破棄して再findByIdするため内容は問わないが、
+  // `as never`を使わず型を満たす実インスタンスを用意する
+  const buildMockQuizSummary = (): QuizSummary =>
+    QuizSummary.build({
+      id: QuizId.parse("quiz-123"),
+      question: "What is TypeScript?",
+      answerType: "boolean",
+      solutionId: SolutionId.parse("solution-123"),
+      status: "draft",
+      creatorId: CreatorId.parse("creator-123"),
+      createdAt: "2024-01-01 00:00:00",
+      tagIds: TagIds.parse([]),
+    });
+
   beforeEach(() => {
     mockRepository = {
       create: vi.fn(),
@@ -67,7 +88,7 @@ describe("ChangeQuizStatusUseCase", () => {
         createImmediateSuccess(buildQuizResponse(afterOverrides)),
       );
     vi.mocked(mockRepository.update).mockReturnValue(
-      createImmediateSuccess({} as never),
+      createImmediateSuccess(buildMockQuizSummary()),
     );
   };
 
@@ -146,6 +167,15 @@ describe("ChangeQuizStatusUseCase", () => {
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
           expect(result.error).toBeInstanceOf(QuizStatusError);
+          // 「必要なステータス」には遷移元(draft/rejected)が入る。遷移先(pending_approval)ではない
+          const error = result.error as QuizStatusError;
+          expect(error.currentStatus).toBe(status);
+          expect(error.requiredStatus).toBe("draft or rejected");
+          // .messageはConflictErrorのクラスフィールドで固定されるため、
+          // 動的な文言は.detailsに入る(AppErrorの既知の仕様)
+          expect(error.details).toBe(
+            `Quiz quiz-123 is in ${status} status, but draft or rejected is required`,
+          );
         }
       },
     );
@@ -227,6 +257,9 @@ describe("ChangeQuizStatusUseCase", () => {
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
           expect(result.error).toBeInstanceOf(QuizStatusError);
+          const error = result.error as QuizStatusError;
+          expect(error.currentStatus).toBe(status);
+          expect(error.requiredStatus).toBe("pending_approval");
         }
       },
     );
@@ -256,6 +289,59 @@ describe("ChangeQuizStatusUseCase", () => {
         status: "rejected",
       });
     });
+
+    test("モデレーターでない場合はQuizAdminOnlyError", async () => {
+      // Arrange
+      vi.mocked(mockRepository.findById).mockReturnValue(
+        createImmediateSuccess(
+          buildQuizResponse({ status: "pending_approval" }),
+        ),
+      );
+      const command: ChangeQuizStatusCommand = {
+        quizId: "quiz-123",
+        action: "reject",
+        requesterId: "someone",
+        isModerator: false,
+      };
+
+      // Act
+      const result = await useCase.execute(command);
+
+      // Assert
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        expect(result.error).toBeInstanceOf(QuizAdminOnlyError);
+      }
+      expect(mockRepository.update).not.toHaveBeenCalled();
+    });
+
+    test.each(["draft", "approved", "rejected", "published"] as const)(
+      "%sからrejectするとQuizStatusError",
+      async (status) => {
+        // Arrange
+        vi.mocked(mockRepository.findById).mockReturnValue(
+          createImmediateSuccess(buildQuizResponse({ status })),
+        );
+        const command: ChangeQuizStatusCommand = {
+          quizId: "quiz-123",
+          action: "reject",
+          requesterId: "moderator-1",
+          isModerator: true,
+        };
+
+        // Act
+        const result = await useCase.execute(command);
+
+        // Assert
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+          expect(result.error).toBeInstanceOf(QuizStatusError);
+          const error = result.error as QuizStatusError;
+          expect(error.currentStatus).toBe(status);
+          expect(error.requiredStatus).toBe("pending_approval");
+        }
+      },
+    );
   });
 
   describe("publish", () => {
@@ -282,7 +368,7 @@ describe("ChangeQuizStatusUseCase", () => {
       });
     });
 
-    test.each(["draft", "pending_approval", "rejected"] as const)(
+    test.each(["draft", "pending_approval", "rejected", "published"] as const)(
       "%sからpublishするとQuizStatusError",
       async (status) => {
         // Arrange
@@ -303,6 +389,9 @@ describe("ChangeQuizStatusUseCase", () => {
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
           expect(result.error).toBeInstanceOf(QuizStatusError);
+          const error = result.error as QuizStatusError;
+          expect(error.currentStatus).toBe(status);
+          expect(error.requiredStatus).toBe("approved");
         }
       },
     );
@@ -412,6 +501,60 @@ describe("ChangeQuizStatusUseCase", () => {
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error).toBeInstanceOf(UseCaseInternalError);
+      }
+    });
+
+    test("should return QuizNotFoundError when UpdateFailedError indicates the quiz is gone (TOCTOU)", async () => {
+      // Arrange: findByIdは成功したが、update直前に対象が削除された(競合)
+      vi.mocked(mockRepository.findById).mockReturnValue(
+        createImmediateSuccess(buildQuizResponse({ status: "draft" })),
+      );
+      vi.mocked(mockRepository.update).mockReturnValue(
+        createImmediateFailure(
+          new UpdateFailedError("Quiz", "Quiz not found: quiz-123"),
+        ),
+      );
+      const command: ChangeQuizStatusCommand = {
+        quizId: "quiz-123",
+        action: "submit",
+        requesterId: "creator-123",
+        isModerator: false,
+      };
+
+      // Act
+      const result = await useCase.execute(command);
+
+      // Assert
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        expect(result.error).toBeInstanceOf(QuizNotFoundError);
+      }
+    });
+
+    test("should return QuizNotFoundError when the post-update re-fetch reports not found (D1経路)", async () => {
+      // Arrange: D1のexecuteUpdateはUPDATE成功後の再取得SELECTが空だとFindFailedErrorを返す
+      vi.mocked(mockRepository.findById).mockReturnValue(
+        createImmediateSuccess(buildQuizResponse({ status: "draft" })),
+      );
+      vi.mocked(mockRepository.update).mockReturnValue(
+        createImmediateFailure(
+          new FindFailedError("Quiz", "Quiz not found: quiz-123"),
+        ),
+      );
+      const command: ChangeQuizStatusCommand = {
+        quizId: "quiz-123",
+        action: "submit",
+        requesterId: "creator-123",
+        isModerator: false,
+      };
+
+      // Act
+      const result = await useCase.execute(command);
+
+      // Assert
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        expect(result.error).toBeInstanceOf(QuizNotFoundError);
       }
     });
   });
