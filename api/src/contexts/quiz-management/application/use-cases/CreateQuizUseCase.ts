@@ -25,8 +25,10 @@ export type CreateQuizCommand = {
   explanation?: string;
   /** タグ配列（オプション） */
   tags?: string[];
-  /** 作成者ID（オプション） */
-  creatorId?: string;
+  /** 作成者ID（c.var.userFingerprint、ADR-0027の暫定措置） */
+  creatorId: string;
+  /** trueの場合、下書き（draft）として保存する（ADR-0027） */
+  isDraft?: boolean;
 };
 
 /**
@@ -72,8 +74,10 @@ export class CreateQuizUseCase {
       answerType: command.answerType,
       solutionId: solutionId,
       explanation: command.explanation,
-      status: "pending_approval" as const,
-      creatorId: command.creatorId || "mock-user-id",
+      status: command.isDraft
+        ? ("draft" as const)
+        : ("pending_approval" as const),
+      creatorId: command.creatorId,
       createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
       tagIds: [], // デフォルト値
     };

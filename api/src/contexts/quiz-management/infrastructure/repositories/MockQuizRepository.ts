@@ -4,22 +4,26 @@ import {
   RepositoryErrorFactory,
 } from "../../../../shared/errors";
 import { NotFoundError } from "../../../../shared/errors/base";
-import { loadQuizFixtures } from "../../../../shared/fixtures";
 import type { components } from "../../../../shared/types";
-import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
+import type {
+  QuizSummary,
+  QuizSummaryData,
+} from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
+import { MockQuizStore } from "./MockQuizStore";
 /**
  * モッククイズリポジトリ実装
  * D1検証システムを活用した共通フィクスチャーを使用
  * 本番環境ではCloudflare D1に置き換える
+ *
+ * データストアは {@link MockQuizStore} に分離している。デフォルト引数
+ * （`new MockQuizStore()`）は呼び出す度に新規ストアを作るため、unit テストでは
+ * 従来どおりテスト間で状態が独立する。`QuizRepositoryFactory` は
+ * `getSharedMockQuizStore()` を明示的に注入することで、BDD テストなど
+ * リクエストを跨いだ永続化が必要な場面にのみ共有ストアを使う。
  */
 export class MockQuizRepository implements IQuizRepository {
-  private readonly mockData: QuizSummary[];
-
-  constructor() {
-    // D1検証システムを活用した型安全なフィクスチャーロード
-    this.mockData = [...loadQuizFixtures()];
-  }
+  constructor(private readonly store: MockQuizStore = new MockQuizStore()) {}
 
   create(
     quiz: QuizSummary,
@@ -27,7 +31,7 @@ export class MockQuizRepository implements IQuizRepository {
   ): ResultAsync<QuizSummary, RepositoryError> {
     // モックデータに追加（実際のD1では永続化）
     // Note: _solution は実際には使用しないが、インターフェースの互換性のため受け取る
-    this.mockData.push(quiz);
+    this.store.add(quiz);
 
     return ResultAsync.fromPromise(
       new Promise((resolve) => resolve(quiz)),
@@ -46,7 +50,7 @@ export class MockQuizRepository implements IQuizRepository {
   ): ResultAsync<components["schemas"]["QuizResponse"], RepositoryError> {
     return ResultAsync.fromPromise(
       new Promise((resolve, reject) => {
-        const quiz = this.mockData.find((q) => q.get("id") === id);
+        const quiz = this.store.findById(id);
         if (quiz) {
           // QuizSummaryからQuizResponse形式に変換（モック用）
           const quizResponse: components["schemas"]["QuizResponse"] = {
@@ -82,7 +86,11 @@ export class MockQuizRepository implements IQuizRepository {
       (error) => {
         console.error("Failed to find quiz by ID:", error);
         if (error instanceof NotFoundError) {
-          return RepositoryErrorFactory.findFailed("Quiz", error);
+          // NotFoundError.messageは固定文言のため、詳細はdetailsから引き継ぐ
+          return RepositoryErrorFactory.findFailed(
+            "Quiz",
+            new Error(error.details ?? error.message),
+          );
         }
         return RepositoryErrorFactory.findFailed(
           "Quiz",
@@ -164,7 +172,7 @@ export class MockQuizRepository implements IQuizRepository {
     },
     RepositoryError
   > {
-    let filteredData = [...this.mockData];
+    let filteredData = [...this.store.list()];
 
     // フィルタリング
     if (filter.status && filter.status.length > 0) {
@@ -207,14 +215,42 @@ export class MockQuizRepository implements IQuizRepository {
   }
 
   update(
-    _id: string,
-    _quiz: Partial<QuizSummary>,
+    id: string,
+    patch: Partial<QuizSummaryData>,
   ): ResultAsync<QuizSummary, RepositoryError> {
-    // 今回は実装せず、将来追加
     return ResultAsync.fromPromise(
-      Promise.reject(new Error("NOT_IMPLEMENTED")),
+      new Promise<QuizSummary>((resolve, reject) => {
+        const existing = this.store.findById(id);
+        if (!existing) {
+          reject(new NotFoundError(`Quiz not found: ${id}`));
+          return;
+        }
+
+        const updateResult = existing.with(patch);
+        if (updateResult.isErr()) {
+          reject(
+            new Error(
+              updateResult.error.issues
+                .map((issue) => issue.message)
+                .join(", "),
+            ),
+          );
+          return;
+        }
+
+        const updated = updateResult.value;
+        this.store.replace(id, updated);
+        resolve(updated);
+      }),
       (error) => {
         console.error("Failed to update quiz:", error);
+        if (error instanceof NotFoundError) {
+          // NotFoundError.messageは固定文言のため、詳細はdetailsから引き継ぐ
+          return RepositoryErrorFactory.updateFailed(
+            "Quiz",
+            new Error(error.details ?? error.message),
+          );
+        }
         return RepositoryErrorFactory.updateFailed(
           "Quiz",
           error instanceof Error ? error : undefined,
@@ -223,12 +259,25 @@ export class MockQuizRepository implements IQuizRepository {
     );
   }
 
-  delete(_id: string): ResultAsync<void, RepositoryError> {
-    // 今回は実装せず、将来追加
+  delete(id: string): ResultAsync<void, RepositoryError> {
     return ResultAsync.fromPromise(
-      Promise.reject(new Error("NOT_IMPLEMENTED")),
+      new Promise<void>((resolve, reject) => {
+        const removed = this.store.remove(id);
+        if (!removed) {
+          reject(new NotFoundError(`Quiz not found: ${id}`));
+          return;
+        }
+        resolve();
+      }),
       (error) => {
         console.error("Failed to delete quiz:", error);
+        if (error instanceof NotFoundError) {
+          // NotFoundError.messageは固定文言のため、詳細はdetailsから引き継ぐ
+          return RepositoryErrorFactory.deleteFailed(
+            "Quiz",
+            new Error(error.details ?? error.message),
+          );
+        }
         return RepositoryErrorFactory.deleteFailed(
           "Quiz",
           error instanceof Error ? error : undefined,

@@ -191,10 +191,10 @@ describe("Quiz Patches", () => {
       it.each([
         ["pending", "pending", [{ status: "pending_approval" }]],
         ["waiting", "waiting", [{ status: "pending_approval" }]],
-        ["draft", "draft", [{ status: "pending_approval" }]],
         ["approve", "approve", [{ status: "approved" }]],
         ["accept", "accept", [{ status: "approved" }]],
-        ["published", "published", [{ status: "approved" }]],
+        ["draft (正式なステータス値のため補正しない)", "draft", []],
+        ["published (正式なステータス値のため補正しない)", "published", []],
         ["reject", "reject", [{ status: "rejected" }]],
         ["decline", "decline", [{ status: "rejected" }]],
         ["denied", "denied", [{ status: "rejected" }]],
@@ -817,7 +817,7 @@ describe("Quiz Patches", () => {
           id: "  solution-456  ",
           value: "true",
         } as unknown as BooleanSolutionData,
-        status: "draft" as "approved",
+        status: "waiting" as "approved",
         creatorId: "  creator-789  " as CreatorId,
         createdAt: "2023-12-01T10:00:00.000Z",
       } as const;

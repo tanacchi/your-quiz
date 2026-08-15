@@ -297,6 +297,9 @@ model CreateQuizRequest {
   solution: SolutionCreate;
   explanation?: string;
   tags?: string[];
+
+  @doc("trueの場合、下書き（draft）として保存する。省略時はfalse扱いで承認待ち（pending_approval）として投稿される（ADR-0027）")
+  isDraft?: boolean;
 }
 
 model CreateQuizResponse {
@@ -307,33 +310,14 @@ model CreateQuizResponse {
 
 @example(#{
   question: "HTMLの段落を表すタグはどれですか？（修正版）",
-  answerType: AnswerType.single_choice,
-  solution: #{
-    type: "single_choice",
-    choices: #[
-      #{
-        text: "<p>",
-        orderIndex: 0,
-        isCorrect: true
-      },
-      #{
-        text: "<div>",
-        orderIndex: 1,
-        isCorrect: false
-      }
-    ]
-  },
-  explanation: "pタグはparagraphの略で、HTMLで段落を表現するために使用します。段落間には自動的にマージンが設定されます。",
-  tags: #["html", "基礎", "初級", "マークアップ"],
-  creatorId: "user-456"
+  explanation: "pタグはparagraphの略で、HTMLで段落を表現するために使用します。段落間には自動的にマージンが設定されます。"
 })
 model UpdateQuizRequest {
+  @doc("更新後の問題文。省略時は変更しない")
   question?: string;
-  answerType?: AnswerType;
-  solution?: SolutionCreate;
+
+  @doc("更新後の解説文。省略時は変更しない。solution/tags/answerType/creatorIdの更新は現時点で未対応（ADR-0027、フォローアップissueで対応予定）")
   explanation?: string;
-  tags?: string[];
-  creatorId?: UserId;
 }
 
 // QuizSummary model for list responses (lightweight, without solution details)
@@ -367,7 +351,9 @@ model QuizSummaryListResponse extends PaginationResponse<QuizSummary> {}
 model ApprovalRequest {
   decision: "approved" | "rejected";
   reviewerNotes?: string;
-  publishImmediately?: boolean = true;
+
+  @doc("現時点ではpublishQuiz呼び出し前の中間状態(reviewerNotes等)の記録先カラムが無いため未使用。将来のフォローアップで対応予定")
+  publishImmediately?: boolean;
 }
 
 model QuizSearchFilters {

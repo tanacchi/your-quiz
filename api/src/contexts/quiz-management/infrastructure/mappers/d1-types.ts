@@ -25,9 +25,11 @@ export const zodAnswerTypeSchema = z.enum([
 ]);
 
 export const zodQuizStatusSchema = z.enum([
+  "draft",
   "pending_approval",
   "approved",
   "rejected",
+  "published",
 ]);
 
 export const zodMatchingStrategySchema = z.enum(["exact", "partial", "regex"]);
@@ -187,7 +189,12 @@ export function isValidAnswerType(
  */
 export function isValidQuizStatus(
   value: string,
-): value is "pending_approval" | "approved" | "rejected" {
+): value is
+  | "draft"
+  | "pending_approval"
+  | "approved"
+  | "rejected"
+  | "published" {
   const result = zodQuizStatusSchema.safeParse(value);
   return result.success;
 }

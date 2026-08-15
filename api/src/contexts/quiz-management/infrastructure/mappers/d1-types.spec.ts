@@ -966,7 +966,7 @@ describe("D1 Types with Zod", () => {
           >();
           expectTypeOf(data.solution_id).toEqualTypeOf<string>();
           expectTypeOf(data.status).toEqualTypeOf<
-            "pending_approval" | "approved" | "rejected"
+            "draft" | "pending_approval" | "approved" | "rejected" | "published"
           >();
           expectTypeOf(data.creator_id).toEqualTypeOf<string>();
           expectTypeOf(data.created_at).toEqualTypeOf<string>();
@@ -1079,7 +1079,12 @@ describe("D1 Types with Zod", () => {
             | "single_choice"
             | "multiple_choice";
           solution_id: string;
-          status: "pending_approval" | "approved" | "rejected";
+          status:
+            | "draft"
+            | "pending_approval"
+            | "approved"
+            | "rejected"
+            | "published";
           creator_id: string;
           created_at: string;
           explanation?: string;
@@ -1371,7 +1376,7 @@ describe("D1 Types with Zod", () => {
             "boolean" | "free_text" | "single_choice" | "multiple_choice"
           >();
           expectTypeOf(data.status).toEqualTypeOf<
-            "pending_approval" | "approved" | "rejected"
+            "draft" | "pending_approval" | "approved" | "rejected" | "published"
           >();
 
           // Runtime verification

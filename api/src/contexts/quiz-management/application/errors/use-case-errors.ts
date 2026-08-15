@@ -78,6 +78,30 @@ export class InvalidQuizIdError extends ValidationError {
 }
 
 /**
+ * クイズ更新失敗エラー
+ */
+export class QuizUpdateFailedError extends InternalServerError {
+  readonly quizId: string;
+
+  constructor(quizId: string, details?: string, requestId?: string) {
+    super(`Failed to update quiz with ID: ${quizId}`, details, requestId);
+    this.quizId = quizId;
+  }
+}
+
+/**
+ * クイズ削除失敗エラー
+ */
+export class QuizDeletionFailedError extends InternalServerError {
+  readonly quizId: string;
+
+  constructor(quizId: string, details?: string, requestId?: string) {
+    super(`Failed to delete quiz with ID: ${quizId}`, details, requestId);
+    this.quizId = quizId;
+  }
+}
+
+/**
  * ユースケースエラーの統合型
  */
 export type UseCaseError =
@@ -86,4 +110,6 @@ export type UseCaseError =
   | QuizRetrievalFailedError
   | QuizListRetrievalFailedError
   | InvalidQuizIdError
+  | QuizUpdateFailedError
+  | QuizDeletionFailedError
   | QuizDomainError;

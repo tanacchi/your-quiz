@@ -5,7 +5,10 @@ import {
 } from "../../../../shared/errors";
 import { NotFoundError } from "../../../../shared/errors/base";
 import type { components } from "../../../../shared/types";
-import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
+import type {
+  QuizSummary,
+  QuizSummaryData,
+} from "../../domain/entities/quiz-summary/QuizSummary";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import { D1QuizSummaryMapper } from "../mappers/D1QuizSummaryMapper";
 import type { D1QueryParam, QuizRow } from "../mappers/d1-types";
@@ -136,9 +139,9 @@ export class D1QuizRepository implements IQuizRepository {
    */
   update(
     id: string,
-    quiz: Partial<QuizSummary>,
+    patch: Partial<QuizSummaryData>,
   ): ResultAsync<QuizSummary, RepositoryError> {
-    return this.executeUpdate(id, quiz).mapErr((error) => {
+    return this.executeUpdate(id, patch).mapErr((error) => {
       console.error("Failed to update quiz:", error);
       return error;
     });
@@ -500,29 +503,27 @@ export class D1QuizRepository implements IQuizRepository {
 
   private executeUpdate(
     id: string,
-    quiz: Partial<QuizSummary>,
+    patch: Partial<QuizSummaryData>,
   ): ResultAsync<QuizSummary, RepositoryError> {
     const fields: string[] = [];
     const params: D1QueryParam[] = [];
 
     // 更新可能なフィールドのマッピング
-    // Partial<QuizSummary>の場合、getメソッドを使用できないため、単純なフィールドアクセスを使用
-    // QuizSummaryData の Partial でも良いかも.
-    if ("question" in quiz && quiz.question !== undefined) {
+    if (patch.question !== undefined) {
       fields.push("question = ?");
-      params.push(quiz.question as string);
+      params.push(patch.question);
     }
-    if ("explanation" in quiz && quiz.explanation !== undefined) {
+    if (patch.explanation !== undefined) {
       fields.push("explanation = ?");
-      params.push(quiz.explanation as string);
+      params.push(patch.explanation);
     }
-    if ("status" in quiz && quiz.status !== undefined) {
+    if (patch.status !== undefined) {
       fields.push("status = ?");
-      params.push(quiz.status as string);
+      params.push(patch.status);
     }
-    if ("approvedAt" in quiz && quiz.approvedAt !== undefined) {
+    if (patch.approvedAt !== undefined) {
       fields.push("approved_at = ?");
-      params.push(quiz.approvedAt as string);
+      params.push(patch.approvedAt);
     }
 
     if (fields.length === 0) {
@@ -560,7 +561,7 @@ export class D1QuizRepository implements IQuizRepository {
       ResultAsync.fromPromise(
         this.db
           .prepare(
-            "SELECT id, question, answer_type, explanation, status, creator_id, created_at, approved_at FROM Quiz WHERE id = ?",
+            "SELECT id, question, answer_type, solution_id, explanation, status, creator_id, created_at, approved_at FROM Quiz WHERE id = ?",
           )
           .bind(id)
           .first(),
@@ -573,11 +574,12 @@ export class D1QuizRepository implements IQuizRepository {
           ),
       ).andThen((updatedRow) => {
         if (!updatedRow || !isQuizRow(updatedRow)) {
+          // UPDATEが0件しかヒットしなかった(対象不在)場合もここに来る
           return ResultAsync.fromSafePromise(
             Promise.reject(
               RepositoryErrorFactory.findFailed(
                 "Quiz",
-                new Error(`Failed to fetch updated quiz: ${id}`),
+                new Error(`Quiz not found: ${id}`),
               ),
             ),
           );

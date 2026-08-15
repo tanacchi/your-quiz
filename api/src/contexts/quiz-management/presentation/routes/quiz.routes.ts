@@ -2,11 +2,15 @@ import { Hono } from "hono";
 import { createQuizRepository } from "../../../../infrastructure/repositories/QuizRepositoryFactory";
 import type { AppEnv, CloudflareBindings } from "../../../../shared/types";
 import {
+  ChangeQuizStatusUseCase,
   CreateQuizUseCase,
+  DeleteQuizUseCase,
   GetQuizUseCase,
   ListQuizzesUseCase,
+  UpdateQuizUseCase,
 } from "../../application/use-cases";
 import { QuizController } from "../controllers/QuizController";
+import { QuizWriteController } from "../controllers/QuizWriteController";
 
 // Quiz Management ルーティング
 export const quizRoutes = new Hono<AppEnv>();
@@ -36,6 +40,27 @@ function createQuizController(env: CloudflareBindings): QuizController {
   );
 }
 
+/**
+ * クイズ書き込み系コントローラーのファクトリー関数
+ *
+ * PATCH/DELETE と承認ワークフロー（submit/approve/reject/publish）を
+ * 担当するコントローラーを作成する（issue #46）。
+ *
+ * @param env - Cloudflare Workersのバインディング環境変数
+ * @returns 設定済みのQuizWriteController
+ */
+function createQuizWriteController(
+  env: CloudflareBindings,
+): QuizWriteController {
+  const quizRepository = createQuizRepository(env);
+
+  return new QuizWriteController({
+    update: new UpdateQuizUseCase(quizRepository),
+    delete: new DeleteQuizUseCase(quizRepository),
+    changeStatus: new ChangeQuizStatusUseCase(quizRepository),
+  });
+}
+
 // Quiz CRUD endpoints
 quizRoutes.get("/quizzes", (c) => {
   const controller = createQuizController(c.env);
@@ -53,11 +78,32 @@ quizRoutes.post("/quizzes", (c) => {
 });
 
 quizRoutes.patch("/quizzes/:id", (c) => {
-  const controller = createQuizController(c.env);
+  const controller = createQuizWriteController(c.env);
   return controller.updateQuiz(c);
 });
 
 quizRoutes.delete("/quizzes/:id", (c) => {
-  const controller = createQuizController(c.env);
+  const controller = createQuizWriteController(c.env);
   return controller.deleteQuiz(c);
+});
+
+// 承認ワークフロー（ADR-0027）
+quizRoutes.post("/quizzes/:id/submit", (c) => {
+  const controller = createQuizWriteController(c.env);
+  return controller.submitForApproval(c);
+});
+
+quizRoutes.post("/quizzes/:id/approve", (c) => {
+  const controller = createQuizWriteController(c.env);
+  return controller.approveQuiz(c);
+});
+
+quizRoutes.post("/quizzes/:id/reject", (c) => {
+  const controller = createQuizWriteController(c.env);
+  return controller.rejectQuiz(c);
+});
+
+quizRoutes.post("/quizzes/:id/publish", (c) => {
+  const controller = createQuizWriteController(c.env);
+  return controller.publishQuiz(c);
 });
