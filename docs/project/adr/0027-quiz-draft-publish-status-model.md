@@ -104,6 +104,8 @@ issue本文の「`POST /quizzes/:id/publish` 実装（下書き→公開）」�
 - `c.var.userFingerprint` を `creatorId` として直接使う暫定措置は、`UserIdentity` 解決実装（ADR-0026 の未完了 Action Item）が入るまで継続する
 - D1書き込み経路（`CreateQuizUseCase` が `Date.now().toString()` をINTEGER PKに、fingerprint文字列をINTEGER FKに入れている不整合）は本ADRのスコープ外。別issueで扱う
 - 論理削除（`deleted_at` カラム追加）は本ADRのスコープ外。DELETEは物理削除のまま運用する
+- `ApprovalRequest.decision` / `publishImmediately`、`ChangeQuizStatusCommand.reviewerNotes` は受け取るが実装では記録先カラムが無いため未使用。`decision` のみエンドポイントのverbと矛盾する値を送ると400で拒否する（送ったのに逆の結果になる事故を防ぐため）。`reviewerNotes` / `publishImmediately` は現状黙って無視される
+- dev/staging環境では `isModerator` の判定が `NODE_ENV` のみに基づくため、**作成者が自分のクイズを承認・公開できる（自己承認を防いでいない）**。管理者ロールが無い現状の暫定措置であり、ロールベース認可導入時に解消する
 
 ### Risks and Mitigation
 
@@ -116,16 +118,19 @@ issue本文の「`POST /quizzes/:id/publish` 実装（下書き→公開）」�
 
 ### Action Items
 
-- [ ] `api/spec/common/types.tsp`: `QuizStatus` enum に `draft` / `published` を追加
-- [ ] `api/spec/models/quiz.tsp`: `CreateQuizRequest.isDraft?: boolean`、`UpdateQuizRequest` を2フィールドに縮小、`ApprovalRequest.publishImmediately` のデフォルト値を削除
-- [ ] `api/spec/operations/quiz-management.tsp`: `submitForApproval` / `approveQuiz` / `rejectQuiz` / `publishQuiz` のコメントアウト解除、戻り型を `QuizResponse` に統一
-- [ ] `api/migrations/quiz-db/0002_quiz_status_add_draft_published.sql`: テーブル再作成によるCHECK制約拡張
-- [ ] `domain/entities/quiz-summary/quiz-status-transition.ts`: 遷移表と純関数の実装
-- [ ] `presentation/policies/moderation-policy.ts`: `canModerate(env)` の実装
-- [ ] `docs/project/ddd-design/2.09_bounded-context-definition/quiz-management-context.md`: `QuizStatusValue` を5値に更新
+- [x] `api/spec/common/types.tsp`: `QuizStatus` enum に `draft` / `published` を追加
+- [x] `api/spec/models/quiz.tsp`: `CreateQuizRequest.isDraft?: boolean`、`UpdateQuizRequest` を2フィールドに縮小、`ApprovalRequest.publishImmediately` のデフォルト値を削除
+- [x] `api/spec/operations/quiz-management.tsp`: `submitForApproval` / `approveQuiz` / `rejectQuiz` / `publishQuiz` のコメントアウト解除、戻り型を `QuizResponse` に統一（承認ワークフローには `ValidationError` も追加）
+- [x] `api/migrations/quiz-db/0002_quiz_status_add_draft_published.sql`: テーブル再作成によるCHECK制約拡張。D1ではPRAGMA foreign_keys/defer_foreign_keysがQuizTag/Attemptのような子行を持つ状態でのDROP TABLEを防げないため、子テーブルを一時退避して作り直す方式を採用（実機検証済み）
+- [x] `domain/entities/quiz-summary/quiz-status-transition.ts`: 遷移表と純関数の実装
+- [x] `infrastructure/repositories/MockQuizStore.ts`: BDDのリクエストを跨いだ永続化用の共有ストア（unitテストは従来どおり独立）
+- [x] `application/use-cases/{UpdateQuiz,DeleteQuiz,ChangeQuizStatus}UseCase.ts`: ユースケース3本と共通エラーマッピング（`quiz-repository-error-mapping.ts`）
+- [x] `presentation/policies/moderation-policy.ts`: `canModerate(env)` の実装（許可リスト方式でfail-closed）
+- [x] `presentation/controllers/QuizWriteController.ts` / `quiz.routes.ts`: 書き込み系6メソッドと動詞ルート登録
+- [x] `docs/project/ddd-design/2.09_bounded-context-definition/quiz-management-context.md`: `QuizStatusValue` を5値に更新（集約の疑似コード自体の全面更新は #78 へ）
 - [ ] 将来: `UserIdentity` 解決の実装（ADR-0026 の後続PR）に伴い `creatorId` の暫定措置を解消する
-- [ ] 将来: `UpdateQuizRequest` への `solution` / `tags` 対応を別issueで検討する
-- [ ] 将来: モデレーション権限をロールベースの認可に置き換える
+- [ ] 将来: `UpdateQuizRequest` への `solution` / `tags` 対応を別issueで検討する（#74）
+- [ ] 将来: モデレーション権限をロールベースの認可に置き換え、自己承認（作成者が自分のクイズを承認・公開できる）を防ぐ
 
 ### Timeline
 
