@@ -2,7 +2,9 @@ import { describe, expect, test } from "vitest";
 import {
   isSearchCountRow,
   isSearchRow,
+  parseSearchRows,
   type SearchRow,
+  searchCountRowSchema,
   searchRowSchema,
   toQuizSummary,
 } from "./search-row.schema";
@@ -10,9 +12,13 @@ import {
 describe("search-row.schema", () => {
   /**
    * 有効なD1検索行データを生成するヘルパー関数
+   *
+   * D1の生の行（パース前）を模すため、overridesの型は変換後の SearchRow
+   * ではなく Record<string, unknown> とする（id等はD1から数値で返ることも
+   * あり、パース前はそのままの型で渡せる必要があるため）。
    */
   const createValidRow = (
-    overrides: Partial<SearchRow> = {},
+    overrides: Record<string, unknown> = {},
   ): Record<string, unknown> => ({
     id: "1",
     question: "TypeScriptはJavaScriptのスーパーセットである",
@@ -183,8 +189,19 @@ describe("search-row.schema", () => {
       expect(isSearchCountRow({ total: 42 })).toBe(true);
     });
 
-    test("D1が返す文字列型のtotalも数値に変換されて有効と判定される", () => {
+    test("D1が返す文字列型のtotalはisSearchCountRowでは有効と判定されるのみで、実際の数値変換にはsafeParse().dataを使う必要がある", () => {
+      // isSearchCountRow は型ガード（真偽値のみ）であり、この呼び出し自体は
+      // transform後の値を返さない。D1SearchRepositoryが実際に総数を取り出す
+      // 際は searchCountRowSchema.safeParse(...).data を使う（型ガードの
+      // narrowingだけでは transform 前の値のまま扱ってしまうバグの回帰）
       expect(isSearchCountRow({ total: "42" })).toBe(true);
+
+      const parsed = searchCountRowSchema.safeParse({ total: "42" });
+      expect(parsed.success).toBe(true);
+      if (parsed.success) {
+        expect(parsed.data.total).toBe(42);
+        expect(typeof parsed.data.total).toBe("number");
+      }
     });
 
     test("totalが欠落している場合は無効", () => {
@@ -193,6 +210,58 @@ describe("search-row.schema", () => {
 
     test("totalが数値変換不能な文字列の場合は無効", () => {
       expect(isSearchCountRow({ total: "not-a-number" })).toBe(false);
+    });
+  });
+
+  describe("parseSearchRows", () => {
+    test("全行が有効な場合、validRowsに全件、invalidRowsは空になる", () => {
+      // Arrange
+      const rows = [createValidRow({ id: 1 }), createValidRow({ id: 2 })];
+
+      // Act
+      const { validRows, invalidRows } = parseSearchRows(rows);
+
+      // Assert
+      expect(validRows).toHaveLength(2);
+      expect(invalidRows).toHaveLength(0);
+    });
+
+    test("数値IDの行はvalidRowsの中でzodのtransformにより文字列化される", () => {
+      // isSearchRow による filter だけでは transform が適用されないバグの
+      // 回帰テスト（D1SearchRepository.spec.tsの対応するテストと対）
+      // Arrange
+      const rows = [createValidRow({ id: 42, solution_id: 7, creator_id: 3 })];
+
+      // Act
+      const { validRows } = parseSearchRows(rows);
+
+      // Assert
+      expect(validRows[0]?.id).toBe("42");
+      expect(validRows[0]?.solution_id).toBe("7");
+      expect(validRows[0]?.creator_id).toBe("3");
+      expect(typeof validRows[0]?.id).toBe("string");
+    });
+
+    test("不正な形式の行はinvalidRowsに振り分けられ、validRowsには含まれない", () => {
+      // Arrange
+      const rows = [
+        createValidRow({ id: 1 }),
+        { id: 2 /* question等の必須フィールド欠落 */ },
+      ];
+
+      // Act
+      const { validRows, invalidRows } = parseSearchRows(rows);
+
+      // Assert
+      expect(validRows).toHaveLength(1);
+      expect(validRows[0]?.id).toBe("1");
+      expect(invalidRows).toEqual([{ id: 2 }]);
+    });
+
+    test("空配列を渡した場合、両方とも空配列になる", () => {
+      const { validRows, invalidRows } = parseSearchRows([]);
+      expect(validRows).toEqual([]);
+      expect(invalidRows).toEqual([]);
     });
   });
 });

@@ -48,6 +48,39 @@ export function isSearchRow(data: unknown): data is SearchRow {
 }
 
 /**
+ * D1クエリ結果の複数行を検証し、有効な行（zodのtransform適用済み）と
+ * 不正な形式で破棄された生の行を振り分ける
+ *
+ * `isSearchRow` は型ガード（真偽値のみ返す）のため、`filter(isSearchRow)`
+ * では TypeScript の型は `SearchRow[]` に絞り込まれるが、実行時の値は
+ * D1が返した生オブジェクトのままで、`d1IdSchema` の `transform(String)` が
+ * 適用されない（数値IDが数値のまま残る）バグを踏みやすい。
+ * この関数は `safeParse` の `.data`（変換後の値）を1回のパースで確実に
+ * 使うことで、型と実行時の値を一致させる。
+ *
+ * @param rows - D1クエリ結果の生の行配列
+ * @returns 検証・変換済みの行と、破棄された生の行
+ */
+export function parseSearchRows(rows: unknown[]): {
+  validRows: SearchRow[];
+  invalidRows: unknown[];
+} {
+  const validRows: SearchRow[] = [];
+  const invalidRows: unknown[] = [];
+
+  for (const row of rows) {
+    const parsed = searchRowSchema.safeParse(row);
+    if (parsed.success) {
+      validRows.push(parsed.data);
+    } else {
+      invalidRows.push(row);
+    }
+  }
+
+  return { validRows, invalidRows };
+}
+
+/**
  * 検索件数クエリ（COUNT(*)）の結果行スキーマ
  */
 export const searchCountRowSchema = z.object({
