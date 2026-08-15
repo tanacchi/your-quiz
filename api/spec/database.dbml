@@ -26,12 +26,12 @@ Table Quiz {
   answer_type AnswerType [not null, note: 'Discriminator: boolean|free_text|single_choice|multiple_choice']
   solution_id SolutionId [not null, note: 'Polymorphic reference to solution tables']
   explanation text [null, note: 'Max 1000 characters, optional']
-  status QuizStatus [not null, default: 'pending_approval', note: 'pending_approval|approved|rejected']
+  status QuizStatus [not null, default: 'pending_approval', note: 'draft|pending_approval|approved|rejected|published']
   creator_id UserId [not null, ref: > UserIdentity.id]
   created_at timestamp [not null, default: `now()`]
-  approved_at timestamp [null, note: 'Set when status becomes approved']
+  approved_at timestamp [null, note: 'Set when status becomes approved or published']
 
-  Note: 'Quiz entity with polymorphic solution design. Only approved quizzes can be answered.'
+  Note: 'Quiz entity with polymorphic solution design. Only approved/published quizzes can be answered. See ADR-0027 for status transitions.'
 }
 
 Table BooleanSolution {
@@ -176,9 +176,11 @@ Enum AnswerType {
 }
 
 Enum QuizStatus {
+  draft
   pending_approval
   approved
   rejected
+  published
 }
 
 Enum TagType {

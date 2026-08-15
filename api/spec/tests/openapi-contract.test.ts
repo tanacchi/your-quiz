@@ -17,8 +17,17 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const specRoot = path.resolve(__dirname, "..");
 
+type OpenApiSchema = {
+  $ref?: string;
+  required?: string[];
+  properties?: Record<string, unknown>;
+};
+
 type OpenApiOperation = {
-  responses: Record<string, unknown>;
+  responses: Record<
+    string,
+    { content?: Record<string, { schema?: OpenApiSchema }> }
+  >;
 };
 
 type OpenApiPathItem = Partial<
@@ -27,6 +36,7 @@ type OpenApiPathItem = Partial<
 
 type OpenApiDocument = {
   paths: Record<string, OpenApiPathItem>;
+  components: { schemas: Record<string, OpenApiSchema> };
 };
 
 let openApiDoc: OpenApiDocument;
@@ -117,5 +127,67 @@ describe("OpenAPI契約", () => {
       answersPath?.post,
       "submitAnswerが同一path item内に存在すること",
     ).toBeDefined();
+  });
+});
+
+describe("クイズ書き込み系エンドポイントの契約（issue #46）", () => {
+  const verbActionPaths = [
+    "/api/quiz/v1/manage/quizzes/{id}/submit",
+    "/api/quiz/v1/manage/quizzes/{id}/approve",
+    "/api/quiz/v1/manage/quizzes/{id}/reject",
+    "/api/quiz/v1/manage/quizzes/{id}/publish",
+  ] as const;
+
+  it.each(verbActionPaths)("%s が存在しPOST操作を持つ", (pathTemplate) => {
+    const pathItem = openApiDoc.paths[pathTemplate];
+    expect(pathItem, `${pathTemplate} が定義されていること`).toBeDefined();
+    expect(
+      pathItem?.post,
+      `${pathTemplate} にPOST操作が定義されていること`,
+    ).toBeDefined();
+  });
+
+  it.each(verbActionPaths)(
+    "%s の200レスポンスはQuizResponseを参照する",
+    (pathTemplate) => {
+      const post = openApiDoc.paths[pathTemplate]?.post;
+      const schema =
+        post?.responses["200"]?.content?.["application/json"]?.schema;
+      expect(schema?.$ref, `${pathTemplate} の200レスポンススキーマ`).toBe(
+        "#/components/schemas/QuizResponse",
+      );
+    },
+  );
+
+  it("deleteQuiz (DELETE /quizzes/{id}) は204を返す", () => {
+    const deleteOp =
+      openApiDoc.paths["/api/quiz/v1/manage/quizzes/{id}"]?.delete;
+    expect(deleteOp, "deleteQuiz操作が存在すること").toBeDefined();
+    expect(
+      Object.keys(deleteOp?.responses ?? {}),
+      "deleteQuizは204 No Contentを返すこと",
+    ).toContain("204");
+  });
+
+  it("CreateQuizRequest.isDraft はrequiredでない", () => {
+    const schema = openApiDoc.components.schemas["CreateQuizRequest"];
+    expect(schema, "CreateQuizRequestスキーマが存在すること").toBeDefined();
+    expect(
+      schema?.required ?? [],
+      "isDraftがrequired配列に含まれないこと（TypeSpecでデフォルト値を書くとrequired化するため）",
+    ).not.toContain("isDraft");
+    expect(
+      schema?.properties,
+      "isDraftプロパティ自体は定義されていること",
+    ).toHaveProperty("isDraft");
+  });
+
+  it("UpdateQuizRequest はquestion/explanationのみを持つ", () => {
+    const schema = openApiDoc.components.schemas["UpdateQuizRequest"];
+    expect(schema, "UpdateQuizRequestスキーマが存在すること").toBeDefined();
+    expect(Object.keys(schema?.properties ?? {}).sort()).toEqual([
+      "explanation",
+      "question",
+    ]);
   });
 });
