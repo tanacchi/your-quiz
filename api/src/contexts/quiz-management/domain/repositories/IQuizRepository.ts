@@ -71,12 +71,12 @@ export interface IQuizRepository {
    * クイズを更新する
    *
    * @param id - 更新するクイズのID
-   * @param quiz - 更新するフィールドの部分オブジェクト
-   * @returns 更新されたクイズエンティティ、またはRepositoryError
+   * @param patch - 更新するフィールドの部分オブジェクト
+   * @returns 更新されたクイズエンティティ、またはRepositoryError（対象不在時はNotFoundError）
    */
   update(
     id: string,
-    quiz: Partial<QuizSummary>,
+    patch: Partial<QuizSummaryData>,
   ): ResultAsync<QuizSummary, RepositoryError>;
 
   /**
