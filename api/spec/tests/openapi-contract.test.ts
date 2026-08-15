@@ -17,10 +17,15 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const specRoot = path.resolve(__dirname, "..");
 
+type OpenApiPropertySchema = {
+  default?: unknown;
+};
+
 type OpenApiSchema = {
   $ref?: string;
   required?: string[];
-  properties?: Record<string, unknown>;
+  properties?: Record<string, OpenApiPropertySchema>;
+  anyOf?: { $ref?: string }[];
 };
 
 type OpenApiOperation = {
@@ -174,12 +179,31 @@ describe("クイズ書き込み系エンドポイントの契約（issue #46）"
     expect(schema, "CreateQuizRequestスキーマが存在すること").toBeDefined();
     expect(
       schema?.required ?? [],
-      "isDraftがrequired配列に含まれないこと（TypeSpecでデフォルト値を書くとrequired化するため）",
+      "isDraftがrequired配列に含まれないこと",
     ).not.toContain("isDraft");
     expect(
       schema?.properties,
       "isDraftプロパティ自体は定義されていること",
     ).toHaveProperty("isDraft");
+  });
+
+  it("CreateQuizRequest.isDraft にはOpenAPIのdefault値が付与されていない", () => {
+    // TypeSpecで`isDraft?: boolean = false`のようにデフォルト値を書くと、
+    // OpenAPIドキュメントのrequired配列は変化しない(前のテストは通り続ける)まま
+    // `default`キーが付与され、openapi-typescript v7の`defaultNonNullable`
+    // (デフォルトtrue)によって生成型`api.d.ts`側だけがrequired化してしまう
+    // （実証: deck.tsp `shuffleOrder?: boolean = false` → 生成型でrequired化）。
+    // required配列だけを見るテストではこの退行を検出できないため、
+    // OpenAPIスキーマの`default`キーの不在を直接検証する。
+    const schema = openApiDoc.components.schemas["CreateQuizRequest"];
+    expect(
+      schema?.properties?.["isDraft"],
+      "isDraftプロパティが存在すること",
+    ).toBeDefined();
+    expect(
+      schema?.properties?.["isDraft"],
+      "isDraftにdefault値が付与されていないこと（付与されると生成型がrequired化する）",
+    ).not.toHaveProperty("default");
   });
 
   it("UpdateQuizRequest はquestion/explanationのみを持つ", () => {
@@ -189,5 +213,52 @@ describe("クイズ書き込み系エンドポイントの契約（issue #46）"
       "explanation",
       "question",
     ]);
+  });
+
+  it.each([
+    "/api/quiz/v1/manage/quizzes/{id}/approve",
+    "/api/quiz/v1/manage/quizzes/{id}/reject",
+  ] as const)(
+    "%s はValidationErrorレスポンスを契約に含む(A-1)",
+    (pathTemplate) => {
+      // 実装は不正なdecision値・S-2のdecision/endpoint不一致で400を返すが、
+      // 従来の契約にはValidationErrorが無く実装と乖離していた。
+      // TypeSpecのOpenAPI3エミッターは複数のエラーモデルのunionを個別の
+      // ステータスコードに分けず、1つの`default`レスポンスのanyOfへ
+      // まとめる仕様のため、ステータスコードではなくanyOf内の$refを見る。
+      const post = openApiDoc.paths[pathTemplate]?.post;
+      expect(post, `${pathTemplate} のPOST操作が存在すること`).toBeDefined();
+      const anyOf =
+        post?.responses["default"]?.content?.["application/json"]?.schema
+          ?.anyOf ?? [];
+      expect(
+        anyOf.map((s) => s.$ref),
+        `${pathTemplate} のdefaultレスポンスがValidationErrorを含むこと`,
+      ).toContain("#/components/schemas/ValidationError");
+    },
+  );
+
+  it("ApprovalRequest.decision はrequired", () => {
+    // 実装(QuizWriteController)はdecisionとエンドポイントのverbが矛盾すると
+    // 400で拒否する(S-2)。この方針はdecisionが必須であることが前提のため、
+    // 契約側で必須性が失われていないことを保証する。
+    const schema = openApiDoc.components.schemas["ApprovalRequest"];
+    expect(schema, "ApprovalRequestスキーマが存在すること").toBeDefined();
+    expect(schema?.required ?? []).toContain("decision");
+  });
+
+  it("ApprovalRequest.publishImmediately にはOpenAPIのdefault値が付与されていない", () => {
+    const schema = openApiDoc.components.schemas["ApprovalRequest"];
+    expect(schema?.properties?.["publishImmediately"]).not.toHaveProperty(
+      "default",
+    );
+  });
+
+  it("/quizzes/{id} はpatchを持ちputを持たない", () => {
+    // 本PRはerror-scenarios.tsのPUT表記をPATCHに修正した(fc367b5)。
+    // TypeSpec側もPUTを使っていないことをここで固定する。
+    const pathItem = openApiDoc.paths["/api/quiz/v1/manage/quizzes/{id}"];
+    expect(pathItem?.patch, "PATCH操作が定義されていること").toBeDefined();
+    expect(pathItem?.put, "PUT操作は定義されていないこと").toBeUndefined();
   });
 });

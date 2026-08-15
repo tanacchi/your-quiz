@@ -283,7 +283,7 @@ interface QuizManagement {
 
     ## 機能
     - **承認処理**: pending_approvalのクイズをapproved状態に変更
-    - **承認理由記録**: レビュー内容・承認理由の記録（reviewerNotes）
+    - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0027、フォローアップissueで対応予定）
 
     ## 承認権限
     - **暫定モデレーション権限**: 本番環境ではAPI経由での実行を許可しない（403）
@@ -306,16 +306,16 @@ interface QuizManagement {
   approveQuiz(
     @doc("承認対象のクイズID（UUID形式）")
     @path id: QuizId,
-    @doc("承認処理の詳細情報を含むリクエスト")
+    @doc("承認処理の詳細情報を含むリクエスト。decisionはこのエンドポイントでは'approved'固定で、それ以外の値は400を返す")
     @body request: ApprovalRequest
-  ): QuizResponse | NotFoundError | ForbiddenError | ConflictError;
+  ): QuizResponse | NotFoundError | ForbiddenError | ValidationError | ConflictError;
 
   @doc("""
     クイズ却下API（モデレーター専用、ADR-0027の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
 
     ## 機能
     - **却下処理**: pending_approvalのクイズをrejected状態に変更
-    - **却下理由記録**: 詳細な却下理由・改善点の記録（reviewerNotes）
+    - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0027、フォローアップissueで対応予定）
     - **再申請可能**: 却下後も修正して`submit`で再申請が可能
 
     ## 却下権限
@@ -334,9 +334,9 @@ interface QuizManagement {
   rejectQuiz(
     @doc("却下対象のクイズID（UUID形式）")
     @path id: QuizId,
-    @doc("却下処理の詳細情報・理由を含むリクエスト")
+    @doc("却下処理の詳細情報・理由を含むリクエスト。decisionはこのエンドポイントでは'rejected'固定で、それ以外の値は400を返す")
     @body request: ApprovalRequest
-  ): QuizResponse | NotFoundError | ForbiddenError | ConflictError;
+  ): QuizResponse | NotFoundError | ForbiddenError | ValidationError | ConflictError;
 
   @doc("""
     クイズ公開API（モデレーター専用、ADR-0027の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
