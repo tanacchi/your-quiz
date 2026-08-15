@@ -192,12 +192,15 @@ describe.todo("QuizController", () => {
         await controller.createQuiz(mockContext);
 
         // Assert
+        // JsonParseErrorはValidationErrorを継承する(A-2修正)。
+        // 空ボディ・壊れたJSONはクライアント起因のリクエスト不備であり、
+        // サーバ障害(500)ではなく400を返すべきため。
         expect(mockContext.json).toHaveBeenCalledWith(
           expect.objectContaining({
-            code: 500, // JsonParseError extends InternalServerError with code 500
-            message: "Internal server error",
+            code: 400,
+            message: "Invalid JSON in request body",
           }),
-          500,
+          400,
         );
       });
 
