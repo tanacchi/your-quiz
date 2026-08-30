@@ -6,6 +6,7 @@
     "build:cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "build:gen-schema": "pnpm --filter quiz-api-spec build && pnpm format",
     "db:mig:apply": "wrangler d1 migrations apply quiz-db --local",
+    "db:mig:apply:remote": "wrangler d1 migrations apply quiz-db --remote",
     "db:mig:create": "wrangler d1 migrations create quiz-db init",
     "db:reset": "rm -rf .wrangler/state && pnpm db:mig:apply && pnpm db:seed",
     "db:seed": "wrangler d1 execute quiz-db --local --file migrations/dev/seed.sql",
