@@ -289,17 +289,25 @@ describe("QuizSummary Patches", () => {
     });
 
     describe("suggestApprovedAtPatches", () => {
-      it("should suggest approvedAt for approved status without timestamp", () => {
-        const mockDate = "2023-12-01T10:00:00.000Z";
-        vi.spyOn(Date.prototype, "toISOString").mockReturnValue(mockDate);
+      // 提案するパッチは sqliteDateTimeSchema（YYYY-MM-DD HH:MM:SS）を満たす
+      // 必要がある。ISO 8601（...T...Z）を提案していた頃は、適用しても必ず
+      // 再度バリデーションエラーになりパッチが役目を果たしていなかった。
+      it.each([["approved"], ["published"]] as const)(
+        "should suggest a SQLite-formatted approvedAt for %s status without timestamp",
+        (status) => {
+          const input = { status, approvedAt: undefined };
+          const result = suggestApprovedAtPatches(input);
 
-        const input = { status: "approved" as const, approvedAt: undefined };
-        const result = suggestApprovedAtPatches(input);
-
-        expect(result).toEqual([{ approvedAt: mockDate }]);
-
-        vi.restoreAllMocks();
-      });
+          expect(result).toHaveLength(1);
+          const patch = result[0];
+          if (!patch) throw new Error("Expected patch to exist");
+          // EntityPatchはオブジェクトまたは遅延関数のunionなので適用して確かめる
+          const patched = applyEntityPatch(input, patch);
+          expect(patched.approvedAt).toMatch(
+            /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/,
+          );
+        },
+      );
 
       it.each([
         [
@@ -311,8 +319,12 @@ describe("QuizSummary Patches", () => {
           { status: "rejected", approvedAt: undefined },
         ],
         [
+          "draft status without approvedAt",
+          { status: "draft", approvedAt: undefined },
+        ],
+        [
           "approved status with approvedAt",
-          { status: "approved", approvedAt: "2023-12-01T10:00:00.000Z" },
+          { status: "approved", approvedAt: "2023-12-01 10:00:00" },
         ],
       ])("should not suggest patch for %s", (_desc, input) => {
         const result = suggestApprovedAtPatches(
@@ -323,9 +335,6 @@ describe("QuizSummary Patches", () => {
 
       describe("Patch Application", () => {
         it("should apply approvedAt patch correctly", () => {
-          const mockDate = "2023-12-01T10:00:00.000Z";
-          vi.spyOn(Date.prototype, "toISOString").mockReturnValue(mockDate);
-
           const input = {
             ...validQuizSummaryInput,
             status: "approved" as const,
@@ -337,7 +346,9 @@ describe("QuizSummary Patches", () => {
           if (!patch) throw new Error("Expected patch to exist");
           const patched = applyEntityPatch(input, patch);
 
-          expect(patched.approvedAt).toBe(mockDate);
+          expect(patched.approvedAt).toMatch(
+            /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/,
+          );
 
           vi.restoreAllMocks();
         });
@@ -536,9 +547,6 @@ describe("QuizSummary Patches", () => {
         });
 
         it("should handle approved status patch integration", () => {
-          const mockDate = "2023-12-01T10:00:00.000Z";
-          vi.spyOn(Date.prototype, "toISOString").mockReturnValue(mockDate);
-
           const input = {
             status: "approved" as const,
             approvedAt: undefined,
@@ -567,9 +575,10 @@ describe("QuizSummary Patches", () => {
             ) as QuizSummaryInput;
 
           expect(patched.status).toBe("approved");
-          expect(patched.approvedAt).toBe(mockDate);
-
-          vi.restoreAllMocks();
+          // 提案値はsqliteDateTimeSchema（YYYY-MM-DD HH:MM:SS）を満たす必要がある
+          expect(patched.approvedAt).toMatch(
+            /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/,
+          );
         });
       });
     });

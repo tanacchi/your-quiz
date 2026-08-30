@@ -29,7 +29,6 @@ import {
  */
 export class D1QuizRepository implements IQuizRepository {
   constructor(private readonly db: D1Database) {
-    console.log("D1QuizRepository constructor - db:", !!db);
     if (!db) {
       console.error(
         "FATAL: D1Database is undefined in D1QuizRepository constructor!",
@@ -123,7 +122,6 @@ export class D1QuizRepository implements IQuizRepository {
     },
     RepositoryError
   > {
-    console.log("D1QuizRepository#findMany - db exists:", !!this.db);
     if (!this.db) {
       console.error("FATAL: this.db is undefined in findMany!");
       return errAsync(
@@ -385,7 +383,6 @@ export class D1QuizRepository implements IQuizRepository {
     },
     RepositoryError
   > {
-    console.log("executeFindMany - db exists:", !!this.db);
     if (!this.db) {
       console.error("FATAL: this.db is undefined in executeFindMany!");
       return errAsync(
@@ -417,8 +414,6 @@ export class D1QuizRepository implements IQuizRepository {
 
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-    console.debug(`whereClause: ${whereClause}`);
-    console.debug(`params: ${params}`);
 
     // 総数を取得
     const countQuery = ResultAsync.fromPromise(
@@ -454,10 +449,8 @@ export class D1QuizRepository implements IQuizRepository {
           error instanceof Error ? error : new Error("Failed to fetch quizzes"),
         ),
     );
-    console.debug(`dataQuery: ${JSON.stringify(dataQuery)}`);
 
     return ResultAsync.combine([countQuery, dataQuery])
-      .orTee((e) => console.debug(`findError: ${e.message}`))
       .andThen(([countResult, dataResult]) => {
         // Count結果の検証
         if (!isCountResult(countResult)) {
@@ -472,7 +465,6 @@ export class D1QuizRepository implements IQuizRepository {
         const totalCount = (countResult as { total: number }).total;
 
         // QuizSummaryエンティティへの変換
-        console.debug(`result: ${JSON.stringify(dataResult.results)}`);
         const mappingResult = D1QuizSummaryMapper.fromRows(
           dataResult.results.filter(isQuizRow),
         );
