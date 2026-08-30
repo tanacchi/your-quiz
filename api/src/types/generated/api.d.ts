@@ -87,7 +87,8 @@ export interface paths {
     delete: operations["QuizLearning_deleteDeck"];
     options?: never;
     head?: never;
-    patch?: never;
+    /** @description Update deck (partial update) */
+    patch: operations["QuizLearning_updateDeck"];
     trace?: never;
   };
   "/api/quiz/v1/learning/published": {
@@ -884,7 +885,7 @@ export interface components {
     };
     DeckId: string;
     DeckListResponse: {
-      items: components["schemas"]["DeckWithQuizzes"][];
+      items: components["schemas"]["Deck"][];
       /** Format: int32 */
       totalCount: number;
       hasMore: boolean;
@@ -1367,6 +1368,11 @@ export interface components {
       components["schemas"]["ErrorResponse"],
       "code" | "message"
     >;
+    UpdateDeckRequest: {
+      name?: string;
+      description?: string;
+      quizIds?: components["schemas"]["QuizId"][];
+    };
     /** @example {
      *       "question": "HTMLの段落を表すタグはどれですか？（修正版）",
      *       "answerType": "single_choice",
@@ -1533,9 +1539,7 @@ export interface operations {
   };
   QuizLearning_getMyDecks: {
     parameters: {
-      query: {
-        userId: components["schemas"]["UserId"];
-      };
+      query?: never;
       header?: never;
       path?: never;
       cookie?: never;
@@ -1569,7 +1573,6 @@ export interface operations {
         "application/json": {
           name?: string;
           description?: string;
-          userId: components["schemas"]["UserId"];
           /**
            * Format: int32
            * @default 50
@@ -1662,6 +1665,44 @@ export interface operations {
           "application/json":
             | components["schemas"]["NotFoundError"]
             | components["schemas"]["ForbiddenError"];
+        };
+      };
+    };
+  };
+  QuizLearning_updateDeck: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["schemas"]["DeckId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateDeckRequest"];
+      };
+    };
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Deck"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"]
+            | components["schemas"]["ValidationError"];
         };
       };
     };

@@ -51,7 +51,6 @@ interface QuizLearning {
   createDeckFromWrongAnswers(@body request: {
     name?: string;
     description?: string;
-    userId: UserId;
     maxQuizzes?: int32 = 50;
     sinceDays?: int32 = 30;
   }): CreateDeckResponse | ValidationError;
@@ -66,8 +65,12 @@ interface QuizLearning {
   @route("/decks/mine")
   getMyDecks(
     ...PaginationRequest,
-    @query userId: UserId
   ): DeckListResponse;
+
+  /** Update deck (partial update) */
+  @patch(#{ implicitOptionality: false })
+  @route("/decks/{id}")
+  updateDeck(@path id: DeckId, @body request: UpdateDeckRequest): Deck | NotFoundError | ForbiddenError | ValidationError;
 
   /** Delete deck */
   @delete
