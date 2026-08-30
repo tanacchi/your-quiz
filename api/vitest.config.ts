@@ -18,7 +18,14 @@ export default defineConfig({
     // タイムアウト設定
     testTimeout: 30000,
 
-    // カバレッジ設定（95%以上必須）
+    // カバレッジ設定
+    //
+    // 閾値は現時点の実測値に合わせたラチェット（下がったらCIで落とす）。
+    // 以前は `thresholds: { global: {...} }` というJest記法で95%を指定して
+    // いたが、Vitestの`Thresholds`型に`global`は無く、それ以外のキーは
+    // per-file閾値のglobパターンとして扱われるためゼロマッチとなり、
+    // 閾値が一度も適用されていなかった（実測60%台でもCIが緑だった）。
+    // 95%への引き上げは issue #78 で追跡する。
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
@@ -31,12 +38,10 @@ export default defineConfig({
         "src/types/generated/**",
       ],
       thresholds: {
-        global: {
-          lines: 95,
-          functions: 95,
-          branches: 95,
-          statements: 95,
-        },
+        lines: 69,
+        statements: 69,
+        branches: 88,
+        functions: 81,
       },
     },
 
