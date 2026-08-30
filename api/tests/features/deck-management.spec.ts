@@ -2,7 +2,7 @@ import { spec } from "pactum";
 import { deckManagementData } from "../fixtures/deck-management-data";
 
 // Deck Management BDD Tests - Deck管理BDDテスト
-// issue #47（quiz-learning Deck管理）/ ADR-0027
+// issue #47（quiz-learning Deck管理）/ ADR-0028
 // Endpoint: /api/quiz/v1/learning/decks/*
 //
 // dev-mock env（USE_MOCK_DB=true）で動作するため、MockDeckRepository /

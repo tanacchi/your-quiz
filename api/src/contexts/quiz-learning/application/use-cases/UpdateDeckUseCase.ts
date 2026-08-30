@@ -20,7 +20,7 @@ export type UpdateDeckCommand = {
 };
 
 /**
- * Deck部分更新ユースケース（PATCH、ADR-0027参照）
+ * Deck部分更新ユースケース（PATCH、ADR-0028参照）
  */
 export class UpdateDeckUseCase {
   constructor(

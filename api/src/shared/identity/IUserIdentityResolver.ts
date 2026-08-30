@@ -10,7 +10,7 @@ import type { RepositoryError } from "../errors";
  * （INTEGER PRIMARY KEY）への外部キーを持つ。両者を橋渡しする役割を担う。
  *
  * ミドルウェア本体には統合せず独立したポートとして定義した理由は
- * ADR-0027 を参照。
+ * ADR-0028 を参照。
  */
 export interface IUserIdentityResolver {
   /**

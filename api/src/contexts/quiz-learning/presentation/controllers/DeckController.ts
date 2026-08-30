@@ -25,7 +25,7 @@ const DEFAULT_LIST_OFFSET = 0;
  *
  * Deck（問題集）のCRUD・生成に関するHTTPリクエストを処理する。
  * 所有者は常に`c.var.userFingerprint`（anonymousSessionミドルウェア）
- * から取得し、リクエストの`userId`は受け付けない（ADR-0027）。
+ * から取得し、リクエストの`userId`は受け付けない（ADR-0028）。
  */
 export class DeckController {
   constructor(

@@ -1,4 +1,4 @@
-# ADR-0027: quiz-learning Deck API の所有者解決とAPIサーフェス調整
+# ADR-0028: quiz-learning Deck API の所有者解決とAPIサーフェス調整
 
 ## Status
 

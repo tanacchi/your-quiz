@@ -74,7 +74,7 @@ export const createDeckFromSearchSchema = z
 /**
  * 間違い問題からDeck生成リクエスト用Zodスキーマ（POST /decks/wrong-questions）
  *
- * userIdはTypeSpecから削除済み（ADR-0027）。所有者は常に
+ * userIdはTypeSpecから削除済み（ADR-0028）。所有者は常に
  * `c.var.userFingerprint`から解決する。
  */
 export const createDeckFromWrongAnswersSchema = z

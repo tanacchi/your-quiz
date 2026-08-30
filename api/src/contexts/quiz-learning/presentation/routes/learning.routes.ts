@@ -20,7 +20,7 @@ import { DeckController } from "../controllers/DeckController";
 // Quiz Learning ルーティング（Deck管理のみ。Session/Answerは次issueのスコープ）
 export const learningRoutes = new Hono<AppEnv>();
 
-// search.routes.tsと同じくMockSearchRepositoryを直接使用（issue #48でD1化予定、ADR-0027参照）
+// search.routes.tsと同じくMockSearchRepositoryを直接使用（issue #48でD1化予定、ADR-0028参照）
 const searchQuizzesUseCase = new SearchQuizzesUseCase(
   new MockSearchRepository(),
 );

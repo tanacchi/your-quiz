@@ -23,7 +23,7 @@ export type GetMyDecksQuery = {
  * 自分のDeck一覧取得ユースケース
  *
  * issue #47の「一覧」要件は本ユースケース（`GET /decks/mine`）で満たす
- * （ADR-0027参照）。
+ * （ADR-0028参照）。
  */
 export class GetMyDecksUseCase {
   constructor(

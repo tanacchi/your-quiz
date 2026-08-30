@@ -18,7 +18,7 @@ type QuizResponse = components["schemas"]["QuizResponse"];
  * Deck詳細取得ユースケース
  *
  * quiz-managementのIQuizRepositoryを読み取り専用で参照し、
- * Deckに紐づく問題本体を解決する（ADR-0027参照：意図的な
+ * Deckに紐づく問題本体を解決する（ADR-0028参照：意図的な
  * コンテキスト間参照）。存在しないQuizIdは結果から除外し、
  * Deck自体の取得は失敗させない。
  */

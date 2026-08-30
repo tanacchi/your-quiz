@@ -33,7 +33,7 @@ export type CreateDeckFromSearchCommand = {
  * 検索結果からDeckを生成するユースケース
  *
  * 既存のsearchコンテキストの`SearchQuizzesUseCase`をそのまま注入・
- * 再利用する（現状Mock実装、issue #48でD1化予定。ADR-0027参照）。
+ * 再利用する（現状Mock実装、issue #48でD1化予定。ADR-0028参照）。
  */
 export class CreateDeckFromSearchUseCase {
   constructor(

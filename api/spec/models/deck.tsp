@@ -72,7 +72,7 @@ model CreateDeckFromSearchRequest {
   description?: string;
 }
 
-// Deck部分更新リクエスト（ADR-0025のPATCH方針に準拠、ADR-0027参照）
+// Deck部分更新リクエスト（ADR-0025のPATCH方針に準拠、ADR-0028参照）
 model UpdateDeckRequest {
   name?: string;
   description?: string;
@@ -94,7 +94,7 @@ model UpdateSessionRequest {
   isCompleted?: boolean;
 }
 
-// 一覧では問題本体は含めず軽量なDeckのみ返す（詳細はgetDeckで取得。ADR-0027参照）
+// 一覧では問題本体は含めず軽量なDeckのみ返す（詳細はgetDeckで取得。ADR-0028参照）
 model DeckListResponse extends PaginationResponse<Deck> {}
 
 model SessionListResponse extends PaginationResponse<QuizSessionWithProgress> {}
