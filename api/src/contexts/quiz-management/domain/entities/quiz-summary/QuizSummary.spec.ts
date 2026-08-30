@@ -303,7 +303,7 @@ describe("QuizSummary", () => {
   });
 
   describe("Business Logic", () => {
-    describe("canBeUpdated status checks (ADR-0027)", () => {
+    describe("canBeUpdated status checks (ADR-0029)", () => {
       it.each([
         ["draft", true],
         ["pending_approval", true],
@@ -325,7 +325,7 @@ describe("QuizSummary", () => {
       });
     });
 
-    describe("canBeDeleted status checks (ADR-0027)", () => {
+    describe("canBeDeleted status checks (ADR-0029)", () => {
       it.each([
         ["draft", true],
         ["pending_approval", true],
@@ -383,7 +383,7 @@ describe("QuizSummary", () => {
       });
     });
 
-    describe("submit method state transitions (ADR-0027)", () => {
+    describe("submit method state transitions (ADR-0029)", () => {
       it.each([["draft"], ["rejected"]])(
         "should submit %s quiz to pending_approval",
         (status) => {
@@ -426,7 +426,7 @@ describe("QuizSummary", () => {
       );
     });
 
-    describe("reject method state transitions (ADR-0027)", () => {
+    describe("reject method state transitions (ADR-0029)", () => {
       it("should reject pending quiz successfully", () => {
         const initialResult = QuizSummary.from(validQuizData);
         const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
@@ -462,7 +462,7 @@ describe("QuizSummary", () => {
       );
     });
 
-    describe("publish method state transitions (ADR-0027)", () => {
+    describe("publish method state transitions (ADR-0029)", () => {
       it("should publish approved quiz successfully", () => {
         const testData = {
           ...(validQuizData as Record<string, unknown>),
@@ -502,7 +502,7 @@ describe("QuizSummary", () => {
       );
     });
 
-    describe("applyTransition (ADR-0027)", () => {
+    describe("applyTransition (ADR-0029)", () => {
       it("エラー種別はinvalid_stateである", () => {
         const initialResult = QuizSummary.from(validQuizData);
         const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });

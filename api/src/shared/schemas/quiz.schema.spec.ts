@@ -31,7 +31,7 @@ describe("quiz.schema", () => {
       }
     });
 
-    describe("isDraft (ADR-0027)", () => {
+    describe("isDraft (ADR-0029)", () => {
       it.each([
         ["isDraft: true", { isDraft: true }, true],
         ["isDraft: false", { isDraft: false }, false],

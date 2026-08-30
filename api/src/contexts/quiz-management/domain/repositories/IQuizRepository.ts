@@ -73,7 +73,7 @@ export interface IQuizRepository {
    * @param id - 更新するクイズのID
    * @param patch - 更新するフィールドの部分オブジェクト。D1実装が対応する
    *   question/explanation/status/approvedAtの4フィールドのみに限定する
-   *   （ADR-0027。それ以外を含めても実装は無視するため、型で表現する）
+   *   （ADR-0029。それ以外を含めても実装は無視するため、型で表現する）
    * @returns 更新されたクイズエンティティ、またはRepositoryError
    */
   update(

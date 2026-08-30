@@ -24,7 +24,7 @@ export type { QuizTransitionAction };
  * クイズステータス遷移コマンドの型定義
  *
  * submit/approve/reject/publish の4アクションを共通のコマンド型で扱う
- * （遷移規則は quiz-status-transition.ts に一元化されている、ADR-0027）。
+ * （遷移規則は quiz-status-transition.ts に一元化されている、ADR-0029）。
  */
 export type ChangeQuizStatusCommand = {
   /** 対象のクイズID */
@@ -38,7 +38,7 @@ export type ChangeQuizStatusCommand = {
    * approve/reject/publishはtrueが必須、submitでは参照しない。
    */
   readonly isModerator: boolean;
-  /** 承認・却下時のレビューコメント（現状は記録先カラムが無いため未使用、ADR-0027） */
+  /** 承認・却下時のレビューコメント（現状は記録先カラムが無いため未使用、ADR-0029） */
   readonly reviewerNotes?: string;
 };
 

@@ -24,7 +24,7 @@ export type QuizWriteUseCases = {
  * `decision`はエンドポイントのverb（URL）と冗長な必須フィールドだが、
  * TypeSpec契約上は必須のため、verbと矛盾する値を送った場合は400で拒否する
  * （黙って無視してverb側を正とすると「送ったのに逆の結果になる」という
- * ADR-0027が自ら断罪したアンチパターンを踏むため）。
+ * ADR-0029が自ら断罪したアンチパターンを踏むため）。
  */
 const EXPECTED_DECISION_BY_ACTION = {
   approve: "approved",
@@ -35,7 +35,7 @@ const EXPECTED_DECISION_BY_ACTION = {
  * クイズ書き込み系コントローラー
  *
  * PATCH/DELETE と承認ワークフロー（submit/approve/reject/publish）の
- * HTTPリクエストを処理する（issue #46、ADR-0027）。
+ * HTTPリクエストを処理する（issue #46、ADR-0029）。
  */
 export class QuizWriteController {
   constructor(private readonly useCases: QuizWriteUseCases) {}

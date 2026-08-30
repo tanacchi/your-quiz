@@ -49,11 +49,11 @@ Quiz Management API - クイズの作成・管理・承認に関する包括的�
 - **管理者**: 全クイズの管理・承認・統計閲覧
 
 ## 品質管理方針
-- **段階的承認**: draft → pending_approval → approved → published（ADR-0027）
+- **段階的承認**: draft → pending_approval → approved → published（ADR-0029）
 - **コミュニティ報告**: ユーザーによる品質問題報告システム
 - **継続的改善**: 統計に基づく品質向上施策
 
-## 権限モデルの暫定状態（ADR-0027）
+## 権限モデルの暫定状態（ADR-0029）
 - 管理者ロール・所有者解決の本格実装は未着手のため、以下の暫定措置で運用する
   - 所有者確認: リクエストの匿名識別子（userFingerprint）を creatorId として直接比較する
   - モデレーション操作（approve/reject/publish）: 本番環境ではAPI経由の実行を許可せず、DB直接操作を前提とする
@@ -61,7 +61,7 @@ Quiz Management API - クイズの作成・管理・承認に関する包括的�
 ## 技術仕様
 - **認証**: 全操作でユーザー認証が必要
 - **レート制限**: 作成操作に1日50問の制限
-- **データ整合性**: `deleteQuiz` は物理削除。論理削除は将来対応（ADR-0027）
+- **データ整合性**: `deleteQuiz` は物理削除。論理削除は将来対応（ADR-0029）
 - **監査ログ**: 全ての重要操作の記録・追跡
 """)
 // Quiz Management API - Basic CRUD operations
@@ -149,7 +149,7 @@ interface QuizManagement {
     - **問題文（question）**: 問題の内容を修正
     - **解説（explanation）**: 問題の説明文を追加・修正
 
-    ## 未対応フィールド（ADR-0027、フォローアップissueで対応予定）
+    ## 未対応フィールド（ADR-0029、フォローアップissueで対応予定）
     - 回答形式（answerType）・解答内容（solution）・タグ（tags）・作成者ID（creatorId）は本APIでは更新できない
 
     ## 権限制御
@@ -176,7 +176,7 @@ interface QuizManagement {
     クイズ削除API
 
     ## 機能
-    - **物理削除**: データベースから完全に削除する（論理削除は将来対応、ADR-0027）
+    - **物理削除**: データベースから完全に削除する（論理削除は将来対応、ADR-0029）
     - **所有者限定**: 作成者本人のみ削除可能
     - **状態制限**: draft/pending_approval/rejected状態のクイズのみ削除可能
 
@@ -249,7 +249,7 @@ interface QuizManagement {
     @query quizId?: string[]
   ): QuizSummaryListResponse;
   
-  // 承認ワークフロー操作（ADR-0027）
+  // 承認ワークフロー操作（ADR-0029）
 
   @doc("""
     クイズ承認申請API
@@ -279,11 +279,11 @@ interface QuizManagement {
   ): QuizResponse | NotFoundError | ForbiddenError | ConflictError;
 
   @doc("""
-    クイズ承認API（モデレーター専用、ADR-0027の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+    クイズ承認API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
 
     ## 機能
     - **承認処理**: pending_approvalのクイズをapproved状態に変更
-    - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0027、フォローアップissueで対応予定）
+    - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0029、フォローアップissueで対応予定）
 
     ## 承認権限
     - **暫定モデレーション権限**: 本番環境ではAPI経由での実行を許可しない（403）
@@ -311,11 +311,11 @@ interface QuizManagement {
   ): QuizResponse | NotFoundError | ForbiddenError | ValidationError | ConflictError;
 
   @doc("""
-    クイズ却下API（モデレーター専用、ADR-0027の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+    クイズ却下API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
 
     ## 機能
     - **却下処理**: pending_approvalのクイズをrejected状態に変更
-    - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0027、フォローアップissueで対応予定）
+    - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0029、フォローアップissueで対応予定）
     - **再申請可能**: 却下後も修正して`submit`で再申請が可能
 
     ## 却下権限
@@ -339,7 +339,7 @@ interface QuizManagement {
   ): QuizResponse | NotFoundError | ForbiddenError | ValidationError | ConflictError;
 
   @doc("""
-    クイズ公開API（モデレーター専用、ADR-0027の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+    クイズ公開API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
 
     ## 機能
     - **公開**: 承認済み（approved）クイズを公開状態（published）に変更

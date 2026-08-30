@@ -362,7 +362,7 @@ export interface paths {
     /** @description クイズ削除API
      *
      *     ## 機能
-     *     - **物理削除**: データベースから完全に削除する（論理削除は将来対応、ADR-0027）
+     *     - **物理削除**: データベースから完全に削除する（論理削除は将来対応、ADR-0029）
      *     - **所有者限定**: 作成者本人のみ削除可能
      *     - **状態制限**: draft/pending_approval/rejected状態のクイズのみ削除可能
      *
@@ -388,7 +388,7 @@ export interface paths {
      *     - **問題文（question）**: 問題の内容を修正
      *     - **解説（explanation）**: 問題の説明文を追加・修正
      *
-     *     ## 未対応フィールド（ADR-0027、フォローアップissueで対応予定）
+     *     ## 未対応フィールド（ADR-0029、フォローアップissueで対応予定）
      *     - 回答形式（answerType）・解答内容（solution）・タグ（tags）・作成者ID（creatorId）は本APIでは更新できない
      *
      *     ## 権限制御
@@ -413,11 +413,11 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description クイズ承認API（モデレーター専用、ADR-0027の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+    /** @description クイズ承認API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
      *
      *     ## 機能
      *     - **承認処理**: pending_approvalのクイズをapproved状態に変更
-     *     - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0027、フォローアップissueで対応予定）
+     *     - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0029、フォローアップissueで対応予定）
      *
      *     ## 承認権限
      *     - **暫定モデレーション権限**: 本番環境ではAPI経由での実行を許可しない（403）
@@ -450,7 +450,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description クイズ公開API（モデレーター専用、ADR-0027の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+    /** @description クイズ公開API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
      *
      *     ## 機能
      *     - **公開**: 承認済み（approved）クイズを公開状態（published）に変更
@@ -482,11 +482,11 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** @description クイズ却下API（モデレーター専用、ADR-0027の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+    /** @description クイズ却下API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
      *
      *     ## 機能
      *     - **却下処理**: pending_approvalのクイズをrejected状態に変更
-     *     - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0027、フォローアップissueで対応予定）
+     *     - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0029、フォローアップissueで対応予定）
      *     - **再申請可能**: 却下後も修正して`submit`で再申請が可能
      *
      *     ## 却下権限
@@ -973,7 +973,7 @@ export interface components {
       solution: components["schemas"]["SolutionCreate"];
       explanation?: string;
       tags?: string[];
-      /** @description trueの場合、下書き（draft）として保存する。省略時はfalse扱いで承認待ち（pending_approval）として投稿される（ADR-0027） */
+      /** @description trueの場合、下書き（draft）として保存する。省略時はfalse扱いで承認待ち（pending_approval）として投稿される（ADR-0029） */
       isDraft?: boolean;
     };
     CreateQuizResponse: {
@@ -1501,7 +1501,7 @@ export interface components {
     UpdateQuizRequest: {
       /** @description 更新後の問題文。省略時は変更しない */
       question?: string;
-      /** @description 更新後の解説文。省略時は変更しない。solution/tags/answerType/creatorIdの更新は現時点で未対応（ADR-0027、フォローアップissueで対応予定） */
+      /** @description 更新後の解説文。省略時は変更しない。solution/tags/answerType/creatorIdの更新は現時点で未対応（ADR-0029、フォローアップissueで対応予定） */
       explanation?: string;
     };
     UpdateSessionRequest: {

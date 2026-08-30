@@ -53,7 +53,7 @@ export const createQuizSchema = z
 /**
  * クイズ部分更新リクエスト用Zodスキーマ（PATCH /quizzes/{id}）
  *
- * question/explanationのみ更新可能（ADR-0027）。少なくとも一方の指定が必須。
+ * question/explanationのみ更新可能（ADR-0029）。少なくとも一方の指定が必須。
  *
  * 注: `satisfies z.ZodType<UpdateQuizRequest>` は付与していない。tsconfigの
  * `exactOptionalPropertyTypes: true` 下では、Zodの`.optional()`が生成する型

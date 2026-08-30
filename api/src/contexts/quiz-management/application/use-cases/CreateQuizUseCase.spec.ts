@@ -309,7 +309,7 @@ describe("CreateQuizUseCase", () => {
       });
     });
 
-    describe("isDraft (ADR-0027)", () => {
+    describe("isDraft (ADR-0029)", () => {
       test("isDraft: trueの場合はstatus draftでリポジトリに渡す", async () => {
         // Arrange
         const mockQuizSummary = {

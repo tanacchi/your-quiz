@@ -31,7 +31,7 @@ Table Quiz {
   created_at timestamp [not null, default: `now()`]
   approved_at timestamp [null, note: 'Set when status becomes approved or published']
 
-  Note: 'Quiz entity with polymorphic solution design. Only approved/published quizzes can be answered. See ADR-0027 for status transitions.'
+  Note: 'Quiz entity with polymorphic solution design. Only approved/published quizzes can be answered. See ADR-0029 for status transitions.'
 }
 
 Table BooleanSolution {

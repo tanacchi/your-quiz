@@ -24,7 +24,7 @@ describe("moderation-policy", () => {
       expect(canModerate(env)).toBe(expected);
     });
 
-    // ADR-0027のリスク表「NODE_ENVの判定漏れにより本番でモデレーションAPIが
+    // ADR-0029のリスク表「NODE_ENVの判定漏れにより本番でモデレーションAPIが
     // 開いてしまう」対策として、許可リスト方式(fail-closed)であることを検証する。
     // `!== "production"`という否定形の判定だとこれらは全てtrue(全開放)になる。
     it.each([

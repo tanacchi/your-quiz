@@ -10,7 +10,7 @@ import {
 } from "../helpers/fingerprint-helpers";
 
 // Quiz Write Operations BDD Tests - クイズ書き込み操作BDDテスト
-// issue #46 / ADR-0027: PATCH/DELETE 501解消・下書き保存・承認ワークフロー
+// issue #46 / ADR-0029: PATCH/DELETE 501解消・下書き保存・承認ワークフロー
 //
 // 各itはfingerprintをUUID v4で都度発行し、自分でPOSTしてから操作することで
 // テスト間の状態依存を作らない(MockQuizRepositoryはリクエストを跨いで

@@ -1,4 +1,4 @@
--- Quiz.status に draft/published を追加する(ADR-0027)
+-- Quiz.status に draft/published を追加する(ADR-0029)
 --
 -- SQLiteはCHECK制約を直接ALTERできないため、テーブル再作成で対応する。
 -- 既存の列・デフォルト値・外部キーはそのまま引き継ぐ。

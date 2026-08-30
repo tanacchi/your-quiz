@@ -14,7 +14,7 @@ import {
  * クイズ更新コマンドの型定義
  *
  * PATCH /quizzes/{id} で更新可能なフィールドは question/explanation のみ
- * （ADR-0027。solution/tags/answerType/creatorId は本UseCaseの対象外）。
+ * （ADR-0029。solution/tags/answerType/creatorId は本UseCaseの対象外）。
  */
 export type UpdateQuizCommand = {
   /** 更新対象のクイズID */

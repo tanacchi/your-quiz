@@ -144,7 +144,7 @@ export class QuizSummary extends EntityBase<
   /**
    * Checks if the quiz can be updated
    *
-   * @returns true if status is draft/pending_approval/rejected（ADR-0027）
+   * @returns true if status is draft/pending_approval/rejected（ADR-0029）
    */
   canBeUpdated(): boolean {
     return canUpdateStatus(this.get("status"));
@@ -153,14 +153,14 @@ export class QuizSummary extends EntityBase<
   /**
    * Checks if the quiz can be deleted
    *
-   * @returns true if status is not approved/published（ADR-0027）
+   * @returns true if status is not approved/published（ADR-0029）
    */
   canBeDeleted(): boolean {
     return canDeleteStatus(this.get("status"));
   }
 
   /**
-   * Applies a status transition (submit/approve/reject/publish) defined in ADR-0027.
+   * Applies a status transition (submit/approve/reject/publish) defined in ADR-0029.
    *
    * @param action - The transition action to apply
    * @param occurredAt - Timestamp of the transition. Recorded as approvedAt when the

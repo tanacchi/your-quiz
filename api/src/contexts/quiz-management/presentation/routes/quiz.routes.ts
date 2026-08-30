@@ -87,7 +87,7 @@ quizRoutes.delete("/quizzes/:id", (c) => {
   return controller.deleteQuiz(c);
 });
 
-// 承認ワークフロー（ADR-0027）
+// 承認ワークフロー（ADR-0029）
 quizRoutes.post("/quizzes/:id/submit", (c) => {
   const controller = createQuizWriteController(c.env);
   return controller.submitForApproval(c);

@@ -1,5 +1,5 @@
 /**
- * クイズのステータス遷移規則（ADR-0027）
+ * クイズのステータス遷移規則（ADR-0029）
  *
  * draft → submit → pending_approval → {approve→approved, reject→rejected}
  *   → publish → published
@@ -27,7 +27,7 @@ type TransitionRule = {
   readonly from: readonly QuizStatusValue[];
   /** 遷移先ステータス */
   readonly to: QuizStatusValue;
-  /** trueの場合、実行にはモデレーション権限が必要（ADR-0027の暫定権限モデル） */
+  /** trueの場合、実行にはモデレーション権限が必要（ADR-0029の暫定権限モデル） */
   readonly requiresModeration: boolean;
   /** trueの場合、遷移時にapprovedAtを記録する */
   readonly stampsApprovedAt: boolean;

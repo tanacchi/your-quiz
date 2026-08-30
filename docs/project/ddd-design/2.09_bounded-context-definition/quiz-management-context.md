@@ -37,11 +37,11 @@ interface Quiz {
 
 #### 主要な振る舞い
 
-> **注（ADR-0027）**: 以下は本コンテキストの目標設計（管理者ロール・`AdministratorId`・`rejectionReason` の永続化を含む）であり、issue #46 時点の暫定実装とは差分がある。暫定実装では管理者ロールが未実装のため `approve`/`reject`/`publish` は `NODE_ENV` ベースの暫定権限（`presentation/policies/moderation-policy.ts`）で代替し、`reviewerNotes`（拒否理由に相当）は記録先カラムが無く未使用。`create()` の `isDraft` 分岐、`submit`/`publish` の追加は ADR-0027 の正規フロー `draft → submit → pending_approval → (approved | rejected) → publish → published` を反映したもの。
+> **注（ADR-0029）**: 以下は本コンテキストの目標設計（管理者ロール・`AdministratorId`・`rejectionReason` の永続化を含む）であり、issue #46 時点の暫定実装とは差分がある。暫定実装では管理者ロールが未実装のため `approve`/`reject`/`publish` は `NODE_ENV` ベースの暫定権限（`presentation/policies/moderation-policy.ts`）で代替し、`reviewerNotes`（拒否理由に相当）は記録先カラムが無く未使用。`create()` の `isDraft` 分岐、`submit`/`publish` の追加は ADR-0029 の正規フロー `draft → submit → pending_approval → (approved | rejected) → publish → published` を反映したもの。
 
 ```typescript
 class QuizAggregate {
-  // クイズ作成（ADR-0027: isDraftによりDraft/PendingApprovalを出し分ける）
+  // クイズ作成（ADR-0029: isDraftによりDraft/PendingApprovalを出し分ける）
   static create(command: CreateQuizCommand): Result<Quiz, DomainError> {
     // バリデーション
     const question = Question.create(command.questionText);
@@ -179,7 +179,7 @@ class Question {
 }
 ```
 
-#### QuizStatus（クイズ状態、ADR-0027で5値に拡張）
+#### QuizStatus（クイズ状態、ADR-0029で5値に拡張）
 
 ```typescript
 enum QuizStatusValue {
@@ -456,7 +456,7 @@ interface QuizPublishedEvent extends DomainEvent {
 
 1. **問題文必須**: 問題文は必ず存在し、500文字以内
 2. **正解必須**: 正解は必ず◯または×のいずれか
-3. **ステータス遷移**（ADR-0027）: `Draft → submit → PendingApproval → (Approved | Rejected)`、`Rejected → submit → PendingApproval`（再申請）、`Approved → publish → Published` のみ許可。`Approved`/`Published` への更新・削除は不可
+3. **ステータス遷移**（ADR-0029）: `Draft → submit → PendingApproval → (Approved | Rejected)`、`Rejected → submit → PendingApproval`（再申請）、`Approved → publish → Published` のみ許可。`Approved`/`Published` への更新・削除は不可
 4. **承認者必須**: 承認済みクイズには必ず承認者が存在
 5. **作成者不変**: 作成者IDは作成後変更不可
 6. **サニタイズ済み**: 問題文・解説はHTMLタグが除去済み

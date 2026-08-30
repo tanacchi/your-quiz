@@ -25,9 +25,9 @@ export type CreateQuizCommand = {
   explanation?: string;
   /** タグ配列（オプション） */
   tags?: string[];
-  /** 作成者ID（c.var.userFingerprint、ADR-0027の暫定措置） */
+  /** 作成者ID（c.var.userFingerprint、ADR-0029の暫定措置） */
   creatorId: string;
-  /** trueの場合、下書き（draft）として保存する（ADR-0027） */
+  /** trueの場合、下書き（draft）として保存する（ADR-0029） */
   isDraft?: boolean;
 };
 

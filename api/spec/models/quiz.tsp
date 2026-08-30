@@ -298,7 +298,7 @@ model CreateQuizRequest {
   explanation?: string;
   tags?: string[];
 
-  @doc("trueの場合、下書き（draft）として保存する。省略時はfalse扱いで承認待ち（pending_approval）として投稿される（ADR-0027）")
+  @doc("trueの場合、下書き（draft）として保存する。省略時はfalse扱いで承認待ち（pending_approval）として投稿される（ADR-0029）")
   isDraft?: boolean;
 }
 
@@ -316,7 +316,7 @@ model UpdateQuizRequest {
   @doc("更新後の問題文。省略時は変更しない")
   question?: string;
 
-  @doc("更新後の解説文。省略時は変更しない。solution/tags/answerType/creatorIdの更新は現時点で未対応（ADR-0027、フォローアップissueで対応予定）")
+  @doc("更新後の解説文。省略時は変更しない。solution/tags/answerType/creatorIdの更新は現時点で未対応（ADR-0029、フォローアップissueで対応予定）")
   explanation?: string;
 }
 
