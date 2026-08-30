@@ -3,7 +3,6 @@ import {
   type RepositoryError,
   RepositoryErrorFactory,
 } from "../../../../shared/errors";
-import { NotFoundError } from "../../../../shared/errors/base";
 import type { components } from "../../../../shared/types";
 import type {
   QuizSummary,
@@ -54,7 +53,7 @@ export class D1QuizRepository implements IQuizRepository {
 
   /**
    * IDでクイズを取得（ソリューション情報含む）
-   * 見つからない場合はNotFoundErrorを返す
+   * 見つからない場合は FindFailedError(details に "not found") を返す
    */
   findById(
     id: string,
@@ -86,8 +85,14 @@ export class D1QuizRepository implements IQuizRepository {
     )
       .andThen((result) => {
         if (result === null) {
-          return ResultAsync.fromSafePromise(
-            Promise.reject(new NotFoundError(`Quiz not found: ${id}`)),
+          // mapFindErrorToUseCaseError は FindFailedError かつ details に
+          // "not found" を含む場合に404へ変換する。AppErrorのNotFoundErrorを
+          // 返すと RepositoryError ではないため型契約も判定も外れて500になる。
+          return errAsync(
+            RepositoryErrorFactory.findFailed(
+              "Quiz",
+              new Error(`Quiz not found: ${id}`),
+            ),
           );
         }
         return ResultAsync.fromSafePromise(Promise.resolve(result));
@@ -281,16 +286,12 @@ export class D1QuizRepository implements IQuizRepository {
       }
 
       default:
-        return ResultAsync.fromSafePromise(
-          Promise.reject(
-            RepositoryErrorFactory.createFailed(
+        return errAsync(RepositoryErrorFactory.createFailed(
               "Solution",
               new Error(
                 `Unsupported solution type: ${(solution as { type: string }).type}`,
               ),
-            ),
-          ),
-        );
+            ));
     }
   }
 
@@ -344,30 +345,22 @@ export class D1QuizRepository implements IQuizRepository {
       }
 
       if (!isQuizRow(result)) {
-        return ResultAsync.fromSafePromise(
-          Promise.reject(
-            RepositoryErrorFactory.findFailed(
+        return errAsync(RepositoryErrorFactory.findFailed(
               "Quiz",
               new Error("Invalid quiz row data from database"),
-            ),
-          ),
-        );
+            ));
       }
 
       try {
         const quizResponse = this.mapRowToQuizResponse(result);
         return ResultAsync.fromSafePromise(Promise.resolve(quizResponse));
       } catch (error) {
-        return ResultAsync.fromSafePromise(
-          Promise.reject(
-            RepositoryErrorFactory.findFailed(
+        return errAsync(RepositoryErrorFactory.findFailed(
               "Quiz",
               error instanceof Error
                 ? error
                 : new Error("Failed to map quiz response"),
-            ),
-          ),
-        );
+            ));
       }
     });
   }
@@ -462,14 +455,10 @@ export class D1QuizRepository implements IQuizRepository {
       .andThen(([countResult, dataResult]) => {
         // Count結果の検証
         if (!isCountResult(countResult)) {
-          return ResultAsync.fromSafePromise(
-            Promise.reject(
-              RepositoryErrorFactory.findFailed(
+          return errAsync(RepositoryErrorFactory.findFailed(
                 "Quiz",
                 new Error("Invalid count result from database"),
-              ),
-            ),
-          );
+              ));
         }
 
         const totalCount = (countResult as { total: number }).total;
@@ -527,14 +516,10 @@ export class D1QuizRepository implements IQuizRepository {
     }
 
     if (fields.length === 0) {
-      return ResultAsync.fromSafePromise(
-        Promise.reject(
-          RepositoryErrorFactory.updateFailed(
+      return errAsync(RepositoryErrorFactory.updateFailed(
             "Quiz",
             new Error("No fields to update"),
-          ),
-        ),
-      );
+          ));
     }
 
     params.push(id);
@@ -575,28 +560,20 @@ export class D1QuizRepository implements IQuizRepository {
       ).andThen((updatedRow) => {
         if (!updatedRow || !isQuizRow(updatedRow)) {
           // UPDATEが0件しかヒットしなかった(対象不在)場合もここに来る
-          return ResultAsync.fromSafePromise(
-            Promise.reject(
-              RepositoryErrorFactory.findFailed(
+          return errAsync(RepositoryErrorFactory.findFailed(
                 "Quiz",
                 new Error(`Quiz not found: ${id}`),
-              ),
-            ),
-          );
+              ));
         }
 
         const mappingResult = D1QuizSummaryMapper.fromRow(updatedRow);
         if (mappingResult.isErr()) {
-          return ResultAsync.fromSafePromise(
-            Promise.reject(
-              RepositoryErrorFactory.updateFailed(
+          return errAsync(RepositoryErrorFactory.updateFailed(
                 "Quiz",
                 new Error(
                   `Failed to map updated quiz to QuizSummary: ${mappingResult.error.message}`,
                 ),
-              ),
-            ),
-          );
+              ));
         }
 
         return ResultAsync.fromSafePromise(
@@ -606,6 +583,55 @@ export class D1QuizRepository implements IQuizRepository {
     );
   }
 
+  /**
+   * answerTypeに対応するsolution系テーブルの削除文を返す
+   *
+   * Quiz.solution_id / Choice.solution_id にFK制約は無いため、Quiz本体より
+   * 後に消して問題ない。
+   */
+  private solutionDeleteStatements(
+    solutionId: string,
+    answerType: string,
+  ): D1PreparedStatement[] | undefined {
+    const solutionTableByAnswerType: Record<string, string> = {
+      boolean: "BooleanSolution",
+      free_text: "FreeTextSolution",
+      single_choice: "SingleChoiceSolution",
+      multiple_choice: "MultipleChoiceSolution",
+    };
+
+    const table = solutionTableByAnswerType[answerType];
+    if (table === undefined) {
+      return undefined;
+    }
+
+    const statements: D1PreparedStatement[] = [];
+    if (answerType === "single_choice" || answerType === "multiple_choice") {
+      statements.push(
+        this.db
+          .prepare("DELETE FROM Choice WHERE solution_id = ?")
+          .bind(solutionId),
+      );
+    }
+    statements.push(
+      this.db.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(solutionId),
+    );
+    return statements;
+  }
+
+  /**
+   * クイズと関連行を削除する
+   *
+   * 以前は「solution削除 → Quiz削除」を別々のクエリとして順に実行していた。
+   * QuizTag/Attempt が Quiz(id) をFK参照しているため、タグ付きクイズでは
+   * Quiz の DELETE がFK制約違反で失敗する一方、先行する solution の削除は
+   * 既にコミット済みとなり、「solutionだけ消えたQuiz行」という恒久破損が
+   * 残っていた（GETが500を返し続ける、boolean型では正解falseを返し続ける）。
+   *
+   * db.batch() は単一トランザクションで実行されるため、途中で失敗しても
+   * 何もコミットされない。回答済み(Attempt有り)のクイズは削除できないが、
+   * その場合も破損ではなくエラーで終わる。
+   */
   private executeDelete(id: string): ResultAsync<void, RepositoryError> {
     return ResultAsync.fromPromise(
       this.db
@@ -621,143 +647,56 @@ export class D1QuizRepository implements IQuizRepository {
         ),
     ).andThen((existingQuiz) => {
       if (!existingQuiz) {
-        return ResultAsync.fromSafePromise(
-          Promise.reject(new NotFoundError(`Quiz not found: ${id}`)),
-        );
-      }
-
-      if (!isBasicQuizInfo(existingQuiz)) {
-        return ResultAsync.fromSafePromise(
-          Promise.reject(
-            RepositoryErrorFactory.deleteFailed(
-              "Quiz",
-              new Error("Invalid quiz info from database"),
-            ),
+        return errAsync(
+          RepositoryErrorFactory.findFailed(
+            "Quiz",
+            new Error(`Quiz not found: ${id}`),
           ),
         );
       }
 
-      const info = existingQuiz as {
-        id: string;
-        solution_id: string;
-        answer_type: string;
-      };
-
-      // ソリューションと関連データを削除
-      return this.deleteSolution(info.solution_id, info.answer_type).andThen(
-        () =>
-          // クイズを削除
-          ResultAsync.fromPromise(
-            this.db.prepare("DELETE FROM Quiz WHERE id = ?").bind(id).run(),
-            (error) =>
-              RepositoryErrorFactory.deleteFailed(
-                "Quiz",
-                error instanceof Error
-                  ? error
-                  : new Error("Failed to delete quiz"),
-              ),
-          ).map(() => undefined),
-      );
-    });
-  }
-
-  private deleteSolution(
-    solutionId: string,
-    answerType: string,
-  ): ResultAsync<void, RepositoryError> {
-    const deleteChoices =
-      answerType === "single_choice" || answerType === "multiple_choice"
-        ? ResultAsync.fromPromise(
-            this.db
-              .prepare("DELETE FROM Choice WHERE solution_id = ?")
-              .bind(solutionId)
-              .run(),
-            (error) =>
-              RepositoryErrorFactory.deleteFailed(
-                "Choice",
-                error instanceof Error
-                  ? error
-                  : new Error("Failed to delete choices"),
-              ),
-          ).map(() => undefined)
-        : ResultAsync.fromSafePromise(Promise.resolve(undefined));
-
-    return deleteChoices.andThen(() => {
-      let solutionDeleteQuery: ResultAsync<unknown, RepositoryError>;
-
-      switch (answerType) {
-        case "boolean":
-          solutionDeleteQuery = ResultAsync.fromPromise(
-            this.db
-              .prepare("DELETE FROM BooleanSolution WHERE id = ?")
-              .bind(solutionId)
-              .run(),
-            (error) =>
-              RepositoryErrorFactory.deleteFailed(
-                "BooleanSolution",
-                error instanceof Error
-                  ? error
-                  : new Error("Failed to delete boolean solution"),
-              ),
-          );
-          break;
-        case "free_text":
-          solutionDeleteQuery = ResultAsync.fromPromise(
-            this.db
-              .prepare("DELETE FROM FreeTextSolution WHERE id = ?")
-              .bind(solutionId)
-              .run(),
-            (error) =>
-              RepositoryErrorFactory.deleteFailed(
-                "FreeTextSolution",
-                error instanceof Error
-                  ? error
-                  : new Error("Failed to delete free text solution"),
-              ),
-          );
-          break;
-        case "single_choice":
-          solutionDeleteQuery = ResultAsync.fromPromise(
-            this.db
-              .prepare("DELETE FROM SingleChoiceSolution WHERE id = ?")
-              .bind(solutionId)
-              .run(),
-            (error) =>
-              RepositoryErrorFactory.deleteFailed(
-                "SingleChoiceSolution",
-                error instanceof Error
-                  ? error
-                  : new Error("Failed to delete single choice solution"),
-              ),
-          );
-          break;
-        case "multiple_choice":
-          solutionDeleteQuery = ResultAsync.fromPromise(
-            this.db
-              .prepare("DELETE FROM MultipleChoiceSolution WHERE id = ?")
-              .bind(solutionId)
-              .run(),
-            (error) =>
-              RepositoryErrorFactory.deleteFailed(
-                "MultipleChoiceSolution",
-                error instanceof Error
-                  ? error
-                  : new Error("Failed to delete multiple choice solution"),
-              ),
-          );
-          break;
-        default:
-          solutionDeleteQuery = ResultAsync.fromSafePromise(
-            Promise.reject(
-              RepositoryErrorFactory.deleteFailed(
-                "Solution",
-                new Error(`Unknown answer type: ${answerType}`),
-              ),
-            ),
-          );
+      // isBasicQuizInfoは型ガードなので、以降 existingQuiz は
+      // { id: string; solution_id: string; answer_type: string } として扱える
+      // （型アサーションは使わない）
+      if (!isBasicQuizInfo(existingQuiz)) {
+        return errAsync(
+          RepositoryErrorFactory.deleteFailed(
+            "Quiz",
+            new Error("Invalid quiz info from database"),
+          ),
+        );
       }
 
-      return solutionDeleteQuery.map(() => undefined);
+      const solutionStatements = this.solutionDeleteStatements(
+        existingQuiz.solution_id,
+        existingQuiz.answer_type,
+      );
+      if (solutionStatements === undefined) {
+        return errAsync(
+          RepositoryErrorFactory.deleteFailed(
+            "Solution",
+            new Error(`Unknown answer type: ${existingQuiz.answer_type}`),
+          ),
+        );
+      }
+
+      // FK参照元(QuizTag)を先に消してからQuiz本体、最後にFK制約の無いsolution系
+      const statements: D1PreparedStatement[] = [
+        this.db.prepare("DELETE FROM QuizTag WHERE quiz_id = ?").bind(id),
+        this.db.prepare("DELETE FROM Quiz WHERE id = ?").bind(id),
+        ...solutionStatements,
+      ];
+
+      return ResultAsync.fromPromise(
+        this.db.batch(statements),
+        (error) =>
+          RepositoryErrorFactory.deleteFailed(
+            "Quiz",
+            error instanceof Error
+              ? error
+              : new Error("Failed to delete quiz"),
+          ),
+      ).map(() => undefined);
     });
   }
 
