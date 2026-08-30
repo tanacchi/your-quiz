@@ -450,8 +450,8 @@ export class D1QuizRepository implements IQuizRepository {
         ),
     );
 
-    return ResultAsync.combine([countQuery, dataQuery])
-      .andThen(([countResult, dataResult]) => {
+    return ResultAsync.combine([countQuery, dataQuery]).andThen(
+      ([countResult, dataResult]) => {
         // Count結果の検証
         if (!isCountResult(countResult)) {
           return errAsync(
@@ -487,7 +487,8 @@ export class D1QuizRepository implements IQuizRepository {
             hasMore: offset + limit < totalCount,
           }),
         );
-      });
+      },
+    );
   }
 
   private executeUpdate(

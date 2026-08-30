@@ -6,12 +6,12 @@ import {
   type EntityParseResult,
   toIssues,
 } from "../../../../../shared/validation/entity";
-import { BooleanSolution } from "../solutions/boolean/BooleanSolution";
-import { suggestQuizPatches } from "./quiz-patches";
 import {
   canDeleteStatus,
   canUpdateStatus,
 } from "../quiz-summary/quiz-status-transition";
+import { BooleanSolution } from "../solutions/boolean/BooleanSolution";
+import { suggestQuizPatches } from "./quiz-patches";
 import { type QuizData, type QuizInput, QuizSchema } from "./quiz-schema";
 
 // Type aliases for Quiz-specific types
