@@ -755,7 +755,6 @@ describe("D1 Types with Zod", () => {
 
   describe("Performance and Edge Cases", () => {
     test("should validate large dataset efficiently", () => {
-      const startTime = performance.now();
       const largeDataset = Array.from(
         { length: 1000 },
         (_, i) =>
@@ -770,13 +769,20 @@ describe("D1 Types with Zod", () => {
           }) satisfies unknown,
       );
 
-      largeDataset.forEach((item) => {
-        expect(isQuizRow(item)).toBe(true);
-      });
+      // 計測前に1周させてJITを暖める。全件がQuizRowとして妥当である
+      // ことの検証もここで行い、expectを計測区間の外に出す。
+      expect(largeDataset.every((item) => isQuizRow(item))).toBe(true);
 
-      const endTime = performance.now();
-      const executionTime = endTime - startTime;
-      expect(executionTime).toBeLessThan(200); // Should complete within 200ms (increased for added tests)
+      // 計測対象はisQuizRowのみ。データ生成・expect呼び出し・初回JIT
+      // コンパイルはいずれも計測区間の外にある。これらを含めていた頃は
+      // Zodの検証時間ではなくvitestのアサーション機構とJITの初回コストを
+      // 測っており、CIランナーの負荷でそれだけで200msを超えていた。
+      const startTime = performance.now();
+      const allValid = largeDataset.every((item) => isQuizRow(item));
+      const executionTime = performance.now() - startTime;
+
+      expect(allValid).toBe(true);
+      expect(executionTime).toBeLessThan(200);
     });
 
     test("should handle edge cases gracefully", () => {
