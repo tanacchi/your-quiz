@@ -1,5 +1,5 @@
-import { describe, expect, test, vi } from "vitest";
 import { okAsync } from "neverthrow";
+import { describe, expect, test, vi } from "vitest";
 import type { components } from "../../../../shared/types";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import type { ListQuizzesQuery } from "../schemas/list-quizzes-query.schema";
@@ -39,7 +39,9 @@ function createRepository(
 ): IQuizRepository {
   return {
     findById: vi.fn(() => okAsync(createQuizResponse())),
-    findMany: vi.fn(() => okAsync({ items: [], totalCount: 0, hasMore: false })),
+    findMany: vi.fn(() =>
+      okAsync({ items: [], totalCount: 0, hasMore: false }),
+    ),
     ...overrides,
   } as unknown as IQuizRepository;
 }
@@ -58,7 +60,9 @@ describe("非公開ステータスの可視性", () => {
   describe("ListQuizzesUseCase", () => {
     test("非公開ステータスを要求すると本人のクイズに限定される", async () => {
       // Arrange
-      const findMany = vi.fn(() => okAsync({ items: [], totalCount: 0, hasMore: false }));
+      const findMany = vi.fn(() =>
+        okAsync({ items: [], totalCount: 0, hasMore: false }),
+      );
       const useCase = new ListQuizzesUseCase(createRepository({ findMany }));
 
       // Act
@@ -72,7 +76,9 @@ describe("非公開ステータスの可視性", () => {
 
     test("他人のcreatorIdを指定して非公開ステータスを覗こうとしても本人に上書きされる", async () => {
       // Arrange
-      const findMany = vi.fn(() => okAsync({ items: [], totalCount: 0, hasMore: false }));
+      const findMany = vi.fn(() =>
+        okAsync({ items: [], totalCount: 0, hasMore: false }),
+      );
       const useCase = new ListQuizzesUseCase(createRepository({ findMany }));
 
       // Act
@@ -89,11 +95,16 @@ describe("非公開ステータスの可視性", () => {
 
     test("公開ステータスのみの要求では絞り込みを強制しない", async () => {
       // Arrange
-      const findMany = vi.fn(() => okAsync({ items: [], totalCount: 0, hasMore: false }));
+      const findMany = vi.fn(() =>
+        okAsync({ items: [], totalCount: 0, hasMore: false }),
+      );
       const useCase = new ListQuizzesUseCase(createRepository({ findMany }));
 
       // Act
-      await useCase.execute(baseQuery({ status: ["approved", "published"] }), OWNER);
+      await useCase.execute(
+        baseQuery({ status: ["approved", "published"] }),
+        OWNER,
+      );
 
       // Assert: 公開済みは誰でも見られる
       expect(findMany).toHaveBeenCalledWith(
@@ -142,7 +153,9 @@ describe("非公開ステータスの可視性", () => {
       // Arrange
       const repository = createRepository({
         findById: vi.fn(() =>
-          okAsync(createQuizResponse({ status: "published", creatorId: OWNER })),
+          okAsync(
+            createQuizResponse({ status: "published", creatorId: OWNER }),
+          ),
         ),
       });
       const useCase = new GetQuizUseCase(repository);

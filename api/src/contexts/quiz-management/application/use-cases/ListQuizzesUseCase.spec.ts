@@ -203,7 +203,10 @@ describe.todo("ListQuizzesUseCase", () => {
         ["invalid ids array", { ...validQuery, ids: [""] }],
       ])("should handle %s", async (_description, invalidQuery) => {
         // Act
-        const result = await useCase.execute(invalidQuery as ListQuizzesQuery, TEST_REQUESTER);
+        const result = await useCase.execute(
+          invalidQuery as ListQuizzesQuery,
+          TEST_REQUESTER,
+        );
 
         // Assert
         expect(result.isErr()).toBe(true);
@@ -351,9 +354,9 @@ describe.todo("ListQuizzesUseCase", () => {
         );
 
         // Act & Assert
-        await expect(useCase.execute(validQuery, TEST_REQUESTER)).rejects.toThrow(
-          "Unsupported answer type: unsupported_type",
-        );
+        await expect(
+          useCase.execute(validQuery, TEST_REQUESTER),
+        ).rejects.toThrow("Unsupported answer type: unsupported_type");
       });
     });
 

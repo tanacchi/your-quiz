@@ -286,12 +286,14 @@ export class D1QuizRepository implements IQuizRepository {
       }
 
       default:
-        return errAsync(RepositoryErrorFactory.createFailed(
-              "Solution",
-              new Error(
-                `Unsupported solution type: ${(solution as { type: string }).type}`,
-              ),
-            ));
+        return errAsync(
+          RepositoryErrorFactory.createFailed(
+            "Solution",
+            new Error(
+              `Unsupported solution type: ${(solution as { type: string }).type}`,
+            ),
+          ),
+        );
     }
   }
 
@@ -345,22 +347,26 @@ export class D1QuizRepository implements IQuizRepository {
       }
 
       if (!isQuizRow(result)) {
-        return errAsync(RepositoryErrorFactory.findFailed(
-              "Quiz",
-              new Error("Invalid quiz row data from database"),
-            ));
+        return errAsync(
+          RepositoryErrorFactory.findFailed(
+            "Quiz",
+            new Error("Invalid quiz row data from database"),
+          ),
+        );
       }
 
       try {
         const quizResponse = this.mapRowToQuizResponse(result);
         return ResultAsync.fromSafePromise(Promise.resolve(quizResponse));
       } catch (error) {
-        return errAsync(RepositoryErrorFactory.findFailed(
-              "Quiz",
-              error instanceof Error
-                ? error
-                : new Error("Failed to map quiz response"),
-            ));
+        return errAsync(
+          RepositoryErrorFactory.findFailed(
+            "Quiz",
+            error instanceof Error
+              ? error
+              : new Error("Failed to map quiz response"),
+          ),
+        );
       }
     });
   }
@@ -455,10 +461,12 @@ export class D1QuizRepository implements IQuizRepository {
       .andThen(([countResult, dataResult]) => {
         // Count結果の検証
         if (!isCountResult(countResult)) {
-          return errAsync(RepositoryErrorFactory.findFailed(
-                "Quiz",
-                new Error("Invalid count result from database"),
-              ));
+          return errAsync(
+            RepositoryErrorFactory.findFailed(
+              "Quiz",
+              new Error("Invalid count result from database"),
+            ),
+          );
         }
 
         const totalCount = (countResult as { total: number }).total;
@@ -516,10 +524,12 @@ export class D1QuizRepository implements IQuizRepository {
     }
 
     if (fields.length === 0) {
-      return errAsync(RepositoryErrorFactory.updateFailed(
-            "Quiz",
-            new Error("No fields to update"),
-          ));
+      return errAsync(
+        RepositoryErrorFactory.updateFailed(
+          "Quiz",
+          new Error("No fields to update"),
+        ),
+      );
     }
 
     params.push(id);
@@ -560,20 +570,24 @@ export class D1QuizRepository implements IQuizRepository {
       ).andThen((updatedRow) => {
         if (!updatedRow || !isQuizRow(updatedRow)) {
           // UPDATEが0件しかヒットしなかった(対象不在)場合もここに来る
-          return errAsync(RepositoryErrorFactory.findFailed(
-                "Quiz",
-                new Error(`Quiz not found: ${id}`),
-              ));
+          return errAsync(
+            RepositoryErrorFactory.findFailed(
+              "Quiz",
+              new Error(`Quiz not found: ${id}`),
+            ),
+          );
         }
 
         const mappingResult = D1QuizSummaryMapper.fromRow(updatedRow);
         if (mappingResult.isErr()) {
-          return errAsync(RepositoryErrorFactory.updateFailed(
-                "Quiz",
-                new Error(
-                  `Failed to map updated quiz to QuizSummary: ${mappingResult.error.message}`,
-                ),
-              ));
+          return errAsync(
+            RepositoryErrorFactory.updateFailed(
+              "Quiz",
+              new Error(
+                `Failed to map updated quiz to QuizSummary: ${mappingResult.error.message}`,
+              ),
+            ),
+          );
         }
 
         return ResultAsync.fromSafePromise(
@@ -687,15 +701,11 @@ export class D1QuizRepository implements IQuizRepository {
         ...solutionStatements,
       ];
 
-      return ResultAsync.fromPromise(
-        this.db.batch(statements),
-        (error) =>
-          RepositoryErrorFactory.deleteFailed(
-            "Quiz",
-            error instanceof Error
-              ? error
-              : new Error("Failed to delete quiz"),
-          ),
+      return ResultAsync.fromPromise(this.db.batch(statements), (error) =>
+        RepositoryErrorFactory.deleteFailed(
+          "Quiz",
+          error instanceof Error ? error : new Error("Failed to delete quiz"),
+        ),
       ).map(() => undefined);
     });
   }

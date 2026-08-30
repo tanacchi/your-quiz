@@ -21,10 +21,7 @@ export class GetQuizUseCase {
    * @param id - クイズID
    * @param requesterId - リクエスト元の userFingerprint
    */
-  execute(
-    id: string,
-    requesterId: string,
-  ): ResultAsync<Quiz, UseCaseError> {
+  execute(id: string, requesterId: string): ResultAsync<Quiz, UseCaseError> {
     return this.quizRepository
       .findById(id)
       .mapErr((repositoryError) =>

@@ -116,7 +116,9 @@ describe("D1QuizRepository", () => {
       const quizTagIndex = sqls.findIndex((sql) =>
         /DELETE FROM QuizTag/i.test(sql),
       );
-      const quizIndex = sqls.findIndex((sql) => /DELETE FROM Quiz\b/i.test(sql));
+      const quizIndex = sqls.findIndex((sql) =>
+        /DELETE FROM Quiz\b/i.test(sql),
+      );
       expect(quizTagIndex).toBeGreaterThanOrEqual(0);
       expect(quizIndex).toBeGreaterThanOrEqual(0);
       expect(quizTagIndex).toBeLessThan(quizIndex);

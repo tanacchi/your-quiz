@@ -126,7 +126,10 @@ describe.todo("GetQuizUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute("non-existent-quiz", TEST_REQUESTER);
+        const result = await useCase.execute(
+          "non-existent-quiz",
+          TEST_REQUESTER,
+        );
 
         // Assert
         expect(result.isErr()).toBe(true);

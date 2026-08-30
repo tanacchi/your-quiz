@@ -47,9 +47,11 @@ CREATE TYPE "AnswerType" AS ENUM (
 );
 
 CREATE TYPE "QuizStatus" AS ENUM (
+  'draft',
   'pending_approval',
   'approved',
-  'rejected'
+  'rejected',
+  'published'
 );
 
 CREATE TABLE "UserAccount" (
@@ -142,7 +144,7 @@ ALTER TABLE "Deck" ADD FOREIGN KEY ("creator_id") REFERENCES "UserIdentity" ("id
         "CHECK (\"answer_type\" IN ('boolean', 'free_text', 'single_choice', 'multiple_choice'))",
       );
       expect(result).toContain(
-        "CHECK (\"status\" IN ('pending_approval', 'approved', 'rejected'))",
+        "CHECK (\"status\" IN ('draft', 'pending_approval', 'approved', 'rejected', 'published'))",
       );
 
       // 配列型が変換されたことを確認
