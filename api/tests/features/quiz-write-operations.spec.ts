@@ -174,6 +174,101 @@ describe("Quiz Write Operations - クイズ書き込み操作", () => {
     });
   });
 
+  describe("非公開ステータスの可視性", () => {
+    it("GET /quizzes の既定レスポンスに他人の下書きが含まれない", async () => {
+      // Given: 他人が下書きを作成する
+      const owner = newFingerprint();
+      const created = await withFingerprint(
+        spec().post(quizWriteEndpoints.base),
+        owner,
+      )
+        .withJson(buildCreateQuizPayload({ isDraft: true }))
+        .expectStatus(201)
+        .toss();
+
+      // When: 別ユーザーがフィルタ無しで一覧を取得する
+      const viewer = newFingerprint();
+      const listed = await withFingerprint(
+        spec().get(quizWriteEndpoints.base),
+        viewer,
+      )
+        .expectStatus(200)
+        .toss();
+
+      // Then: 下書きは既定の一覧に出てこない
+      const ids = listed.json.items.map((item: { id: string }) => item.id);
+      expect(ids).not.toContain(created.json.id);
+    });
+
+    it("?status=draft で他人の下書きを列挙できない", async () => {
+      // Given: 他人が下書きを作成する
+      const owner = newFingerprint();
+      const created = await withFingerprint(
+        spec().post(quizWriteEndpoints.base),
+        owner,
+      )
+        .withJson(buildCreateQuizPayload({ isDraft: true }))
+        .expectStatus(201)
+        .toss();
+
+      // When: 別ユーザーがdraftを名指しで要求する
+      const viewer = newFingerprint();
+      const listed = await withFingerprint(
+        spec().get(`${quizWriteEndpoints.base}?status=draft`),
+        viewer,
+      )
+        .expectStatus(200)
+        .toss();
+
+      // Then: 本人のクイズに限定されるため他人の下書きは返らない
+      const ids = listed.json.items.map((item: { id: string }) => item.id);
+      expect(ids).not.toContain(created.json.id);
+    });
+
+    it("自分の下書きは ?status=draft で列挙できる", async () => {
+      // Given: 自分で下書きを作成する
+      const owner = newFingerprint();
+      const created = await withFingerprint(
+        spec().post(quizWriteEndpoints.base),
+        owner,
+      )
+        .withJson(buildCreateQuizPayload({ isDraft: true }))
+        .expectStatus(201)
+        .toss();
+
+      // When: 同じfingerprintでdraftを要求する
+      const listed = await withFingerprint(
+        spec().get(`${quizWriteEndpoints.base}?status=draft`),
+        owner,
+      )
+        .expectStatus(200)
+        .toss();
+
+      // Then: 下書き保存機能として本人には見える必要がある
+      const ids = listed.json.items.map((item: { id: string }) => item.id);
+      expect(ids).toContain(created.json.id);
+    });
+
+    it("他人の下書きはID直接指定でも取得できない(404)", async () => {
+      // Given: 他人が下書きを作成する
+      const owner = newFingerprint();
+      const created = await withFingerprint(
+        spec().post(quizWriteEndpoints.base),
+        owner,
+      )
+        .withJson(buildCreateQuizPayload({ isDraft: true }))
+        .expectStatus(201)
+        .toss();
+
+      // When/Then: 403だと存在自体が漏れるため404を返す
+      const viewer = newFingerprint();
+      await withFingerprint(
+        spec().get(quizWriteEndpoints.byId(created.json.id)),
+        viewer,
+      ).expectStatus(404);
+    });
+  });
+
   describe("異常系: エラーハンドリング", () => {
     it.each(notFoundScenarios)(
       "$description: 存在しないクイズIDは404を返す",

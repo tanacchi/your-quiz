@@ -92,3 +92,19 @@ export const canUpdateStatus = (status: QuizStatusValue): boolean =>
 
 export const canDeleteStatus = (status: QuizStatusValue): boolean =>
   (DELETABLE_STATUSES as readonly QuizStatusValue[]).includes(status);
+
+/**
+ * 誰でも閲覧できるステータス（ADR-0029）
+ *
+ * `quiz-management.tsp` の doc が「一般ユーザーは承認済みクイズのみ表示」と
+ * 定めているのに対応する。ここに含まれないステータスは作成者本人にしか
+ * 見せてはならない。
+ */
+export const PUBLICLY_VISIBLE_STATUSES = [
+  "approved",
+  "published",
+] as const satisfies readonly QuizStatusValue[];
+
+/** 作成者本人にしか見せてはならないステータス（draft / pending_approval / rejected） */
+export const isPubliclyVisibleStatus = (status: QuizStatusValue): boolean =>
+  (PUBLICLY_VISIBLE_STATUSES as readonly QuizStatusValue[]).includes(status);
