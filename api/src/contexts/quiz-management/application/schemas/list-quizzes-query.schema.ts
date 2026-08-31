@@ -7,15 +7,21 @@ import { z } from "zod";
  * 緩めの定義でバリデーション＋型安全なtransformを提供
  */
 
-// QuizStatusの有効値定義
+// QuizStatusの有効値定義（ADR-0029）
 const VALID_QUIZ_STATUSES = [
+  "draft",
   "pending_approval",
   "approved",
   "rejected",
+  "published",
 ] as const;
 
 export const listQuizzesQuerySchema = z.object({
-  status: z.array(z.enum(VALID_QUIZ_STATUSES)).optional().default(["approved"]),
+  // publishedを含めないと公開直後のクイズが一覧から消えるため、デフォルトに含める（ADR-0029）
+  status: z
+    .array(z.enum(VALID_QUIZ_STATUSES))
+    .optional()
+    .default(["approved", "published"]),
   creatorId: z.string().min(1).optional(),
   quizId: z.array(z.string().min(1)).optional(),
   limit: z.number().int().min(1).max(100).default(10),

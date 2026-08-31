@@ -1,4 +1,3 @@
-import { NotImplementedError } from "../../../../shared/errors";
 import { createQuizSchema } from "../../../../shared/schemas";
 import type { AppContext } from "../../../../shared/types";
 import { parseJsonSafe, validateWithZod } from "../../../../shared/utils";
@@ -76,6 +75,8 @@ export class QuizController {
       solution: body.solution,
       explanation: body.explanation,
       tags: body.tags,
+      creatorId: c.var.userFingerprint,
+      isDraft: body.isDraft,
     });
 
     if (result.isErr()) {
@@ -98,7 +99,7 @@ export class QuizController {
   async getQuiz(c: AppContext) {
     const id = c.req.param("id");
 
-    const result = await this.getQuizUseCase.execute(id);
+    const result = await this.getQuizUseCase.execute(id, c.var.userFingerprint);
 
     if (result.isErr()) {
       const error = result.error;
@@ -120,16 +121,20 @@ export class QuizController {
    */
   async listQuizzes(c: AppContext) {
     // クエリパラメータを取得（nullの場合は適切にフォールバック）
+    // 空配列を渡すとZodの`.default()`（undefinedにしか効かない）が発火せず、
+    // status未指定が「フィルタ無し=全ステータス」に化けてdraftまで返っていた。
     const rawQueryParams = {
-      status: c.req.queries("status") ?? [],
+      status: c.req.queries("status") ?? undefined,
       creatorId: c.req.query("creatorId") ?? undefined,
-      quizId: c.req.queries("quizId") ?? [],
+      quizId: c.req.queries("quizId") ?? undefined,
       limit: c.req.query("limit") ?? undefined,
       offset: c.req.query("offset") ?? undefined,
     };
 
     return validateWithZod(listQueryFromReq, rawQueryParams)
-      .asyncAndThen((query) => this.listQuizzesUseCase.execute(query))
+      .asyncAndThen((query) =>
+        this.listQuizzesUseCase.execute(query, c.var.userFingerprint),
+      )
       .match(
         (res) => c.json(res),
         (error) => {
@@ -138,33 +143,5 @@ export class QuizController {
           return c.json(errorResponse.response, errorResponse.statusCode);
         },
       );
-  }
-
-  /**
-   * クイズ更新HTTPハンドラー
-   *
-   * 現在は未実装のため、NOT Implemented エラーを返します。
-   *
-   * @param c - Honoアプリケーションコンテキスト
-   * @returns HTTP 501 (Not Implemented)
-   */
-  async updateQuiz(c: AppContext) {
-    const error = new NotImplementedError("Quiz update");
-    const errorResponse = ControllerErrorHandler.handleError(error);
-    return c.json(errorResponse.response, errorResponse.statusCode);
-  }
-
-  /**
-   * クイズ削除HTTPハンドラー
-   *
-   * 現在は未実装のため、NOT Implemented エラーを返します。
-   *
-   * @param c - Honoアプリケーションコンテキスト
-   * @returns HTTP 501 (Not Implemented)
-   */
-  async deleteQuiz(c: AppContext) {
-    const error = new NotImplementedError("Quiz deletion");
-    const errorResponse = ControllerErrorHandler.handleError(error);
-    return c.json(errorResponse.response, errorResponse.statusCode);
   }
 }

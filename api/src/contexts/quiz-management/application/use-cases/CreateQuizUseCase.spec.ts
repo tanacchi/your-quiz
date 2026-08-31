@@ -10,7 +10,7 @@ import type { IQuizRepository } from "../../domain/repositories/IQuizRepository"
 import { QuizCreationFailedError, UseCaseInternalError } from "../errors";
 import { type CreateQuizCommand, CreateQuizUseCase } from "./CreateQuizUseCase";
 
-describe.todo("CreateQuizUseCase", () => {
+describe("CreateQuizUseCase", () => {
   let useCase: CreateQuizUseCase;
   let mockRepository: IQuizRepository;
 
@@ -113,6 +113,7 @@ describe.todo("CreateQuizUseCase", () => {
             type: "boolean",
             value: true,
           },
+          creatorId: "user-456",
         };
 
         const mockQuizSummary = {
@@ -123,7 +124,7 @@ describe.todo("CreateQuizUseCase", () => {
               answerType: "boolean",
               solutionId: "solution-2",
               status: "pending_approval",
-              creatorId: "mock-user-id",
+              creatorId: "user-456",
               createdAt: "2024-01-01 00:00:00",
               explanation: undefined,
               approvedAt: undefined,
@@ -148,7 +149,7 @@ describe.todo("CreateQuizUseCase", () => {
             answerType: "boolean",
             solutionId: "solution-2",
             status: "pending_approval",
-            creatorId: "mock-user-id",
+            creatorId: "user-456",
             createdAt: "2024-01-01 00:00:00",
           });
           expect(result.value.explanation).toBeUndefined();
@@ -288,11 +289,13 @@ describe.todo("CreateQuizUseCase", () => {
           question: "First question",
           answerType: "boolean",
           solution: { type: "boolean", value: true },
+          creatorId: "user-123",
         });
         const result2 = await useCase.execute({
           question: "Second question",
           answerType: "boolean",
           solution: { type: "boolean", value: false },
+          creatorId: "user-123",
         });
 
         // Assert
@@ -304,21 +307,20 @@ describe.todo("CreateQuizUseCase", () => {
         // Cleanup
         Date.now = originalDateNow;
       });
+    });
 
-      test("should use mock-user-id when creatorId is not provided", async () => {
+    describe("isDraft (ADR-0029)", () => {
+      test("isDraft: trueの場合はstatus draftでリポジトリに渡す", async () => {
         // Arrange
-        const commandWithoutCreator = { ...validCommand };
-        delete (commandWithoutCreator as Partial<CreateQuizCommand>).creatorId;
-
         const mockQuizSummary = {
           get: vi.fn((key: string) => {
             const data: Record<string, unknown> = {
-              id: "quiz-1",
+              id: "quiz-draft",
               question: "What is TypeScript?",
               answerType: "single_choice",
               solutionId: "solution-1",
-              status: "pending_approval",
-              creatorId: "mock-user-id",
+              status: "draft",
+              creatorId: "user-123",
               createdAt: "2024-01-01 00:00:00",
             };
             return data[key];
@@ -330,14 +332,66 @@ describe.todo("CreateQuizUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute(commandWithoutCreator);
+        const result = await useCase.execute({
+          ...validCommand,
+          isDraft: true,
+        });
 
         // Assert
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
-          expect(result.value.creatorId).toBe("mock-user-id");
+          expect(result.value.status).toBe("draft");
         }
+        const [passedQuiz] =
+          vi.mocked(mockRepository.create).mock.calls[0] ?? [];
+        expect(passedQuiz?.get("status")).toBe("draft");
       });
+
+      test.each([
+        ["isDraftを省略", {}],
+        ["isDraft: false", { isDraft: false }],
+      ])(
+        "%s の場合はstatus pending_approvalでリポジトリに渡す",
+        async (_desc, override) => {
+          // Arrange
+          const mockQuizSummary = {
+            get: vi.fn((key: string) => {
+              const data: Record<string, unknown> = {
+                id: "quiz-1",
+                question: "What is TypeScript?",
+                answerType: "single_choice",
+                solutionId: "solution-1",
+                status: "pending_approval",
+                creatorId: "user-123",
+                createdAt: "2024-01-01 00:00:00",
+              };
+              return data[key];
+            }),
+          } as unknown as QuizSummary;
+
+          vi.mocked(mockRepository.create).mockReturnValue(
+            createImmediateSuccess(mockQuizSummary),
+          );
+
+          // Act
+          const result = await useCase.execute({
+            ...validCommand,
+            ...override,
+          });
+
+          // Assert
+          expect(result.isOk()).toBe(true);
+          if (result.isOk()) {
+            expect(result.value.status).toBe("pending_approval");
+          }
+          // result.value.statusはmockQuizSummary.get()のエコーに過ぎず
+          // "pending_approval"固定なので、三項演算子を反転させても検出
+          // できない(T-5)。実際にリポジトリへ渡されたstatusを検証する。
+          const [passedQuiz] =
+            vi.mocked(mockRepository.create).mock.calls[0] ?? [];
+          expect(passedQuiz?.get("status")).toBe("pending_approval");
+        },
+      );
     });
   });
 });

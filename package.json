@@ -34,6 +34,7 @@
     "storybook:build": "pnpm --filter ui storybook:build",
     "test": "run-p test:*",
     "test:api": "pnpm --filter api test",
+    "test:spec": "pnpm --filter quiz-api-spec test",
     "test:ui": "pnpm --filter ui test",
     "test:scripts": "vitest run scripts/",
     "mutation-test": "run-s mutation-test:run mutation-test:report",

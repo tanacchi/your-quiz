@@ -18,6 +18,22 @@ const d1IdSchema = z.union([z.string(), z.number()]).transform(String);
  */
 const TAG_NAME_SEPARATOR = "\x1f";
 
+/**
+ * QuizStatusの全値（ADR-0029で5値に拡張）
+ *
+ * 検索SQLのWHERE句にstatus条件が無く、D1からは全ステータスの行が流れてくる。
+ * ここが実際のQuizStatusより狭いと、該当行がparse失敗で無言に捨てられ、
+ * HTTPは200のままitems.lengthだけがtotalCountより少なくなる。
+ * `satisfies`でTypeSpec生成型に縛り、値が増減したらコンパイルエラーにする。
+ */
+const QUIZ_STATUS_VALUES = [
+  "draft",
+  "pending_approval",
+  "approved",
+  "rejected",
+  "published",
+] as const satisfies readonly components["schemas"]["QuizStatus"][];
+
 export const searchRowSchema = z.object({
   id: d1IdSchema,
   question: z.string(),
@@ -29,7 +45,7 @@ export const searchRowSchema = z.object({
   ]),
   solution_id: d1IdSchema,
   explanation: z.string().nullable(),
-  status: z.enum(["pending_approval", "approved", "rejected"]),
+  status: z.enum(QUIZ_STATUS_VALUES),
   creator_id: d1IdSchema,
   // SearchQueryBuilder が strftime で ISO 8601 化して返すため、文字列として受け取る
   created_at: z.string(),

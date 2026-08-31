@@ -128,14 +128,25 @@ export const suggestTagIdsPatches: QuizSummaryFieldSuggester = (value) => {
   return patches;
 };
 
-// approvedAt 用：approved状態なのにtimestampがない場合
+/**
+ * approvedAt 用：approved/published状態なのにtimestampがない場合
+ *
+ * quiz-summary-schema.ts の superRefine は approved と published の両方で
+ * approvedAt を必須にしているため、提案側も両方を対象にする。
+ * 値は sqliteDateTimeSchema（YYYY-MM-DD HH:MM:SS）に合わせる必要があり、
+ * ISO 8601 を提案すると適用しても必ず再度バリデーションエラーになる。
+ */
 export const suggestApprovedAtPatches = (
   obj: Partial<QuizSummaryInput>,
 ): QuizSummaryPatch[] => {
   const patches: QuizSummaryPatch[] = [];
 
-  if (obj.status === "approved" && !obj.approvedAt) {
-    patches.push({ approvedAt: new Date().toISOString() });
+  const needsApprovedAt =
+    obj.status === "approved" || obj.status === "published";
+  if (needsApprovedAt && !obj.approvedAt) {
+    patches.push({
+      approvedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+    });
   }
 
   return patches;

@@ -262,7 +262,7 @@ export interface paths {
      *     - **権限考慮**: ユーザー権限に応じた表示制御
      *
      *     ## フィルタ機能
-     *     - **ステータス別**: pending_approval, approved, rejected（複数指定でOR条件）
+     *     - **ステータス別**: draft, pending_approval, approved, rejected, published（複数指定でOR条件）
      *     - **作成者別**: 特定ユーザーの作成クイズのみ表示（複数指定でOR条件）
      *     - **クイズID指定**: 複数のクイズIDを指定して一括取得
      *
@@ -300,7 +300,8 @@ export interface paths {
      *     ## 機能
      *     - **多様な問題形式対応**: 真偽値、自由記述、単択、複数選択の4形式をサポート
      *     - **自動バリデーション**: 問題文・解答・選択肢の妥当性を自動検証
-     *     - **承認待ち状態**: 作成されたクイズは承認待ち状態で管理者レビューを経て公開
+     *     - **下書き保存対応**: `isDraft: true` で下書き（draft）として保存し、後から `submit` で承認申請できる
+     *     - **承認待ち状態**: `isDraft` を省略・falseにした場合、作成されたクイズは承認待ち状態で管理者レビューを経て公開
      *     - **タグ分類**: 学習分野・難易度別のタグ付けが可能
      *
      *     ## 制限事項
@@ -312,8 +313,8 @@ export interface paths {
      *     ## 作成フロー
      *     1. リクエスト送信
      *     2. バリデーション実行
-     *     3. pending_approval状態でデータベースに保存
-     *     4. 管理者による承認待ちキューに追加
+     *     3. `isDraft: true` ならdraft状態、それ以外はpending_approval状態でデータベースに保存
+     *     4. pending_approval状態のクイズは管理者による承認待ちキューに追加
      *
      *     ## 使用例
      *     - 教育コンテンツの作成
@@ -361,29 +362,17 @@ export interface paths {
     /** @description クイズ削除API
      *
      *     ## 機能
-     *     - **論理削除**: データは保持し、ステータスを削除済みに変更
-     *     - **権限制御**: 作成者または管理者のみ削除可能
-     *     - **関連データ保護**: 回答履歴や統計データは保持
+     *     - **物理削除**: データベースから完全に削除する（論理削除は将来対応、ADR-0029）
+     *     - **所有者限定**: 作成者本人のみ削除可能
+     *     - **状態制限**: draft/pending_approval/rejected状態のクイズのみ削除可能
      *
      *     ## 削除条件
      *     - **作成者権限**: 自身が作成したクイズの削除
-     *     - **管理者権限**: 全てのクイズの削除（規約違反等）
-     *     - **承認状態**: 全ステータスのクイズが削除対象
-     *
-     *     ## 削除の影響
-     *     - **学習セッション**: 進行中セッションは継続可能
-     *     - **統計データ**: 過去の回答履歴は保持
-     *     - **デッキ**: 含まれるデッキからは自動除外
-     *
-     *     ## 削除後の状態
-     *     - データベースからは物理削除されない
-     *     - 検索結果には表示されない
-     *     - 作成者統計からは除外される
+     *     - **状態制限**: approved/published状態のクイズは削除不可（409エラー）
      *
      *     ## 使用場面
-     *     - 不適切コンテンツの除去
-     *     - 作成者による自主削除
-     *     - 重複問題の整理 */
+     *     - 不適切コンテンツの自主削除
+     *     - 作成ミスの取り消し */
     delete: operations["QuizManagement_deleteQuiz"];
     options?: never;
     head?: never;
@@ -391,39 +380,164 @@ export interface paths {
      *
      *     ## 機能
      *     - **真の部分更新**: 指定されたフィールドのみを更新（PATCH方式）
-     *     - **柔軟な権限制御**: 作成者と管理者で更新可能フィールドが異なる
-     *     - **承認状態制限**: 承認済みクイズは更新不可
+     *     - **所有者限定**: 作成者本人のみ更新可能
+     *     - **状態制限**: draft/pending_approval/rejected状態のクイズのみ更新可能
      *     - **整合性バリデーション**: 更新内容の妥当性を自動検証
      *
      *     ## 更新可能フィールド
      *     - **問題文（question）**: 問題の内容を修正
-     *     - **回答形式（answerType）**: boolean/free_text/single_choice/multiple_choice
-     *     - **解答内容（solution）**: SolutionCreateを使用してIDなしで解答を更新
      *     - **解説（explanation）**: 問題の説明文を追加・修正
-     *     - **タグ（tags）**: 学習分野・難易度別のタグ配列
-     *     - **作成者ID（creatorId）**: 管理者のみ、作成者の変更が可能
+     *
+     *     ## 未対応フィールド（ADR-0029、フォローアップissueで対応予定）
+     *     - 回答形式（answerType）・解答内容（solution）・タグ（tags）・作成者ID（creatorId）は本APIでは更新できない
      *
      *     ## 権限制御
-     *     - **作成者権限**: question, answerType, solution, explanation, tags の更新
-     *     - **管理者権限**: 全フィールド（creatorId含む）の更新
-     *     - **承認済みクイズ**: 全ユーザーで更新不可（approved状態）
-     *
-     *     ## 整合性チェック
-     *     - **answerTypeとsolution**: 回答形式と解答内容の整合性を確認
-     *     - **タグ検証**: 存在するタグIDのみ受け入れ
-     *     - **作成者存在確認**: creatorId変更時のユーザー存在確認
+     *     - **作成者権限**: 自身が作成したクイズのquestion/explanationの更新
+     *     - **approved/published状態**: 更新不可（409エラー）
      *
      *     ## 更新後の動作
-     *     - 更新されたクイズは承認待ち状態に戻る（pending_approval）
-     *     - 管理者に再レビュー通知を送信
-     *     - 更新履歴の詳細記録（変更フィールドと変更者）
+     *     - ステータスは変更されない（PATCHは承認状態遷移を伴わない）
      *
      *     ## 使用場面
-     *     - **内容修正**: 誤字脱字や解答間違いの修正
-     *     - **形式変更**: 回答形式や選択肢の追加・変更
-     *     - **管理業務**: 作成者変更や大幅な内容修正
-     *     - **品質向上**: 解説の充実化やタグ分類の見直し */
+     *     - **内容修正**: 誤字脱字や解説不足の修正
+     *     - **下書きの編集**: submit前のdraft状態クイズの内容修正 */
     patch: operations["QuizManagement_updateQuiz"];
+    trace?: never;
+  };
+  "/api/quiz/v1/manage/quizzes/{id}/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description クイズ承認API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+     *
+     *     ## 機能
+     *     - **承認処理**: pending_approvalのクイズをapproved状態に変更
+     *     - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0029、フォローアップissueで対応予定）
+     *
+     *     ## 承認権限
+     *     - **暫定モデレーション権限**: 本番環境ではAPI経由での実行を許可しない（403）
+     *
+     *     ## 承認プロセス
+     *     1. 問題内容・品質の確認
+     *     2. 承認の判断
+     *     3. 承認理由・コメントの記録
+     *
+     *     ## 承認後の状態
+     *     - ステータス: approved（approvedAtを記録）
+     *     - `publish` を呼ぶことで公開状態に遷移可能
+     *
+     *     ## 使用場面
+     *     - 開発環境での承認フロー検証
+     *     - 品質管理・コンテンツ審査 */
+    post: operations["QuizManagement_approveQuiz"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/quiz/v1/manage/quizzes/{id}/publish": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description クイズ公開API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+     *
+     *     ## 機能
+     *     - **公開**: 承認済み（approved）クイズを公開状態（published）に変更
+     *     - **可視性変更**: 検索・学習での利用開始
+     *
+     *     ## 公開権限
+     *     - **暫定モデレーション権限**: 本番環境ではAPI経由での実行を許可しない（403）
+     *     - **承認済み限定**: approved状態のクイズのみ公開可能（それ以外は409）
+     *
+     *     ## 公開後の状態
+     *     - **検索対象**: 一般ユーザーの検索に含まれる
+     *     - **学習利用**: デッキ作成・学習セッションで選択可能
+     *
+     *     ## 使用場面
+     *     - 品質確認完了後の最終公開 */
+    post: operations["QuizManagement_publishQuiz"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/quiz/v1/manage/quizzes/{id}/reject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description クイズ却下API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+     *
+     *     ## 機能
+     *     - **却下処理**: pending_approvalのクイズをrejected状態に変更
+     *     - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0029、フォローアップissueで対応予定）
+     *     - **再申請可能**: 却下後も修正して`submit`で再申請が可能
+     *
+     *     ## 却下権限
+     *     - **暫定モデレーション権限**: 本番環境ではAPI経由での実行を許可しない（403）
+     *
+     *     ## 却下後の流れ
+     *     1. ステータスをrejectedに変更
+     *     2. 作成者は修正後 `submit` で再申請可能
+     *
+     *     ## 使用場面
+     *     - 品質基準に満たない問題の却下
+     *     - 規約違反コンテンツの審査 */
+    post: operations["QuizManagement_rejectQuiz"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/quiz/v1/manage/quizzes/{id}/submit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description クイズ承認申請API
+     *
+     *     ## 機能
+     *     - **承認プロセス開始**: 作成者が自身のクイズを承認申請に送る
+     *     - **ステータス管理**: pending_approval状態への明示的な変更
+     *     - **再申請対応**: rejected状態からの再申請も可能
+     *
+     *     ## 申請条件
+     *     - **作成者権限**: 自身が作成したクイズのみ申請可能
+     *     - **対象状態**: draft状態（新規申請）またはrejected状態（再申請）のクイズのみ対象
+     *
+     *     ## 申請後の流れ
+     *     1. ステータスをpending_approvalに変更
+     *     2. 管理者承認待ちキューに追加
+     *
+     *     ## 使用場面
+     *     - クイズ作成完了時の承認申請
+     *     - 却下後の修正完了時の再申請 */
+    post: operations["QuizManagement_submitForApproval"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/search/v1/quizzes": {
@@ -700,8 +814,8 @@ export interface components {
       /** @enum {string} */
       decision: "approved" | "rejected";
       reviewerNotes?: string;
-      /** @default true */
-      publishImmediately: boolean;
+      /** @description 現時点ではpublishQuiz呼び出し前の中間状態(reviewerNotes等)の記録先カラムが無いため未使用。将来のフォローアップで対応予定 */
+      publishImmediately?: boolean;
     };
     Attempt: {
       id: components["schemas"]["AttemptId"];
@@ -859,6 +973,8 @@ export interface components {
       solution: components["schemas"]["SolutionCreate"];
       explanation?: string;
       tags?: string[];
+      /** @description trueの場合、下書き（draft）として保存する。省略時はfalse扱いで承認待ち（pending_approval）として投稿される（ADR-0029） */
+      isDraft?: boolean;
     };
     CreateQuizResponse: {
       quiz: components["schemas"]["Quiz"];
@@ -1186,7 +1302,12 @@ export interface components {
       progress: components["schemas"]["SessionProgress"];
     };
     /** @enum {string} */
-    QuizStatus: "pending_approval" | "approved" | "rejected";
+    QuizStatus:
+      | "draft"
+      | "pending_approval"
+      | "approved"
+      | "rejected"
+      | "published";
     /** @example {
      *       "id": "quiz-001",
      *       "question": "JavaScriptで配列の最後に要素を追加するメソッドは？",
@@ -1375,38 +1496,13 @@ export interface components {
     };
     /** @example {
      *       "question": "HTMLの段落を表すタグはどれですか？（修正版）",
-     *       "answerType": "single_choice",
-     *       "solution": {
-     *         "type": "single_choice",
-     *         "choices": [
-     *           {
-     *             "text": "<p>",
-     *             "orderIndex": 0,
-     *             "isCorrect": true
-     *           },
-     *           {
-     *             "text": "<div>",
-     *             "orderIndex": 1,
-     *             "isCorrect": false
-     *           }
-     *         ]
-     *       },
-     *       "explanation": "pタグはparagraphの略で、HTMLで段落を表現するために使用します。段落間には自動的にマージンが設定されます。",
-     *       "tags": [
-     *         "html",
-     *         "基礎",
-     *         "初級",
-     *         "マークアップ"
-     *       ],
-     *       "creatorId": "user-456"
+     *       "explanation": "pタグはparagraphの略で、HTMLで段落を表現するために使用します。段落間には自動的にマージンが設定されます。"
      *     } */
     UpdateQuizRequest: {
+      /** @description 更新後の問題文。省略時は変更しない */
       question?: string;
-      answerType?: components["schemas"]["AnswerType"];
-      solution?: components["schemas"]["SolutionCreate"];
+      /** @description 更新後の解説文。省略時は変更しない。solution/tags/answerType/creatorIdの更新は現時点で未対応（ADR-0029、フォローアップissueで対応予定） */
       explanation?: string;
-      tags?: string[];
-      creatorId?: components["schemas"]["UserId"];
     };
     UpdateSessionRequest: {
       isCompleted?: boolean;
@@ -2211,7 +2307,8 @@ export interface operations {
         content: {
           "application/json":
             | components["schemas"]["NotFoundError"]
-            | components["schemas"]["ForbiddenError"];
+            | components["schemas"]["ForbiddenError"]
+            | components["schemas"]["ConflictError"];
         };
       };
     };
@@ -2251,7 +2348,160 @@ export interface operations {
           "application/json":
             | components["schemas"]["NotFoundError"]
             | components["schemas"]["ForbiddenError"]
-            | components["schemas"]["ValidationError"];
+            | components["schemas"]["ValidationError"]
+            | components["schemas"]["ConflictError"];
+        };
+      };
+    };
+  };
+  QuizManagement_approveQuiz: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 承認対象のクイズID（UUID形式） */
+        id: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    /** @description 承認処理の詳細情報を含むリクエスト。decisionはこのエンドポイントでは'approved'固定で、それ以外の値は400を返す */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApprovalRequest"];
+      };
+    };
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuizResponse"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"]
+            | components["schemas"]["ValidationError"]
+            | components["schemas"]["ConflictError"];
+        };
+      };
+    };
+  };
+  QuizManagement_publishQuiz: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 公開対象のクイズID（UUID形式） */
+        id: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuizResponse"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"]
+            | components["schemas"]["ConflictError"];
+        };
+      };
+    };
+  };
+  QuizManagement_rejectQuiz: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 却下対象のクイズID（UUID形式） */
+        id: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    /** @description 却下処理の詳細情報・理由を含むリクエスト。decisionはこのエンドポイントでは'rejected'固定で、それ以外の値は400を返す */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApprovalRequest"];
+      };
+    };
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuizResponse"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"]
+            | components["schemas"]["ValidationError"]
+            | components["schemas"]["ConflictError"];
+        };
+      };
+    };
+  };
+  QuizManagement_submitForApproval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 承認申請対象のクイズID（UUID形式） */
+        id: components["schemas"]["QuizId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The request has succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuizResponse"];
+        };
+      };
+      /** @description An unexpected error response. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["NotFoundError"]
+            | components["schemas"]["ForbiddenError"]
+            | components["schemas"]["ConflictError"];
         };
       };
     };

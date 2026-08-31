@@ -32,7 +32,9 @@ describe("SearchQueryBuilder", () => {
   });
 
   describe("buildWhereClause", () => {
-    test("フィルタ条件が無い場合はWHERE句が空文字になる", () => {
+    // 検索は公開済みのクイズだけを返す。status条件が無いと全ステータスを
+    // 引いてしまい、他人のdraft（下書き）が検索結果に出る。
+    test("フィルタ条件が無くても公開ステータスに限定するWHERE句を返す", () => {
       // Arrange
       const query = new SearchQuizzesQuery();
 
@@ -40,9 +42,17 @@ describe("SearchQueryBuilder", () => {
       const { clause, params } = buildWhereClause(query);
 
       // Assert
-      expect(clause).toBe("");
-      expect(params).toEqual([]);
+      expect(clause).toContain("q.status IN");
+      expect(params).toEqual(["approved", "published"]);
     });
+
+    test.each([["draft"], ["pending_approval"], ["rejected"]] as const)(
+      "非公開ステータス %s はバインドパラメータに含まれない",
+      (status) => {
+        const { params } = buildWhereClause(new SearchQuizzesQuery());
+        expect(params).not.toContain(status);
+      },
+    );
 
     test("searchTextのみ指定した場合、question/explanation/タグ名をLIKEで横断検索するEXISTS句になる", () => {
       // Arrange
@@ -57,7 +67,13 @@ describe("SearchQueryBuilder", () => {
       expect(clause).toContain("EXISTS");
       expect(clause).toContain("QuizTag");
       expect(clause).toContain("t.name LIKE ? ESCAPE '\\'");
-      expect(params).toEqual(["%TypeScript%", "%TypeScript%", "%TypeScript%"]);
+      expect(params).toEqual([
+        "approved",
+        "published",
+        "%TypeScript%",
+        "%TypeScript%",
+        "%TypeScript%",
+      ]);
     });
 
     test("searchTextにLIKEメタ文字が含まれる場合はエスケープしてからパターン化する", () => {
@@ -69,6 +85,8 @@ describe("SearchQueryBuilder", () => {
 
       // Assert
       expect(params).toEqual([
+        "approved",
+        "published",
         "%100\\%\\_off%",
         "%100\\%\\_off%",
         "%100\\%\\_off%",
@@ -89,7 +107,12 @@ describe("SearchQueryBuilder", () => {
       expect(clause).toContain("EXISTS");
       expect(clause).not.toContain("NOT EXISTS");
       expect(clause).toContain("t.name IN (?, ?)");
-      expect(params).toEqual(["プログラミング", "Web開発"]);
+      expect(params).toEqual([
+        "approved",
+        "published",
+        "プログラミング",
+        "Web開発",
+      ]);
     });
 
     test("excludeTagsを指定した場合、NOT EXISTS句になる", () => {
@@ -104,7 +127,7 @@ describe("SearchQueryBuilder", () => {
       // Assert
       expect(clause).toContain("NOT EXISTS");
       expect(clause).toContain("t.name IN (?)");
-      expect(params).toEqual(["初心者向け"]);
+      expect(params).toEqual(["approved", "published", "初心者向け"]);
     });
 
     test("answerTypeを指定した場合、完全一致条件になる", () => {
@@ -121,8 +144,8 @@ describe("SearchQueryBuilder", () => {
       const { clause, params } = buildWhereClause(query);
 
       // Assert
-      expect(clause).toBe("WHERE q.answer_type = ?");
-      expect(params).toEqual(["single_choice"]);
+      expect(clause).toBe("WHERE q.status IN (?, ?) AND q.answer_type = ?");
+      expect(params).toEqual(["approved", "published", "single_choice"]);
     });
 
     test("creatorIdを指定した場合、完全一致条件になる", () => {
@@ -140,8 +163,8 @@ describe("SearchQueryBuilder", () => {
       const { clause, params } = buildWhereClause(query);
 
       // Assert
-      expect(clause).toBe("WHERE q.creator_id = ?");
-      expect(params).toEqual(["user-1"]);
+      expect(clause).toBe("WHERE q.status IN (?, ?) AND q.creator_id = ?");
+      expect(params).toEqual(["approved", "published", "user-1"]);
     });
 
     test("createdAfter/createdBeforeを指定した場合、datetime()で正規化した範囲条件になる", () => {
@@ -164,9 +187,14 @@ describe("SearchQueryBuilder", () => {
 
       // Assert
       expect(clause).toBe(
-        "WHERE q.created_at >= datetime(?) AND q.created_at <= datetime(?)",
+        "WHERE q.status IN (?, ?) AND q.created_at >= datetime(?) AND q.created_at <= datetime(?)",
       );
-      expect(params).toEqual(["2024-01-01T00:00:00Z", "2024-12-31T23:59:59Z"]);
+      expect(params).toEqual([
+        "approved",
+        "published",
+        "2024-01-01T00:00:00Z",
+        "2024-12-31T23:59:59Z",
+      ]);
     });
 
     test("複数条件を組み合わせた場合、AND連結され、パラメータが条件の出現順に並ぶ", () => {
@@ -187,11 +215,15 @@ describe("SearchQueryBuilder", () => {
       // 各EXISTS/NOT EXISTSサブクエリ内部にも AND (qt.quiz_id = q.id AND t.name ...)
       // が含まれるため、トップレベルの結合だけを厳密に検証する
       // （前後の文脈で "AND EXISTS" / "AND NOT EXISTS" / "AND q.xxx" と続くかで判別）
-      expect(clause.startsWith("WHERE (q.question LIKE")).toBe(true);
+      expect(
+        clause.startsWith("WHERE q.status IN (?, ?) AND (q.question LIKE"),
+      ).toBe(true);
       expect(clause).toContain(") AND EXISTS (SELECT 1 FROM QuizTag");
       expect(clause).toContain(") AND NOT EXISTS (SELECT 1 FROM QuizTag");
       expect(clause).toContain(") AND q.answer_type = ? AND q.creator_id = ?");
       expect(params).toEqual([
+        "approved",
+        "published",
         "%React%",
         "%React%",
         "%React%",
@@ -217,10 +249,11 @@ describe("SearchQueryBuilder", () => {
       // 間に絞って検証する
       const afterFromQuiz = sql.split("FROM Quiz q")[1] ?? "";
       const betweenFromAndOrderBy = afterFromQuiz.split("ORDER BY")[0] ?? "";
-      expect(betweenFromAndOrderBy.trim()).toBe("");
+      // 公開ステータス限定のWHEREは常に付く
+      expect(betweenFromAndOrderBy.trim()).toBe("WHERE q.status IN (?, ?)");
       expect(sql).toContain("ORDER BY q.created_at ASC, q.id ASC");
       expect(sql).toContain("LIMIT ? OFFSET ?");
-      expect(params).toEqual([20, 0]);
+      expect(params).toEqual(["approved", "published", 20, 0]);
     });
 
     test("sortOrder=descの場合、ORDER BY句が created_at と id の両方でDESCになる", () => {
@@ -296,7 +329,7 @@ describe("SearchQueryBuilder", () => {
       const { params } = buildSearchDataQuery(query);
 
       // Assert
-      expect(params).toEqual(["タグ", 5, 10]);
+      expect(params).toEqual(["approved", "published", "タグ", 5, 10]);
     });
 
     test("SELECT句にISO 8601変換済みcreated_at/approved_atとタグ名集約列を含む", () => {

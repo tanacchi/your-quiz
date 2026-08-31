@@ -40,15 +40,24 @@ export const QuizSummarySchema = z
     solutionId: SolutionId,
     explanation: z.string().optional(),
     tagIds: TagIds,
-    status: z.enum(["pending_approval", "approved", "rejected"]),
+    status: z.enum([
+      "draft",
+      "pending_approval",
+      "approved",
+      "rejected",
+      "published",
+    ]),
     creatorId: CreatorId,
     createdAt: sqliteDateTimeSchema,
     approvedAt: sqliteDateTimeSchema.optional(),
   })
   .strict()
   .superRefine((quiz, ctx) => {
-    // Cross-field constraint: approved quiz must have approvedAt
-    if (quiz.status === "approved" && !quiz.approvedAt) {
+    // Cross-field constraint: approved/published quiz must have approvedAt
+    if (
+      (quiz.status === "approved" || quiz.status === "published") &&
+      !quiz.approvedAt
+    ) {
       ctx.addIssue({
         code: "custom",
         message: "Approved quiz must have approvedAt timestamp",

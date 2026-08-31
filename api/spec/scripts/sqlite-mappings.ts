@@ -28,7 +28,8 @@ export const enumMappings: EnumMapping[] = [
   },
   {
     name: "QuizStatus",
-    values: ["pending_approval", "approved", "rejected"],
+    // ADR-0029で5値に拡張（database.dbml の Enum QuizStatus と一致させる）
+    values: ["draft", "pending_approval", "approved", "rejected", "published"],
   },
   {
     name: "TagType",

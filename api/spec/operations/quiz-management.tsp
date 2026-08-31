@@ -25,17 +25,17 @@ Quiz Management API - クイズの作成・管理・承認に関する包括的�
 ## ワークフロー例
 
 ### 基本的なクイズ作成フロー
-1. **作成** → `POST /quizzes` で新しいクイズを作成
+1. **作成** → `POST /quizzes` で新しいクイズを作成（`isDraft: true` で下書き保存も可能）
 2. **確認** → `GET /quizzes/{id}` で作成内容を確認
-3. **編集** → `PUT /quizzes/{id}` で必要に応じて修正
-4. **申請** → `POST /quizzes/{id}/submit` で承認申請（未実装）
-5. **承認** → 管理者による `POST /quizzes/{id}/approve` （未実装）
-6. **公開** → `POST /quizzes/{id}/publish` で一般公開（未実装）
+3. **編集** → `PATCH /quizzes/{id}` で必要に応じて修正（question/explanationのみ）
+4. **申請** → `POST /quizzes/{id}/submit` で承認申請（draft/rejectedから）
+5. **承認** → 管理者による `POST /quizzes/{id}/approve`（pending_approvalから）
+6. **公開** → `POST /quizzes/{id}/publish` で一般公開（approvedから）
 
 ### 管理者による品質管理フロー
 1. **一覧確認** → `GET /quizzes?status=pending_approval` で承認待ちクイズ確認
 2. **詳細審査** → `GET /quizzes/{id}` で個別クイズの詳細確認
-3. **承認/却下** → 品質に応じて承認または却下処理
+3. **承認/却下** → `POST /quizzes/{id}/approve` または `POST /quizzes/{id}/reject` で処理
 4. **品質分析** → `GET /quality/reports` で全体品質動向の把握（未実装）
 
 ### 作成者による実績確認フロー
@@ -49,14 +49,19 @@ Quiz Management API - クイズの作成・管理・承認に関する包括的�
 - **管理者**: 全クイズの管理・承認・統計閲覧
 
 ## 品質管理方針
-- **段階的承認**: pending_approval → approved → published
+- **段階的承認**: draft → pending_approval → approved → published（ADR-0029）
 - **コミュニティ報告**: ユーザーによる品質問題報告システム
 - **継続的改善**: 統計に基づく品質向上施策
+
+## 権限モデルの暫定状態（ADR-0029）
+- 管理者ロール・所有者解決の本格実装は未着手のため、以下の暫定措置で運用する
+  - 所有者確認: リクエストの匿名識別子（userFingerprint）を creatorId として直接比較する
+  - モデレーション操作（approve/reject/publish）: 本番環境ではAPI経由の実行を許可せず、DB直接操作を前提とする
 
 ## 技術仕様
 - **認証**: 全操作でユーザー認証が必要
 - **レート制限**: 作成操作に1日50問の制限
-- **データ整合性**: 論理削除によるデータ保護
+- **データ整合性**: `deleteQuiz` は物理削除。論理削除は将来対応（ADR-0029）
 - **監査ログ**: 全ての重要操作の記録・追跡
 """)
 // Quiz Management API - Basic CRUD operations
@@ -72,21 +77,22 @@ interface QuizManagement {
     ## 機能
     - **多様な問題形式対応**: 真偽値、自由記述、単択、複数選択の4形式をサポート
     - **自動バリデーション**: 問題文・解答・選択肢の妥当性を自動検証
-    - **承認待ち状態**: 作成されたクイズは承認待ち状態で管理者レビューを経て公開
+    - **下書き保存対応**: `isDraft: true` で下書き（draft）として保存し、後から `submit` で承認申請できる
+    - **承認待ち状態**: `isDraft` を省略・falseにした場合、作成されたクイズは承認待ち状態で管理者レビューを経て公開
     - **タグ分類**: 学習分野・難易度別のタグ付けが可能
-    
+
     ## 制限事項
     - 問題文は最大500文字
     - 解説は最大1000文字
     - タグは最大10個まで
     - 1日あたりの作成上限：50問（レート制限）
-    
+
     ## 作成フロー
     1. リクエスト送信
     2. バリデーション実行
-    3. pending_approval状態でデータベースに保存
-    4. 管理者による承認待ちキューに追加
-    
+    3. `isDraft: true` ならdraft状態、それ以外はpending_approval状態でデータベースに保存
+    4. pending_approval状態のクイズは管理者による承認待ちキューに追加
+
     ## 使用例
     - 教育コンテンツの作成
     - 自習用問題集の構築
@@ -132,41 +138,30 @@ interface QuizManagement {
   
   @doc("""
     クイズ情報部分更新API（PATCH）
-    
+
     ## 機能
     - **真の部分更新**: 指定されたフィールドのみを更新（PATCH方式）
-    - **柔軟な権限制御**: 作成者と管理者で更新可能フィールドが異なる
-    - **承認状態制限**: 承認済みクイズは更新不可
+    - **所有者限定**: 作成者本人のみ更新可能
+    - **状態制限**: draft/pending_approval/rejected状態のクイズのみ更新可能
     - **整合性バリデーション**: 更新内容の妥当性を自動検証
-    
+
     ## 更新可能フィールド
     - **問題文（question）**: 問題の内容を修正
-    - **回答形式（answerType）**: boolean/free_text/single_choice/multiple_choice
-    - **解答内容（solution）**: SolutionCreateを使用してIDなしで解答を更新
     - **解説（explanation）**: 問題の説明文を追加・修正
-    - **タグ（tags）**: 学習分野・難易度別のタグ配列
-    - **作成者ID（creatorId）**: 管理者のみ、作成者の変更が可能
-    
+
+    ## 未対応フィールド（ADR-0029、フォローアップissueで対応予定）
+    - 回答形式（answerType）・解答内容（solution）・タグ（tags）・作成者ID（creatorId）は本APIでは更新できない
+
     ## 権限制御
-    - **作成者権限**: question, answerType, solution, explanation, tags の更新
-    - **管理者権限**: 全フィールド（creatorId含む）の更新
-    - **承認済みクイズ**: 全ユーザーで更新不可（approved状態）
-    
-    ## 整合性チェック
-    - **answerTypeとsolution**: 回答形式と解答内容の整合性を確認
-    - **タグ検証**: 存在するタグIDのみ受け入れ
-    - **作成者存在確認**: creatorId変更時のユーザー存在確認
-    
+    - **作成者権限**: 自身が作成したクイズのquestion/explanationの更新
+    - **approved/published状態**: 更新不可（409エラー）
+
     ## 更新後の動作
-    - 更新されたクイズは承認待ち状態に戻る（pending_approval）
-    - 管理者に再レビュー通知を送信
-    - 更新履歴の詳細記録（変更フィールドと変更者）
-    
+    - ステータスは変更されない（PATCHは承認状態遷移を伴わない）
+
     ## 使用場面
-    - **内容修正**: 誤字脱字や解答間違いの修正
-    - **形式変更**: 回答形式や選択肢の追加・変更
-    - **管理業務**: 作成者変更や大幅な内容修正
-    - **品質向上**: 解説の充実化やタグ分類の見直し
+    - **内容修正**: 誤字脱字や解説不足の修正
+    - **下書きの編集**: submit前のdraft状態クイズの内容修正
     """)
   @patch(#{ implicitOptionality: false })
   @route("/quizzes/{id}")
@@ -175,42 +170,30 @@ interface QuizManagement {
     @path id: QuizId, 
     @doc("更新情報を含むリクエスト（部分更新対応）")
     @body request: UpdateQuizRequest
-  ): QuizResponse | NotFoundError | ForbiddenError | ValidationError;
+  ): QuizResponse | NotFoundError | ForbiddenError | ValidationError | ConflictError;
   
   @doc("""
     クイズ削除API
-    
+
     ## 機能
-    - **論理削除**: データは保持し、ステータスを削除済みに変更
-    - **権限制御**: 作成者または管理者のみ削除可能
-    - **関連データ保護**: 回答履歴や統計データは保持
-    
+    - **物理削除**: データベースから完全に削除する（論理削除は将来対応、ADR-0029）
+    - **所有者限定**: 作成者本人のみ削除可能
+    - **状態制限**: draft/pending_approval/rejected状態のクイズのみ削除可能
+
     ## 削除条件
     - **作成者権限**: 自身が作成したクイズの削除
-    - **管理者権限**: 全てのクイズの削除（規約違反等）
-    - **承認状態**: 全ステータスのクイズが削除対象
-    
-    ## 削除の影響
-    - **学習セッション**: 進行中セッションは継続可能
-    - **統計データ**: 過去の回答履歴は保持
-    - **デッキ**: 含まれるデッキからは自動除外
-    
-    ## 削除後の状態
-    - データベースからは物理削除されない
-    - 検索結果には表示されない
-    - 作成者統計からは除外される
-    
+    - **状態制限**: approved/published状態のクイズは削除不可（409エラー）
+
     ## 使用場面
-    - 不適切コンテンツの除去
-    - 作成者による自主削除
-    - 重複問題の整理
+    - 不適切コンテンツの自主削除
+    - 作成ミスの取り消し
     """)
   @delete
   @route("/quizzes/{id}")
   deleteQuiz(
     @doc("削除対象のクイズID（UUID形式）")
     @path id: QuizId
-  ): void | NotFoundError | ForbiddenError;
+  ): void | NotFoundError | ForbiddenError | ConflictError;
   
   @doc("""
     クイズ一覧取得API（フィルタ・ページネーション対応）
@@ -222,7 +205,7 @@ interface QuizManagement {
     - **権限考慮**: ユーザー権限に応じた表示制御
     
     ## フィルタ機能
-    - **ステータス別**: pending_approval, approved, rejected（複数指定でOR条件）
+    - **ステータス別**: draft, pending_approval, approved, rejected, published（複数指定でOR条件）
     - **作成者別**: 特定ユーザーの作成クイズのみ表示（複数指定でOR条件）
     - **クイズID指定**: 複数のクイズIDを指定して一括取得
     
@@ -266,151 +249,120 @@ interface QuizManagement {
     @query quizId?: string[]
   ): QuizSummaryListResponse;
   
-  // 承認ワークフロー操作（初期リリース版では未実装）
-  
-  // @doc("""
-  //   クイズ承認申請API
-  //   
-  //   ## 機能
-  //   - **承認プロセス開始**: 作成者が自身のクイズを承認申請に送る
-  //   - **ステータス管理**: pending_approval状態への明示的な変更
-  //   - **申請履歴記録**: 申請日時・申請理由の記録
-  //   
-  //   ## 申請条件
-  //   - **作成者権限**: 自身が作成したクイズのみ申請可能
-  //   - **ドラフト状態**: draft状態のクイズのみ申請対象
-  //   - **必須項目完了**: 問題文・解答・解説が全て入力済み
-  //   
-  //   ## 申請後の流れ
-  //   1. ステータスをpending_approvalに変更
-  //   2. 管理者承認待ちキューに追加
-  //   3. 作成者に申請完了通知
-  //   4. 管理者に新規申請通知
-  //   
-  //   ## 使用場面
-  //   - クイズ作成完了時の承認申請
-  //   - 修正完了後の再申請
-  //   """)
-  // @post
-  // @route("/quizzes/{id}/submit")
-  // submitForApproval(
-  //   @doc("承認申請対象のクイズID（UUID形式）")
-  //   @path id: QuizId
-  // ): Quiz | NotFoundError | ForbiddenError | ConflictError;
-  // 
-  // @doc("""
-  //   クイズ承認API（管理者専用）
-  //   
-  //   ## 機能
-  //   - **承認処理**: pending_approvalのクイズをapproved状態に変更
-  //   - **承認理由記録**: レビュー内容・承認理由の記録
-  //   - **即時公開オプション**: 承認と同時に公開するかの選択
-  //   - **作成者通知**: 承認完了の自動通知
-  //   
-  //   ## 承認権限
-  //   - **管理者権限**: admin役割を持つユーザーのみ
-  //   - **承認者記録**: 承認した管理者の情報を記録
-  //   - **承認日時**: 承認実行日時の自動記録
-  //   
-  //   ## 承認プロセス
-  //   1. 問題内容・品質の確認
-  //   2. 承認/却下の判断
-  //   3. 承認理由・コメントの記録
-  //   4. 即時公開設定の適用
-  //   
-  //   ## 承認後の状態
-  //   - ステータス: approved
-  //   - 検索対象: 公開検索に含まれる
-  //   - 学習利用: デッキ・セッションで利用可能
-  //   
-  //   ## 使用場面
-  //   - 管理画面での承認作業
-  //   - 品質管理・コンテンツ審査
-  //   """)
-  // @post
-  // @route("/quizzes/{id}/approve")
-  // approveQuiz(
-  //   @doc("承認対象のクイズID（UUID形式）")
-  //   @path id: QuizId, 
-  //   @doc("承認処理の詳細情報を含むリクエスト")
-  //   @body request: ApprovalRequest
-  // ): Quiz | NotFoundError | ForbiddenError;
-  // 
-  // @doc("""
-  //   クイズ却下API（管理者専用）
-  //   
-  //   ## 機能
-  //   - **却下処理**: pending_approvalのクイズをrejected状態に変更
-  //   - **却下理由記録**: 詳細な却下理由・改善点の記録
-  //   - **作成者フィードバック**: 修正点・改善提案の提供
-  //   - **再申請可能**: 却下後も修正して再申請が可能
-  //   
-  //   ## 却下権限
-  //   - **管理者権限**: admin役割を持つユーザーのみ
-  //   - **却下者記録**: 却下した管理者の情報を記録
-  //   - **却下日時**: 却下実行日時の自動記録
-  //   
-  //   ## 却下理由の種類
-  //   - **内容不適切**: 問題内容が規約に違反
-  //   - **品質不足**: 誤字脱字・解説不足等
-  //   - **重複問題**: 既存問題との重複
-  //   - **難易度不適切**: タグと実際の難易度の乖離
-  //   
-  //   ## 却下後の流れ
-  //   1. ステータスをrejectedに変更
-  //   2. 作成者に却下通知・理由を送信
-  //   3. 修正後の再申請を促す
-  //   4. 却下履歴を記録
-  //   
-  //   ## 使用場面
-  //   - 品質基準に満たない問題の却下
-  //   - 規約違反コンテンツの審査
-  //   - 建設的フィードバックの提供
-  //   """)
-  // @post
-  // @route("/quizzes/{id}/reject")
-  // rejectQuiz(
-  //   @doc("却下対象のクイズID（UUID形式）")
-  //   @path id: QuizId, 
-  //   @doc("却下処理の詳細情報・理由を含むリクエスト")
-  //   @body request: ApprovalRequest
-  // ): Quiz | NotFoundError | ForbiddenError;
-  // 
-  // @doc("""
-  //   クイズ公開API（管理者専用）
-  //   
-  //   ## 機能
-  //   - **即時公開**: 承認済みクイズを即座に公開状態に変更
-  //   - **公開制御**: 段階的公開・予約公開の管理
-  //   - **可視性変更**: 検索・学習での利用開始
-  //   
-  //   ## 公開権限
-  //   - **管理者権限**: admin役割を持つユーザーのみ
-  //   - **承認済み限定**: approved状態のクイズのみ公開可能
-  //   - **公開者記録**: 公開した管理者・日時を記録
-  //   
-  //   ## 公開条件
-  //   - **承認完了**: approved状態であること
-  //   - **品質確認**: 最終品質チェック完了
-  //   - **メタデータ完備**: タグ・難易度設定完了
-  //   
-  //   ## 公開後の状態
-  //   - **検索対象**: 一般ユーザーの検索に含まれる
-  //   - **学習利用**: デッキ作成・学習セッションで選択可能
-  //   - **統計対象**: 公開問題統計に含まれる
-  //   
-  //   ## 使用場面
-  //   - 新規コンテンツの段階的公開
-  //   - 品質確認完了後の最終公開
-  //   - 管理画面での公開管理
-  //   """)
-  // @post
-  // @route("/quizzes/{id}/publish")
-  // publishQuiz(
-  //   @doc("公開対象のクイズID（UUID形式）")
-  //   @path id: QuizId
-  // ): Quiz | NotFoundError | ForbiddenError | ConflictError;
-  
+  // 承認ワークフロー操作（ADR-0029）
+
+  @doc("""
+    クイズ承認申請API
+
+    ## 機能
+    - **承認プロセス開始**: 作成者が自身のクイズを承認申請に送る
+    - **ステータス管理**: pending_approval状態への明示的な変更
+    - **再申請対応**: rejected状態からの再申請も可能
+
+    ## 申請条件
+    - **作成者権限**: 自身が作成したクイズのみ申請可能
+    - **対象状態**: draft状態（新規申請）またはrejected状態（再申請）のクイズのみ対象
+
+    ## 申請後の流れ
+    1. ステータスをpending_approvalに変更
+    2. 管理者承認待ちキューに追加
+
+    ## 使用場面
+    - クイズ作成完了時の承認申請
+    - 却下後の修正完了時の再申請
+    """)
+  @post
+  @route("/quizzes/{id}/submit")
+  submitForApproval(
+    @doc("承認申請対象のクイズID（UUID形式）")
+    @path id: QuizId
+  ): QuizResponse | NotFoundError | ForbiddenError | ConflictError;
+
+  @doc("""
+    クイズ承認API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+
+    ## 機能
+    - **承認処理**: pending_approvalのクイズをapproved状態に変更
+    - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0029、フォローアップissueで対応予定）
+
+    ## 承認権限
+    - **暫定モデレーション権限**: 本番環境ではAPI経由での実行を許可しない（403）
+
+    ## 承認プロセス
+    1. 問題内容・品質の確認
+    2. 承認の判断
+    3. 承認理由・コメントの記録
+
+    ## 承認後の状態
+    - ステータス: approved（approvedAtを記録）
+    - `publish` を呼ぶことで公開状態に遷移可能
+
+    ## 使用場面
+    - 開発環境での承認フロー検証
+    - 品質管理・コンテンツ審査
+    """)
+  @post
+  @route("/quizzes/{id}/approve")
+  approveQuiz(
+    @doc("承認対象のクイズID（UUID形式）")
+    @path id: QuizId,
+    @doc("承認処理の詳細情報を含むリクエスト。decisionはこのエンドポイントでは'approved'固定で、それ以外の値は400を返す")
+    @body request: ApprovalRequest
+  ): QuizResponse | NotFoundError | ForbiddenError | ValidationError | ConflictError;
+
+  @doc("""
+    クイズ却下API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+
+    ## 機能
+    - **却下処理**: pending_approvalのクイズをrejected状態に変更
+    - **注意**: reviewerNotesは受け取るが記録先カラムが無いため未使用（ADR-0029、フォローアップissueで対応予定）
+    - **再申請可能**: 却下後も修正して`submit`で再申請が可能
+
+    ## 却下権限
+    - **暫定モデレーション権限**: 本番環境ではAPI経由での実行を許可しない（403）
+
+    ## 却下後の流れ
+    1. ステータスをrejectedに変更
+    2. 作成者は修正後 `submit` で再申請可能
+
+    ## 使用場面
+    - 品質基準に満たない問題の却下
+    - 規約違反コンテンツの審査
+    """)
+  @post
+  @route("/quizzes/{id}/reject")
+  rejectQuiz(
+    @doc("却下対象のクイズID（UUID形式）")
+    @path id: QuizId,
+    @doc("却下処理の詳細情報・理由を含むリクエスト。decisionはこのエンドポイントでは'rejected'固定で、それ以外の値は400を返す")
+    @body request: ApprovalRequest
+  ): QuizResponse | NotFoundError | ForbiddenError | ValidationError | ConflictError;
+
+  @doc("""
+    クイズ公開API（モデレーター専用、ADR-0029の暫定権限モデルにより本番環境ではDB直接操作を前提とする）
+
+    ## 機能
+    - **公開**: 承認済み（approved）クイズを公開状態（published）に変更
+    - **可視性変更**: 検索・学習での利用開始
+
+    ## 公開権限
+    - **暫定モデレーション権限**: 本番環境ではAPI経由での実行を許可しない（403）
+    - **承認済み限定**: approved状態のクイズのみ公開可能（それ以外は409）
+
+    ## 公開後の状態
+    - **検索対象**: 一般ユーザーの検索に含まれる
+    - **学習利用**: デッキ作成・学習セッションで選択可能
+
+    ## 使用場面
+    - 品質確認完了後の最終公開
+    """)
+  @post
+  @route("/quizzes/{id}/publish")
+  publishQuiz(
+    @doc("公開対象のクイズID（UUID形式）")
+    @path id: QuizId
+  ): QuizResponse | NotFoundError | ForbiddenError | ConflictError;
+
   // 統計・品質管理機能（初期リリース版では未実装）
   
   // @doc("""

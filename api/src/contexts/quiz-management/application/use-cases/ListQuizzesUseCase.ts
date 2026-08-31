@@ -3,6 +3,7 @@ import { fromZodErrorToAppError } from "../../../../shared";
 import { FindFailedError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
 import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
+import { isPubliclyVisibleStatus } from "../../domain/entities/quiz-summary/quiz-status-transition";
 import {
   CreatorId,
   QuizId,
@@ -61,13 +62,22 @@ export class ListQuizzesUseCase {
    */
   execute(
     query: ListQuizzesQuery,
+    requesterId: string,
   ): ResultAsync<
     components["schemas"]["QuizSummaryListResponse"],
     UseCaseError
   > {
     return Result.fromThrowable(
       () => {
-        const creatorId = CreatorId.optional().parse(query.creatorId);
+        // 非公開ステータス（draft / pending_approval / rejected）を含む要求は
+        // 作成者本人のクイズに限定する（ADR-0029）。これが無いと
+        // `?status=draft` で他人の下書きを匿名で列挙できてしまう。
+        const requestsNonPublicStatus = query.status.some(
+          (status) => !isPubliclyVisibleStatus(status),
+        );
+        const creatorId = requestsNonPublicStatus
+          ? CreatorId.parse(requesterId)
+          : CreatorId.optional().parse(query.creatorId);
         const ids = query.quizId?.map((id) => QuizId.parse(id)) ?? [];
 
         return {

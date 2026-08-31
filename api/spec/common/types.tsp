@@ -28,9 +28,11 @@ enum AnswerType {
 }
 
 enum QuizStatus {
+  draft: "draft",
   pending_approval: "pending_approval",
   approved: "approved",
-  rejected: "rejected"
+  rejected: "rejected",
+  published: "published"
 }
 
 enum TagType {
