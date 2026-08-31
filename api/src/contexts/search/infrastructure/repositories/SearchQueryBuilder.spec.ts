@@ -67,7 +67,13 @@ describe("SearchQueryBuilder", () => {
       expect(clause).toContain("EXISTS");
       expect(clause).toContain("QuizTag");
       expect(clause).toContain("t.name LIKE ? ESCAPE '\\'");
-      expect(params).toEqual(["approved", "published", "%TypeScript%", "%TypeScript%", "%TypeScript%"]);
+      expect(params).toEqual([
+        "approved",
+        "published",
+        "%TypeScript%",
+        "%TypeScript%",
+        "%TypeScript%",
+      ]);
     });
 
     test("searchTextにLIKEメタ文字が含まれる場合はエスケープしてからパターン化する", () => {
@@ -101,7 +107,12 @@ describe("SearchQueryBuilder", () => {
       expect(clause).toContain("EXISTS");
       expect(clause).not.toContain("NOT EXISTS");
       expect(clause).toContain("t.name IN (?, ?)");
-      expect(params).toEqual(["approved", "published", "プログラミング", "Web開発"]);
+      expect(params).toEqual([
+        "approved",
+        "published",
+        "プログラミング",
+        "Web開発",
+      ]);
     });
 
     test("excludeTagsを指定した場合、NOT EXISTS句になる", () => {
@@ -178,7 +189,12 @@ describe("SearchQueryBuilder", () => {
       expect(clause).toBe(
         "WHERE q.status IN (?, ?) AND q.created_at >= datetime(?) AND q.created_at <= datetime(?)",
       );
-      expect(params).toEqual(["approved", "published", "2024-01-01T00:00:00Z", "2024-12-31T23:59:59Z"]);
+      expect(params).toEqual([
+        "approved",
+        "published",
+        "2024-01-01T00:00:00Z",
+        "2024-12-31T23:59:59Z",
+      ]);
     });
 
     test("複数条件を組み合わせた場合、AND連結され、パラメータが条件の出現順に並ぶ", () => {
@@ -199,9 +215,9 @@ describe("SearchQueryBuilder", () => {
       // 各EXISTS/NOT EXISTSサブクエリ内部にも AND (qt.quiz_id = q.id AND t.name ...)
       // が含まれるため、トップレベルの結合だけを厳密に検証する
       // （前後の文脈で "AND EXISTS" / "AND NOT EXISTS" / "AND q.xxx" と続くかで判別）
-      expect(clause.startsWith("WHERE q.status IN (?, ?) AND (q.question LIKE")).toBe(
-        true,
-      );
+      expect(
+        clause.startsWith("WHERE q.status IN (?, ?) AND (q.question LIKE"),
+      ).toBe(true);
       expect(clause).toContain(") AND EXISTS (SELECT 1 FROM QuizTag");
       expect(clause).toContain(") AND NOT EXISTS (SELECT 1 FROM QuizTag");
       expect(clause).toContain(") AND q.answer_type = ? AND q.creator_id = ?");
