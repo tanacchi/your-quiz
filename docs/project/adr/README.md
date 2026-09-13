@@ -35,6 +35,7 @@
 | [0027](0027-search-full-text-strategy.md) | Search 本番実装の全文検索方式選定 | Proposed | 2026-08-13 | 日本語短語検索の実用性を優先しLIKE方式を採用（FTS5は不採用） |
 | [0028](0028-deck-api-ownership-and-surface-adjustments.md) | quiz-learning Deck API の所有者解決とAPIサーフェス調整 | Proposed | 2026-08-13 | updateDeck追加・userFingerprint一本化・一覧軽量化 |
 | [0029](0029-quiz-draft-publish-status-model.md) | クイズ下書き・公開ステータスモデルと承認ワークフローの実装方針 | Proposed | 2026-08-15 | QuizStatus5値化・暫定モデレーション権限・UpdateQuizRequest縮小を確定 |
+| [0030](0030-quiz-management-user-identity-and-d1-write-path.md) | quiz-management の UserIdentity 解決と D1 書き込み経路の整合 | Proposed | 2026-09-13 | creatorIdをUserIdentity.idに統一・閲覧系は検索専用ポート・作成のbatch化・Choice.quiz_id追加・D1経路BDD |
 
 ## ステータス定義
 
@@ -70,5 +71,5 @@
 ---
 
 **作成日**: 2025-07-28  
-**最終更新**: 2026-08-15  
+**最終更新**: 2026-09-13  
 **管理者**: [@tanacchi](https://github.com/tanacchi)
