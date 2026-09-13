@@ -1,6 +1,7 @@
 import type { IQuizRepository } from "../../contexts/quiz-management/domain/repositories/IQuizRepository";
 import { D1QuizRepository } from "../../contexts/quiz-management/infrastructure/repositories/D1QuizRepository";
 import { MockQuizRepository } from "../../contexts/quiz-management/infrastructure/repositories/MockQuizRepository";
+import { getSharedMockQuizStore } from "../../contexts/quiz-management/infrastructure/repositories/MockQuizStore";
 import type { CloudflareBindings } from "../../shared/types";
 
 /**
@@ -23,18 +24,13 @@ import type { CloudflareBindings } from "../../shared/types";
  * @returns 適切なリポジトリ実装
  */
 export function createQuizRepository(env: CloudflareBindings): IQuizRepository {
-  console.log("QuizRepositoryFactory - env:", {
-    NODE_ENV: env.NODE_ENV,
-    USE_MOCK_DB: env.USE_MOCK_DB,
-    DB_exists: !!env.DB,
-  });
-
   if (shouldUseMock(env)) {
-    console.log("Using MockQuizRepository");
-    return new MockQuizRepository();
+    // リクエストを跨いだ書き込み系の永続化のため共有ストアを注入する。
+    // unitテストで `new MockQuizRepository()` を直接使う場合はデフォルト引数の
+    // 新規ストアが使われるため、この共有化はテスト間の独立性に影響しない。
+    return new MockQuizRepository(getSharedMockQuizStore());
   }
 
-  console.log("Using D1QuizRepository, DB:", !!env.DB);
   if (!env.DB) {
     console.error("ERROR: env.DB is undefined!");
   }

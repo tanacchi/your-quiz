@@ -9,7 +9,7 @@ import {
 import { TagIds } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import { MockQuizRepository } from "./MockQuizRepository";
 
-describe.todo("MockQuizRepository", () => {
+describe("MockQuizRepository", () => {
   let repository: MockQuizRepository;
 
   const createMockQuiz = (
@@ -168,17 +168,19 @@ describe.todo("MockQuizRepository", () => {
     describe("when quiz exists", () => {
       test("should return quiz with solution for existing quiz", async () => {
         // Arrange
-        const quiz = createMockQuiz({ id: "quiz-1" });
+        // "quiz-1" はデフォルトフィクスチャで既に使用されているIDのため、
+        // 衝突しない新規IDを使う
+        const quiz = createMockQuiz({ id: "quiz-new-1" });
         await repository.create(quiz, mockSolution);
 
         // Act
-        const result = await repository.findById("quiz-1");
+        const result = await repository.findById("quiz-new-1");
 
         // Assert
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
-          expect(result.value.id).toBe("quiz-1");
-          expect(result.value.question).toBe("What is TypeScript?");
+          expect(result.value.id).toBe("quiz-new-1");
+          expect(result.value.question).toBe("Test question");
           expect(result.value.solution).toBeDefined();
           expect(result.value.solution.type).toBe("single_choice");
         }
@@ -228,7 +230,8 @@ describe.todo("MockQuizRepository", () => {
         // Assert
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
-          expect(result.error.message).toBe("Resource not found");
+          // FindFailedErrorはInternalServerErrorのサブタイプのためmessageは固定文言
+          expect(result.error.message).toBe("Internal server error");
           expect(result.error.details).toBe(
             "Quiz not found: non-existent-quiz",
           );
@@ -519,31 +522,104 @@ describe.todo("MockQuizRepository", () => {
   });
 
   describe("update", () => {
-    test("should return NOT_IMPLEMENTED error", async () => {
-      // Act
-      const result = await repository.update(
-        "quiz-1",
-        {} as Partial<QuizSummary>,
-      );
+    describe("when quiz exists", () => {
+      test("should update question and explanation and return updated entity", async () => {
+        // Arrange
+        const quiz = createMockQuiz({ id: "quiz-update-target" });
+        await repository.create(quiz, mockSolution);
 
-      // Assert
-      expect(result.isErr()).toBe(true);
-      if (result.isErr()) {
-        expect(result.error.message).toContain("NOT_IMPLEMENTED");
-      }
+        // Act
+        const result = await repository.update("quiz-update-target", {
+          question: "Updated question",
+          explanation: "Updated explanation",
+        });
+
+        // Assert
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          expect(result.value.get("question")).toBe("Updated question");
+          expect(result.value.get("explanation")).toBe("Updated explanation");
+        }
+      });
+
+      test("should persist the update so a subsequent findById reflects it", async () => {
+        // Arrange
+        const quiz = createMockQuiz({ id: "quiz-persist-check" });
+        await repository.create(quiz, mockSolution);
+        await repository.update("quiz-persist-check", {
+          question: "Persisted question",
+        });
+
+        // Act
+        const result = await repository.findById("quiz-persist-check");
+
+        // Assert
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          expect(result.value.question).toBe("Persisted question");
+        }
+      });
+    });
+
+    describe("when quiz does not exist", () => {
+      test("should return a NotFoundError-based RepositoryError", async () => {
+        // Act
+        const result = await repository.update("non-existent-quiz", {
+          question: "Anything",
+        });
+
+        // Assert
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+          expect(result.error.details).toBe(
+            "Quiz not found: non-existent-quiz",
+          );
+        }
+      });
     });
   });
 
   describe("delete", () => {
-    test("should return NOT_IMPLEMENTED error", async () => {
-      // Act
-      const result = await repository.delete("quiz-1");
+    describe("when quiz exists", () => {
+      test("should delete the quiz and return void", async () => {
+        // Arrange
+        const quiz = createMockQuiz({ id: "quiz-delete-target" });
+        await repository.create(quiz, mockSolution);
 
-      // Assert
-      expect(result.isErr()).toBe(true);
-      if (result.isErr()) {
-        expect(result.error.message).toContain("NOT_IMPLEMENTED");
-      }
+        // Act
+        const result = await repository.delete("quiz-delete-target");
+
+        // Assert
+        expect(result.isOk()).toBe(true);
+      });
+
+      test("should remove the quiz so a subsequent findById returns NotFoundError", async () => {
+        // Arrange
+        const quiz = createMockQuiz({ id: "quiz-delete-check" });
+        await repository.create(quiz, mockSolution);
+        await repository.delete("quiz-delete-check");
+
+        // Act
+        const result = await repository.findById("quiz-delete-check");
+
+        // Assert
+        expect(result.isErr()).toBe(true);
+      });
+    });
+
+    describe("when quiz does not exist", () => {
+      test("should return a NotFoundError-based RepositoryError", async () => {
+        // Act
+        const result = await repository.delete("non-existent-quiz");
+
+        // Assert
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+          expect(result.error.details).toBe(
+            "Quiz not found: non-existent-quiz",
+          );
+        }
+      });
     });
   });
 });

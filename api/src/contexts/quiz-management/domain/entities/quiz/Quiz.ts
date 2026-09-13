@@ -6,6 +6,10 @@ import {
   type EntityParseResult,
   toIssues,
 } from "../../../../../shared/validation/entity";
+import {
+  canDeleteStatus,
+  canUpdateStatus,
+} from "../quiz-summary/quiz-status-transition";
 import { BooleanSolution } from "../solutions/boolean/BooleanSolution";
 import { suggestQuizPatches } from "./quiz-patches";
 import { type QuizData, type QuizInput, QuizSchema } from "./quiz-schema";
@@ -110,19 +114,23 @@ export class Quiz extends EntityBase<Quiz, typeof QuizSchema> {
   /**
    * Checks if the quiz can be updated
    *
-   * @returns true if status is 'pending_approval', false otherwise
+   * 判定は quiz-status-transition.ts の UPDATABLE_STATUSES に委譲する
+   * （QuizSummary と規則を二重管理しないため）。ADR-0029 により
+   * draft / pending_approval / rejected のみ更新可。
+   *
+   * @returns true if status is draft/pending_approval/rejected
    */
   canBeUpdated(): boolean {
-    return this.get("status") === "pending_approval";
+    return canUpdateStatus(this.get("status"));
   }
 
   /**
    * Checks if the quiz can be deleted
    *
-   * @returns true if status is not 'approved', false otherwise
+   * @returns true if status is draft/pending_approval/rejected
    */
   canBeDeleted(): boolean {
-    return this.get("status") !== "approved";
+    return canDeleteStatus(this.get("status"));
   }
 
   /**

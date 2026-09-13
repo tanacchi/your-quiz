@@ -78,6 +78,14 @@ export const errorScenarios = {
   ],
 
   // レベル2: ビジネスルール違反
+  //
+  // 注意(A-9): 本ファイル(error-handling-comprehensive.spec.ts)は現状
+  // describe.todoで未実行のため、以下の X-User-Id / X-User-Role ヘッダーは
+  // 実際のミドルウェアには対応していない(実装は`Authorization: Fingerprint
+  // <uuid>`をc.var.userFingerprintとして使う、ADR-0026)。有効化する際は
+  // BDD側(quiz-write-operations.spec.ts)のようにテストごとに動的な
+  // fingerprintを発行し作成者/非作成者を作り分ける設計への刷新が必要
+  // （issue #77で追跡）。ここでは既知のギャップとして明記するに留める。
   businessRuleViolations: [
     {
       description: "Quiz not found - クイズが見つからない",
@@ -89,7 +97,7 @@ export const errorScenarios = {
     {
       description: "Forbidden access - 作成者以外のアクセス",
       endpoint: "/api/quiz/v1/manage/quizzes/test-quiz-id",
-      method: "PUT",
+      method: "PATCH",
       headers: { "X-User-Id": "different-user" },
       input: { question: "Updated question?" },
       expectedStatus: 403,
@@ -98,11 +106,14 @@ export const errorScenarios = {
     {
       description: "Already approved quiz edit - 承認済みクイズの編集",
       endpoint: "/api/quiz/v1/manage/quizzes/approved-quiz-id",
-      method: "PUT",
+      method: "PATCH",
       headers: { "X-User-Id": "creator-user" },
       input: { question: "Updated question?" },
-      expectedStatus: 403,
-      expectedError: "ForbiddenError",
+      // UpdateQuizUseCaseはapproved状態への更新をQuizStatusError
+      // (ConflictError継承)として409で拒否する。403(ForbiddenError)は
+      // 所有者違反用であり、この不変条件違反シナリオには当たらない
+      expectedStatus: 409,
+      expectedError: "ConflictError",
     },
     {
       description: "Submit already submitted quiz - 既に提出済みクイズの再提出",
@@ -155,7 +166,7 @@ export const errorScenarios = {
     {
       description: "Repository update failure - リポジトリ更新失敗",
       endpoint: "/api/quiz/v1/manage/quizzes/test-quiz-id",
-      method: "PUT",
+      method: "PATCH",
       headers: {
         "X-User-Id": "creator-user",
         "_simulate-repository-failure": "UPDATE_FAILED",

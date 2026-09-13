@@ -10,6 +10,9 @@ import type { IQuizRepository } from "../../domain/repositories/IQuizRepository"
 import { QuizRetrievalFailedError, UseCaseInternalError } from "../errors";
 import { GetQuizUseCase } from "./GetQuizUseCase";
 
+/** 可視性チェックで使うリクエスト元のuserFingerprint */
+const TEST_REQUESTER = "test-requester";
+
 describe.todo("GetQuizUseCase", () => {
   let useCase: GetQuizUseCase;
   let mockRepository: IQuizRepository;
@@ -66,7 +69,7 @@ describe.todo("GetQuizUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute("quiz-123");
+        const result = await useCase.execute("quiz-123", TEST_REQUESTER);
 
         // Assert
         expect(result.isOk()).toBe(true);
@@ -99,7 +102,7 @@ describe.todo("GetQuizUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute("quiz-456");
+        const result = await useCase.execute("quiz-456", TEST_REQUESTER);
 
         // Assert
         expect(result.isOk()).toBe(true);
@@ -123,7 +126,10 @@ describe.todo("GetQuizUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute("non-existent-quiz");
+        const result = await useCase.execute(
+          "non-existent-quiz",
+          TEST_REQUESTER,
+        );
 
         // Assert
         expect(result.isErr()).toBe(true);
@@ -149,7 +155,7 @@ describe.todo("GetQuizUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute("undefined-quiz");
+        const result = await useCase.execute("undefined-quiz", TEST_REQUESTER);
 
         // Assert
         expect(result.isErr()).toBe(true);
@@ -174,7 +180,7 @@ describe.todo("GetQuizUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute("quiz-123");
+        const result = await useCase.execute("quiz-123", TEST_REQUESTER);
 
         // Assert
         expect(result.isErr()).toBe(true);
@@ -198,7 +204,7 @@ describe.todo("GetQuizUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute("quiz-123");
+        const result = await useCase.execute("quiz-123", TEST_REQUESTER);
 
         // Assert
         expect(result.isErr()).toBe(true);
@@ -232,7 +238,7 @@ describe.todo("GetQuizUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute(quizId);
+        const result = await useCase.execute(quizId, TEST_REQUESTER);
 
         // Assert
         expect(result.isErr()).toBe(true);
@@ -318,7 +324,7 @@ describe.todo("GetQuizUseCase", () => {
           );
 
           // Act
-          const result = await useCase.execute(quiz.id);
+          const result = await useCase.execute(quiz.id, TEST_REQUESTER);
 
           // Assert
           expect(result.isOk()).toBe(true);

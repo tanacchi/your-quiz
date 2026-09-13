@@ -1,5 +1,11 @@
 // Quiz List Search test data for PactumJS specs
 // Maintains ユビキタス言語 (Ubiquitous Language): AnonymousUser, QuizSummaryListResponse, Search
+//
+// 注意(BDD規約、D-7): MockQuizStoreはBDDスイート全体で共有されるため、
+// 他のBDDファイル(quiz-write-operations.spec.ts等)が作成したクイズも
+// ここでの検索結果に含まれうる。emptyResultScenariosのような「0件になる」
+// ことを検証するフィルタは、どのテストが作るデータとも絶対に一致しない値
+// (存在しないstatus/creatorId/quizId)のみを使うこと。
 
 export const quizSearchData = {
   // Valid search scenarios - 正常系検索シナリオ

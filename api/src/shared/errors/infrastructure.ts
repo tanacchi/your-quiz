@@ -1,4 +1,4 @@
-import { InternalServerError } from "./base";
+import { InternalServerError, ValidationError } from "./base";
 
 /**
  * リポジトリ層で発生するエラー
@@ -79,11 +79,15 @@ export class DatabaseConnectionError extends InternalServerError {
 }
 
 /**
- * JSON解析エラー
+ * JSON解析エラー (400)
+ *
+ * リクエストボディが空・壊れたJSON等のクライアント起因の不備であり、
+ * サーバ障害ではないため400を返す（旧実装はInternalServerErrorを継承し
+ * 500を返していたが、契約・BDDフィクスチャ双方が400を期待しており誤りだった）。
  */
-export class JsonParseError extends InternalServerError {
+export class JsonParseError extends ValidationError {
   constructor(detail: string = "Invalid JSON format", requestId?: string) {
-    super(detail, requestId);
+    super("Invalid JSON in request body", undefined, detail, requestId);
   }
 }
 

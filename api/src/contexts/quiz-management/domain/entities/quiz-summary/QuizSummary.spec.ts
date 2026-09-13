@@ -303,16 +303,18 @@ describe("QuizSummary", () => {
   });
 
   describe("Business Logic", () => {
-    describe("canBeUpdated status checks", () => {
+    describe("canBeUpdated status checks (ADR-0029)", () => {
       it.each([
+        ["draft", true],
         ["pending_approval", true],
+        ["rejected", true],
         ["approved", false],
-        ["rejected", false],
+        ["published", false],
       ])("should return %s for status %s", (status, expectedCanUpdate) => {
         const testData = {
           ...(validQuizData as Record<string, unknown>),
           status,
-          ...(status === "approved" && {
+          ...((status === "approved" || status === "published") && {
             approvedAt: "2023-12-01 12:00:00",
           }),
         };
@@ -323,16 +325,18 @@ describe("QuizSummary", () => {
       });
     });
 
-    describe("canBeDeleted status checks", () => {
+    describe("canBeDeleted status checks (ADR-0029)", () => {
       it.each([
+        ["draft", true],
         ["pending_approval", true],
-        ["approved", false],
         ["rejected", true],
+        ["approved", false],
+        ["published", false],
       ])("should return %s for status %s", (status, expectedCanDelete) => {
         const testData = {
           ...(validQuizData as Record<string, unknown>),
           status,
-          ...(status === "approved" && {
+          ...((status === "approved" || status === "published") && {
             approvedAt: "2023-12-01 12:00:00",
           }),
         };
@@ -376,6 +380,137 @@ describe("QuizSummary", () => {
             issue.message.includes(`${status} cannot be approved`),
           ),
         ).toBe(true);
+      });
+    });
+
+    describe("submit method state transitions (ADR-0029)", () => {
+      it.each([["draft"], ["rejected"]])(
+        "should submit %s quiz to pending_approval",
+        (status) => {
+          const testData = {
+            ...(validQuizData as Record<string, unknown>),
+            status,
+          };
+          const initialResult = QuizSummary.from(testData);
+          const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+
+          const result = quiz.submit("2023-12-01 12:00:00");
+
+          const submitted = result._unsafeUnwrap({ withStackTrace: true });
+          expect(submitted.get("status")).toBe("pending_approval");
+        },
+      );
+
+      it.each([["pending_approval"], ["approved"], ["published"]])(
+        "should reject submit for %s status",
+        (status) => {
+          const testData = {
+            ...(validQuizData as Record<string, unknown>),
+            status,
+            ...((status === "approved" || status === "published") && {
+              approvedAt: "2023-12-01 12:00:00",
+            }),
+          };
+          const initialResult = QuizSummary.from(testData);
+          const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+
+          const result = quiz.submit("2023-12-02 12:00:00");
+
+          const error = result._unsafeUnwrapErr({ withStackTrace: true });
+          expect(
+            error.issues.some((issue) =>
+              issue.message.includes(`${status} cannot be submitted`),
+            ),
+          ).toBe(true);
+        },
+      );
+    });
+
+    describe("reject method state transitions (ADR-0029)", () => {
+      it("should reject pending quiz successfully", () => {
+        const initialResult = QuizSummary.from(validQuizData);
+        const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+
+        const result = quiz.reject("2023-12-01 12:00:00");
+
+        const rejected = result._unsafeUnwrap({ withStackTrace: true });
+        expect(rejected.get("status")).toBe("rejected");
+      });
+
+      it.each([["draft"], ["approved"], ["rejected"], ["published"]])(
+        "should reject reject() for %s status",
+        (status) => {
+          const testData = {
+            ...(validQuizData as Record<string, unknown>),
+            status,
+            ...((status === "approved" || status === "published") && {
+              approvedAt: "2023-12-01 12:00:00",
+            }),
+          };
+          const initialResult = QuizSummary.from(testData);
+          const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+
+          const result = quiz.reject("2023-12-02 12:00:00");
+
+          const error = result._unsafeUnwrapErr({ withStackTrace: true });
+          expect(
+            error.issues.some((issue) =>
+              issue.message.includes(`${status} cannot be rejected`),
+            ),
+          ).toBe(true);
+        },
+      );
+    });
+
+    describe("publish method state transitions (ADR-0029)", () => {
+      it("should publish approved quiz successfully", () => {
+        const testData = {
+          ...(validQuizData as Record<string, unknown>),
+          status: "approved",
+          approvedAt: "2023-12-01 12:00:00",
+        };
+        const initialResult = QuizSummary.from(testData);
+        const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+
+        const result = quiz.publish("2023-12-02 12:00:00");
+
+        const published = result._unsafeUnwrap({ withStackTrace: true });
+        expect(published.get("status")).toBe("published");
+        // approvedAtは既存の値を維持する(publish自体はstampsApprovedAt=false)
+        expect(published.get("approvedAt")).toBe("2023-12-01 12:00:00");
+      });
+
+      it.each([["draft"], ["pending_approval"], ["rejected"]])(
+        "should reject publish for %s status",
+        (status) => {
+          const testData = {
+            ...(validQuizData as Record<string, unknown>),
+            status,
+          };
+          const initialResult = QuizSummary.from(testData);
+          const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+
+          const result = quiz.publish("2023-12-02 12:00:00");
+
+          const error = result._unsafeUnwrapErr({ withStackTrace: true });
+          expect(
+            error.issues.some((issue) =>
+              issue.message.includes(`${status} cannot be published`),
+            ),
+          ).toBe(true);
+        },
+      );
+    });
+
+    describe("applyTransition (ADR-0029)", () => {
+      it("エラー種別はinvalid_stateである", () => {
+        const initialResult = QuizSummary.from(validQuizData);
+        const quiz = initialResult._unsafeUnwrap({ withStackTrace: true });
+
+        const result = quiz.applyTransition("publish", "2023-12-02 12:00:00");
+
+        const error = result._unsafeUnwrapErr({ withStackTrace: true });
+        expect(error.kind).toBe("invalid_state");
       });
     });
   });
@@ -653,8 +788,12 @@ describe("QuizSummary", () => {
 
       // These should compile with correct types
       const question: string = quiz.get("question");
-      const status: "pending_approval" | "approved" | "rejected" =
-        quiz.get("status");
+      const status:
+        | "draft"
+        | "pending_approval"
+        | "approved"
+        | "rejected"
+        | "published" = quiz.get("status");
       const tagIds: TagId[] = quiz.get("tagIds");
 
       expect(typeof question).toBe("string");

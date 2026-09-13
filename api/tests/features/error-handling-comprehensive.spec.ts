@@ -63,8 +63,8 @@ describe.todo("Comprehensive Error Handling - 包括的エラーハンドリン�
           case "GET":
             request = request.get(testCase.endpoint);
             break;
-          case "PUT":
-            request = request.put(testCase.endpoint);
+          case "PATCH":
+            request = request.patch(testCase.endpoint);
             if (testCase.input) {
               request = request.withJson(testCase.input);
             }
@@ -132,8 +132,8 @@ describe.todo("Comprehensive Error Handling - 包括的エラーハンドリン�
           case "GET":
             request = request.get(testCase.endpoint);
             break;
-          case "PUT":
-            request = request.put(testCase.endpoint);
+          case "PATCH":
+            request = request.patch(testCase.endpoint);
             if (testCase.input) {
               request = request.withJson(testCase.input);
             }

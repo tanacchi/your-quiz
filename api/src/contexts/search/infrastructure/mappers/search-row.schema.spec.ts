@@ -83,13 +83,19 @@ describe("search-row.schema", () => {
       expect(isSearchRow(row)).toBe(false);
     });
 
-    test.each([["pending_approval"], ["approved"], ["rejected"]] as const)(
-      "status=%s は有効",
-      (status) => {
-        const row = createValidRow({ status });
-        expect(isSearchRow(row)).toBe(true);
-      },
-    );
+    // QuizStatusはADR-0029でdraft/publishedを含む5値に拡張された。
+    // 検索SQLのWHERE句にstatus条件が無く全ステータスの行が流れてくるため、
+    // ここが3値のままだとpublishしたクイズがparse失敗で無言に捨てられる。
+    test.each([
+      ["draft"],
+      ["pending_approval"],
+      ["approved"],
+      ["rejected"],
+      ["published"],
+    ] as const)("status=%s は有効", (status) => {
+      const row = createValidRow({ status });
+      expect(isSearchRow(row)).toBe(true);
+    });
 
     test("statusが未知の値の場合は無効", () => {
       const row = createValidRow({

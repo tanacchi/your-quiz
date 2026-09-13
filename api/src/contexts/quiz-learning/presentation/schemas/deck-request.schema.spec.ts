@@ -69,6 +69,33 @@ describe("deck-request.schema", () => {
 
       expect(result.success).toBe(false);
     });
+
+    // QuizStatusはADR-0029で5値に拡張された。TypeSpecの
+    // QuizSearchFilters.statusがQuizStatusを参照しているため、
+    // draft/publishedも検索フィルタとして受理される必要がある。
+    it.each(["draft", "pending_approval", "approved", "rejected", "published"])(
+      "filters.statusに%sを指定できる",
+      (status) => {
+        const result = createDeckFromSearchSchema.safeParse({
+          searchQuery: "JavaScript",
+          filters: { status },
+        });
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.filters?.status).toBe(status);
+        }
+      },
+    );
+
+    it("QuizStatusに無い値は拒否する", () => {
+      const result = createDeckFromSearchSchema.safeParse({
+        searchQuery: "JavaScript",
+        filters: { status: "archived" },
+      });
+
+      expect(result.success).toBe(false);
+    });
   });
 
   describe("createDeckFromWrongAnswersSchema", () => {

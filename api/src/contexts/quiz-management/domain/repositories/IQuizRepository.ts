@@ -71,12 +71,19 @@ export interface IQuizRepository {
    * クイズを更新する
    *
    * @param id - 更新するクイズのID
-   * @param quiz - 更新するフィールドの部分オブジェクト
+   * @param patch - 更新するフィールドの部分オブジェクト。D1実装が対応する
+   *   question/explanation/status/approvedAtの4フィールドのみに限定する
+   *   （ADR-0029。それ以外を含めても実装は無視するため、型で表現する）
    * @returns 更新されたクイズエンティティ、またはRepositoryError
    */
   update(
     id: string,
-    quiz: Partial<QuizSummary>,
+    patch: Partial<
+      Pick<
+        QuizSummaryData,
+        "question" | "explanation" | "status" | "approvedAt"
+      >
+    >,
   ): ResultAsync<QuizSummary, RepositoryError>;
 
   /**

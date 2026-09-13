@@ -16,7 +16,7 @@ describe("List Quizzes Query Schema", () => {
 
         if (result.success) {
           const data = result.data as ListQuizzesQuery;
-          expect(data.status).toEqual(["approved"]);
+          expect(data.status).toEqual(["approved", "published"]);
           expect(data.limit).toBe(10);
           expect(data.offset).toBe(0);
           expect(data.creatorId).toBeUndefined();
@@ -47,9 +47,11 @@ describe("List Quizzes Query Schema", () => {
         ["single pending_approval status", ["pending_approval"], true],
         ["single rejected status", ["rejected"], true],
         ["multiple valid statuses", ["pending_approval", "approved"], true],
+        ["single draft status", ["draft"], true],
+        ["single published status", ["published"], true],
         [
           "all valid statuses",
-          ["pending_approval", "approved", "rejected"],
+          ["draft", "pending_approval", "approved", "rejected", "published"],
           true,
         ],
         ["duplicate statuses", ["approved", "approved"], true],
@@ -74,7 +76,7 @@ describe("List Quizzes Query Schema", () => {
         expect(result.success).toBe(true);
 
         if (result.success) {
-          expect(result.data.status).toEqual(["approved"]);
+          expect(result.data.status).toEqual(["approved", "published"]);
         }
       });
     });
@@ -245,7 +247,7 @@ describe("List Quizzes Query Schema", () => {
         expect(result.success).toBe(true);
 
         if (result.success) {
-          expect(result.data.status).toEqual(["approved"]);
+          expect(result.data.status).toEqual(["approved", "published"]);
           expect(result.data.limit).toBe(10);
           expect(result.data.offset).toBe(0);
         }

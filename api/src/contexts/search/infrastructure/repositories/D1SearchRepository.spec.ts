@@ -402,7 +402,10 @@ describe("D1SearchRepository", () => {
       // Assert
       const countCall = preparedCalls.find((c) => c.sql.includes("COUNT(*)"));
       const dataCall = preparedCalls.find((c) => !c.sql.includes("COUNT(*)"));
+      // 公開ステータス限定の条件が先頭に付く
       expect(countCall?.params).toEqual([
+        "approved",
+        "published",
         "%React%",
         "%React%",
         "%React%",
@@ -410,6 +413,8 @@ describe("D1SearchRepository", () => {
       ]);
       // dataCallはlimit/offsetが末尾に付与される分だけ長い
       expect(dataCall?.params).toEqual([
+        "approved",
+        "published",
         "%React%",
         "%React%",
         "%React%",

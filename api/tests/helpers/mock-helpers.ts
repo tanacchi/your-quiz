@@ -14,13 +14,10 @@ import type { RepositoryError } from "../../src/shared/errors";
  * @param value - 成功時に返す値
  * @returns 成功するResultAsync
  */
-export function createSuccessfulRepositoryMock<T>(
+export function createSuccessfulRepositoryMock<T, E = RepositoryError>(
   value: T,
-): ResultAsync<T, RepositoryError> {
-  return ResultAsync.fromPromise(
-    Promise.resolve(value),
-    (error) => error as RepositoryError,
-  );
+): ResultAsync<T, E> {
+  return ResultAsync.fromPromise(Promise.resolve(value), (error) => error as E);
 }
 
 /**
@@ -44,13 +41,10 @@ export function createFailedRepositoryMock<T>(
  * @param value - 返す値
  * @returns 即座に成功するResultAsync
  */
-export function createImmediateSuccess<T>(
+export function createImmediateSuccess<T, E = RepositoryError>(
   value: T,
-): ResultAsync<T, RepositoryError> {
-  return ResultAsync.fromPromise(
-    Promise.resolve(value),
-    (error) => error as RepositoryError,
-  );
+): ResultAsync<T, E> {
+  return ResultAsync.fromPromise(Promise.resolve(value), (error) => error as E);
 }
 
 /**
@@ -89,11 +83,8 @@ export function createImmediateSuccessWithUndefined<T>(): ResultAsync<
  * @param error - 返すエラー
  * @returns 即座に失敗するResultAsync
  */
-export function createImmediateFailure<T>(
-  error: RepositoryError,
-): ResultAsync<T, RepositoryError> {
-  return ResultAsync.fromPromise(
-    Promise.reject(error),
-    (e) => e as RepositoryError,
-  );
+export function createImmediateFailure<T, E = RepositoryError>(
+  error: E,
+): ResultAsync<T, E> {
+  return ResultAsync.fromPromise(Promise.reject(error), (e) => e as E);
 }

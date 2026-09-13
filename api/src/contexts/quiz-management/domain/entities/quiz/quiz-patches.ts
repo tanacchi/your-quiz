@@ -104,13 +104,12 @@ export const suggestStatusPatches: QuizFieldSuggester = (value) => {
 
   const patches: QuizPatch[] = [];
   const status = value.toLowerCase().trim();
+  // draft/publishedは正式なステータス値のため、typo修正対象から除外する（ADR-0029）
   const statusSuggestions = {
     pending: "pending_approval",
     waiting: "pending_approval",
-    draft: "pending_approval",
     approve: "approved",
     accept: "approved",
-    published: "approved",
     reject: "rejected",
     decline: "rejected",
     denied: "rejected",

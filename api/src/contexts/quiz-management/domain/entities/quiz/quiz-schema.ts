@@ -14,15 +14,24 @@ export const QuizSchema = z
     answerType: z.literal("boolean"), // BooleanSolution only
     solution: z.union([BooleanSolutionSchema]),
     explanation: z.string().max(1000).optional(),
-    status: z.enum(["pending_approval", "approved", "rejected"]),
+    status: z.enum([
+      "draft",
+      "pending_approval",
+      "approved",
+      "rejected",
+      "published",
+    ]),
     creatorId: CreatorIdSchema,
     createdAt: sqliteDateTimeSchema,
     approvedAt: sqliteDateTimeSchema.optional(),
   })
   .strict()
   .superRefine((quiz, ctx) => {
-    // Approved status must have approvedAt timestamp
-    if (quiz.status === "approved" && !quiz.approvedAt) {
+    // Approved/Published status must have approvedAt timestamp
+    if (
+      (quiz.status === "approved" || quiz.status === "published") &&
+      !quiz.approvedAt
+    ) {
       ctx.addIssue({
         code: "custom",
         message: "Approved quiz must have approvedAt timestamp",

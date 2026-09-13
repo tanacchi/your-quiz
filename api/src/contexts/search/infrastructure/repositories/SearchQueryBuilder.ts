@@ -50,9 +50,28 @@ export function escapeLikePattern(value: string): string {
  * @param query - 検索クエリエンティティ
  * @returns WHERE句（条件が無ければ空文字）とバインドパラメータ
  */
+/**
+ * 検索で返してよいクイズのステータス
+ *
+ * quiz-management の PUBLICLY_VISIBLE_STATUSES と同じ方針。
+ * search コンテキストから quiz-management のドメインを import しないよう
+ * ここで独立に定義する。
+ */
+const PUBLIC_SEARCH_STATUSES = ["approved", "published"] as const;
+
 export function buildWhereClause(query: SearchQuizzesQuery): WhereClauseResult {
   const conditions: string[] = [];
   const params: D1QueryParam[] = [];
+
+  // 検索は公開済みのクイズのみを対象にする。
+  // status条件が無いと全ステータスを引いてしまい、他人のdraft（下書き）や
+  // pending_approval/rejectedが検索結果に出る。
+  // 以前はsearch-row.schema.tsのstatusが3値だったためparse失敗による
+  // 偶然の除外が働いていたが、それはpublishedも捨てるバグの裏返しだった。
+  conditions.push(
+    `q.status IN (${PUBLIC_SEARCH_STATUSES.map(() => "?").join(", ")})`,
+  );
+  params.push(...PUBLIC_SEARCH_STATUSES);
 
   // 全文検索: 問題文・解説・タグ名を横断してLIKE部分一致
   if (query.searchText) {

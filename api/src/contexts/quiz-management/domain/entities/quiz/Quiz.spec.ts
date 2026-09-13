@@ -204,6 +204,49 @@ describe("Quiz", () => {
         const approvedQuiz = approvedResult._unsafeUnwrap();
         expect(approvedQuiz.canBeDeleted()).toBe(false);
       });
+
+      // ADR-0029でQuizStatusが5値に拡張された。quiz-schema.tsのenumだけを
+      // 5値にして判定を3値時代のまま残すと、publishedが削除可能になり
+      // ADR-0029の不変条件（canBeDeleted = status ∉ {approved, published}）に
+      // 違反する。
+      it.each([["draft"], ["rejected"]] as const)(
+        "should allow updates for %s quiz",
+        (status) => {
+          const result = Quiz.from({ ...validQuizData, status });
+          expect(result.isOk()).toBe(true);
+          expect(result._unsafeUnwrap().canBeUpdated()).toBe(true);
+        },
+      );
+
+      it("should prevent updates for published quiz", () => {
+        // published は approvedAt 必須（quiz-schema.ts の superRefine）
+        const result = Quiz.from({
+          ...validQuizData,
+          status: "published",
+          approvedAt: "2023-12-02 10:00:00",
+        });
+        expect(result.isOk()).toBe(true);
+        expect(result._unsafeUnwrap().canBeUpdated()).toBe(false);
+      });
+
+      it.each([["draft"], ["rejected"]] as const)(
+        "should allow deletion for %s quiz",
+        (status) => {
+          const result = Quiz.from({ ...validQuizData, status });
+          expect(result.isOk()).toBe(true);
+          expect(result._unsafeUnwrap().canBeDeleted()).toBe(true);
+        },
+      );
+
+      it("should prevent deletion for published quiz", () => {
+        const result = Quiz.from({
+          ...validQuizData,
+          status: "published",
+          approvedAt: "2023-12-02 10:00:00",
+        });
+        expect(result.isOk()).toBe(true);
+        expect(result._unsafeUnwrap().canBeDeleted()).toBe(false);
+      });
     });
 
     describe("Solution Integration", () => {

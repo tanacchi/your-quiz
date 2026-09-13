@@ -14,6 +14,9 @@ import { QuizListRetrievalFailedError, UseCaseInternalError } from "../errors";
 import type { ListQuizzesQuery } from "../schemas/list-quizzes-query.schema";
 import { ListQuizzesUseCase } from "./ListQuizzesUseCase";
 
+/** 可視性チェックで使うリクエスト元のuserFingerprint */
+const TEST_REQUESTER = "test-requester";
+
 describe.todo("ListQuizzesUseCase", () => {
   let useCase: ListQuizzesUseCase;
   let mockRepository: IQuizRepository;
@@ -85,7 +88,7 @@ describe.todo("ListQuizzesUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute(validQuery);
+        const result = await useCase.execute(validQuery, TEST_REQUESTER);
 
         // Assert
         expect(result.isOk()).toBe(true);
@@ -156,7 +159,7 @@ describe.todo("ListQuizzesUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute(complexQuery);
+        const result = await useCase.execute(complexQuery, TEST_REQUESTER);
 
         // Assert
         expect(result.isOk()).toBe(true);
@@ -182,7 +185,7 @@ describe.todo("ListQuizzesUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute(validQuery);
+        const result = await useCase.execute(validQuery, TEST_REQUESTER);
 
         // Assert
         expect(result.isOk()).toBe(true);
@@ -200,7 +203,10 @@ describe.todo("ListQuizzesUseCase", () => {
         ["invalid ids array", { ...validQuery, ids: [""] }],
       ])("should handle %s", async (_description, invalidQuery) => {
         // Act
-        const result = await useCase.execute(invalidQuery as ListQuizzesQuery);
+        const result = await useCase.execute(
+          invalidQuery as ListQuizzesQuery,
+          TEST_REQUESTER,
+        );
 
         // Assert
         expect(result.isErr()).toBe(true);
@@ -237,7 +243,7 @@ describe.todo("ListQuizzesUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute(validQuery);
+        const result = await useCase.execute(validQuery, TEST_REQUESTER);
 
         // Assert
         expect(result.isErr()).toBe(true);
@@ -255,7 +261,7 @@ describe.todo("ListQuizzesUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute(validQuery);
+        const result = await useCase.execute(validQuery, TEST_REQUESTER);
 
         // Assert
         expect(result.isErr()).toBe(true);
@@ -318,7 +324,7 @@ describe.todo("ListQuizzesUseCase", () => {
           );
 
           // Act
-          const result = await useCase.execute(validQuery);
+          const result = await useCase.execute(validQuery, TEST_REQUESTER);
 
           // Assert
           expect(result.isOk()).toBe(true);
@@ -348,9 +354,9 @@ describe.todo("ListQuizzesUseCase", () => {
         );
 
         // Act & Assert
-        await expect(useCase.execute(validQuery)).rejects.toThrow(
-          "Unsupported answer type: unsupported_type",
-        );
+        await expect(
+          useCase.execute(validQuery, TEST_REQUESTER),
+        ).rejects.toThrow("Unsupported answer type: unsupported_type");
       });
     });
 
@@ -374,7 +380,7 @@ describe.todo("ListQuizzesUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute(validQuery);
+        const result = await useCase.execute(validQuery, TEST_REQUESTER);
 
         // Assert
         expect(result.isOk()).toBe(true);
@@ -405,7 +411,7 @@ describe.todo("ListQuizzesUseCase", () => {
         );
 
         // Act
-        const result = await useCase.execute(validQuery);
+        const result = await useCase.execute(validQuery, TEST_REQUESTER);
 
         // Assert
         expect(result.isOk()).toBe(true);

@@ -6,6 +6,13 @@ import {
   type EntityParseResult,
   toIssues,
 } from "../../../../../shared/validation/entity";
+import {
+  canDeleteStatus,
+  canTransition,
+  canUpdateStatus,
+  type QuizTransitionAction,
+  transitionRuleOf,
+} from "./quiz-status-transition";
 import { suggestQuizSummaryPatches } from "./quiz-summary-patches";
 import {
   type QuizSummaryData,
@@ -137,36 +144,44 @@ export class QuizSummary extends EntityBase<
   /**
    * Checks if the quiz can be updated
    *
-   * @returns true if status is 'pending_approval', false otherwise
+   * @returns true if status is draft/pending_approval/rejected（ADR-0029）
    */
   canBeUpdated(): boolean {
-    return this.get("status") === "pending_approval";
+    return canUpdateStatus(this.get("status"));
   }
 
   /**
    * Checks if the quiz can be deleted
    *
-   * @returns true if status is not 'approved', false otherwise
+   * @returns true if status is not approved/published（ADR-0029）
    */
   canBeDeleted(): boolean {
-    return this.get("status") !== "approved";
+    return canDeleteStatus(this.get("status"));
   }
 
   /**
-   * Approves the quiz with timestamp
+   * Applies a status transition (submit/approve/reject/publish) defined in ADR-0029.
    *
-   * @param approvedAt - The approval timestamp
-   * @returns QuizSummaryParseResult containing approved QuizSummary or QuizSummaryParseError
+   * @param action - The transition action to apply
+   * @param occurredAt - Timestamp of the transition. Recorded as approvedAt when the
+   *   transition rule requires it (currently only `approve`)
+   * @returns QuizSummaryParseResult containing the transitioned QuizSummary or QuizSummaryParseError
    */
-  approve(approvedAt: string): QuizSummaryParseResult {
-    if (this.get("status") !== "pending_approval") {
+  applyTransition(
+    action: QuizTransitionAction,
+    occurredAt: string,
+  ): QuizSummaryParseResult {
+    const currentStatus = this.get("status");
+    const rule = transitionRuleOf(action);
+
+    if (!canTransition(currentStatus, action)) {
       const error: QuizSummaryParseError = {
-        kind: "parse",
+        kind: "invalid_state",
         issues: [
           {
             path: ["status"],
             code: "custom",
-            message: `Quiz with status ${this.get("status")} cannot be approved`,
+            message: `Quiz with status ${currentStatus} cannot be ${rule.pastParticiple}`,
           },
         ],
         patches: [],
@@ -175,9 +190,49 @@ export class QuizSummary extends EntityBase<
     }
 
     return this.with({
-      status: "approved",
-      approvedAt,
+      status: rule.to,
+      ...(rule.stampsApprovedAt && { approvedAt: occurredAt }),
     });
+  }
+
+  /**
+   * Submits the quiz for approval (draft/rejected → pending_approval)
+   *
+   * @param occurredAt - The submission timestamp
+   * @returns QuizSummaryParseResult containing submitted QuizSummary or QuizSummaryParseError
+   */
+  submit(occurredAt: string): QuizSummaryParseResult {
+    return this.applyTransition("submit", occurredAt);
+  }
+
+  /**
+   * Approves the quiz with timestamp (pending_approval → approved)
+   *
+   * @param approvedAt - The approval timestamp
+   * @returns QuizSummaryParseResult containing approved QuizSummary or QuizSummaryParseError
+   */
+  approve(approvedAt: string): QuizSummaryParseResult {
+    return this.applyTransition("approve", approvedAt);
+  }
+
+  /**
+   * Rejects the quiz (pending_approval → rejected)
+   *
+   * @param occurredAt - The rejection timestamp
+   * @returns QuizSummaryParseResult containing rejected QuizSummary or QuizSummaryParseError
+   */
+  reject(occurredAt: string): QuizSummaryParseResult {
+    return this.applyTransition("reject", occurredAt);
+  }
+
+  /**
+   * Publishes the quiz (approved → published)
+   *
+   * @param occurredAt - The publication timestamp
+   * @returns QuizSummaryParseResult containing published QuizSummary or QuizSummaryParseError
+   */
+  publish(occurredAt: string): QuizSummaryParseResult {
+    return this.applyTransition("publish", occurredAt);
   }
 
   // Tag operations (immutable)

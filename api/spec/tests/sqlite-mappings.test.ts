@@ -60,9 +60,11 @@ describe("SQLite Mappings", () => {
       const quizStatus = enumMappings.find((e) => e.name === "QuizStatus");
       expect(quizStatus).toBeDefined();
       expect(quizStatus?.values).toEqual([
+        "draft",
         "pending_approval",
         "approved",
         "rejected",
+        "published",
       ]);
     });
   });
@@ -162,7 +164,7 @@ describe("SQLite Mappings", () => {
       const result = generateCheckConstraint("status", "QuizStatus");
 
       expect(result).toEqual(
-        "CHECK (\"status\" IN ('pending_approval', 'approved', 'rejected'))",
+        "CHECK (\"status\" IN ('draft', 'pending_approval', 'approved', 'rejected', 'published'))",
       );
     });
 

@@ -39,8 +39,11 @@ const quizSearchFiltersSchema = z
     answerType: z
       .enum(["boolean", "free_text", "single_choice", "multiple_choice"])
       .optional(),
+    // ADR-0029でQuizStatusがdraft/publishedを含む5値に拡張された。
+    // TypeSpecのQuizSearchFilters.statusはQuizStatusを参照しているため、
+    // ここも5値に揃える（デフォルトはTypeSpec定義どおりapproved）。
     status: z
-      .enum(["pending_approval", "approved", "rejected"])
+      .enum(["draft", "pending_approval", "approved", "rejected", "published"])
       .default("approved"),
     creatorId: z.string().optional(),
   })

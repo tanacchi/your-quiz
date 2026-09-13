@@ -37,9 +37,11 @@ interface Quiz {
 
 #### 主要な振る舞い
 
+> **注（ADR-0029）**: 以下は本コンテキストの目標設計（管理者ロール・`AdministratorId`・`rejectionReason` の永続化を含む）であり、issue #46 時点の暫定実装とは差分がある。暫定実装では管理者ロールが未実装のため `approve`/`reject`/`publish` は `NODE_ENV` ベースの暫定権限（`presentation/policies/moderation-policy.ts`）で代替し、`reviewerNotes`（拒否理由に相当）は記録先カラムが無く未使用。`create()` の `isDraft` 分岐、`submit`/`publish` の追加は ADR-0029 の正規フロー `draft → submit → pending_approval → (approved | rejected) → publish → published` を反映したもの。
+
 ```typescript
 class QuizAggregate {
-  // クイズ作成
+  // クイズ作成（ADR-0029: isDraftによりDraft/PendingApprovalを出し分ける）
   static create(command: CreateQuizCommand): Result<Quiz, DomainError> {
     // バリデーション
     const question = Question.create(command.questionText);
@@ -55,10 +57,24 @@ class QuizAggregate {
       correctAnswer: correctAnswer.value,
       explanation: command.explanation ? Explanation.create(command.explanation).value : undefined,
       tags: command.tags.map(tag => Tag.create(tag)).filter(t => t.isOk()).map(t => t.value),
-      status: QuizStatus.PendingApproval,
+      status: command.isDraft ? QuizStatus.Draft : QuizStatus.PendingApproval,
       creatorId: command.creatorId,
       createdAt: Timestamp.now()
     }));
+  }
+
+  // 承認申請（Draft/Rejected → PendingApproval、作成者限定）
+  submit(): Result<void, DomainError> {
+    if (this.status !== QuizStatus.Draft && this.status !== QuizStatus.Rejected) {
+      return err(new BusinessRuleError('draft/rejected状態のクイズのみ承認申請可能'));
+    }
+
+    this.status = QuizStatus.PendingApproval;
+
+    // ドメインイベント発行
+    this.addDomainEvent(new QuizSubmittedEvent(this.id, this.creatorId));
+
+    return ok(undefined);
   }
   
   // 承認処理
@@ -92,13 +108,27 @@ class QuizAggregate {
     
     return ok(undefined);
   }
+
+  // 公開処理（Approved → Published、管理者限定）
+  publish(administratorId: AdministratorId): Result<void, DomainError> {
+    if (this.status !== QuizStatus.Approved) {
+      return err(new BusinessRuleError('承認済み状態のクイズのみ公開可能'));
+    }
+
+    this.status = QuizStatus.Published;
+
+    // ドメインイベント発行
+    this.addDomainEvent(new QuizPublishedEvent(this.id, administratorId));
+
+    return ok(undefined);
+  }
   
   // 作成者確認
   isCreatedBy(creatorId: CreatorId): boolean {
     return this.creatorId.equals(creatorId);
   }
   
-  // 公開可能性確認
+  // 公開可能性確認（Publishedになった後は再びfalseに戻る。publishは冪等な操作ではない）
   isPublishable(): boolean {
     return this.status === QuizStatus.Approved;
   }
@@ -149,21 +179,29 @@ class Question {
 }
 ```
 
-#### QuizStatus（クイズ状態）
+#### QuizStatus（クイズ状態、ADR-0029で5値に拡張）
 
 ```typescript
 enum QuizStatusValue {
+  Draft = 'draft',
   PendingApproval = 'pending_approval',
   Approved = 'approved',
-  Rejected = 'rejected'
+  Rejected = 'rejected',
+  Published = 'published'
 }
 
 class QuizStatus {
   private constructor(readonly value: QuizStatusValue) {}
   
+  static readonly Draft = new QuizStatus(QuizStatusValue.Draft);
   static readonly PendingApproval = new QuizStatus(QuizStatusValue.PendingApproval);
   static readonly Approved = new QuizStatus(QuizStatusValue.Approved);
   static readonly Rejected = new QuizStatus(QuizStatusValue.Rejected);
+  static readonly Published = new QuizStatus(QuizStatusValue.Published);
+  
+  isDraft(): boolean {
+    return this.value === QuizStatusValue.Draft;
+  }
   
   isPendingApproval(): boolean {
     return this.value === QuizStatusValue.PendingApproval;
@@ -175,6 +213,10 @@ class QuizStatus {
   
   isRejected(): boolean {
     return this.value === QuizStatusValue.Rejected;
+  }
+  
+  isPublished(): boolean {
+    return this.value === QuizStatusValue.Published;
   }
   
   equals(other: QuizStatus): boolean {
@@ -397,13 +439,24 @@ interface QuizRejectedEvent extends DomainEvent {
 }
 ```
 
+### QuizPublishedEvent
+
+```typescript
+interface QuizPublishedEvent extends DomainEvent {
+  readonly eventType: 'QuizPublished';
+  readonly quizId: QuizId;
+  readonly administratorId: AdministratorId;
+  readonly publishedAt: Timestamp;
+}
+```
+
 ## 不変条件（Invariants）
 
 ### Quiz集約の不変条件
 
 1. **問題文必須**: 問題文は必ず存在し、500文字以内
 2. **正解必須**: 正解は必ず◯または×のいずれか
-3. **ステータス遷移**: PendingApproval → (Approved | Rejected) のみ許可
+3. **ステータス遷移**（ADR-0029）: `Draft → submit → PendingApproval → (Approved | Rejected)`、`Rejected → submit → PendingApproval`（再申請）、`Approved → publish → Published` のみ許可。`Approved`/`Published` への更新・削除は不可
 4. **承認者必須**: 承認済みクイズには必ず承認者が存在
 5. **作成者不変**: 作成者IDは作成後変更不可
 6. **サニタイズ済み**: 問題文・解説はHTMLタグが除去済み
