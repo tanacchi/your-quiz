@@ -18,6 +18,19 @@ declare global {
   }
 }
 
+const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+/** 指定URLがHTTP応答を返すか */
+async function isResponding(url: string): Promise<boolean> {
+  try {
+    await fetch(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * サーバーのヘルスチェック
  * 指定されたURLが正常に応答するまで待機
@@ -37,10 +50,33 @@ async function waitForServer(url: string, timeoutMs: number): Promise<void> {
       // サーバーがまだ起動していない場合は継続
     }
 
-    await new Promise((resolve) => setTimeout(resolve, checkInterval));
+    await sleep(checkInterval);
   }
 
   throw new Error(`❌ Server failed to start within ${timeoutMs}ms at ${url}`);
+}
+
+/**
+ * プロセスグループ全体にシグナルを送る
+ *
+ * `detached: true` で起動した子プロセスはプロセスグループのリーダーになるため、
+ * pid を負数で指定すると pnpm → wrangler → workerd までまとめて届く。
+ * 子プロセス（pnpm）だけに送ると workerd が残り、ポートを占有し続ける。
+ */
+function signalProcessGroup(pid: number, signal: NodeJS.Signals): void {
+  try {
+    process.kill(-pid, signal);
+  } catch (error) {
+    // 既に終了している場合（ESRCH）は無視する
+    if (
+      !(error instanceof Error && "code" in error && error.code === "ESRCH")
+    ) {
+      console.warn(
+        `⚠️ Failed to send ${signal} to process group ${pid}:`,
+        error,
+      );
+    }
+  }
 }
 
 /**
@@ -50,6 +86,16 @@ export async function startBddServer(
   target: BddTarget,
   timeoutMs = 30000,
 ): Promise<void> {
+  const healthUrl = `${baseUrlOf(target)}/health`;
+
+  // 前回のサーバーが残っていると、新しく起動したサーバーではなく古いサーバーに
+  // ヘルスチェックが通ってしまい、別の状態のサーバーに対してテストが走る。
+  if (await isResponding(healthUrl)) {
+    throw new Error(
+      `❌ A server is already responding at ${healthUrl}. Stop the leftover process before running BDD tests.`,
+    );
+  }
+
   console.log(
     `🚀 Starting quiz-api server for BDD tests (pnpm ${target.script})...`,
   );
@@ -86,43 +132,39 @@ export async function startBddServer(
   });
 
   // ヘルスチェック待機
-  await waitForServer(`${baseUrlOf(target)}/health`, timeoutMs);
+  await waitForServer(healthUrl, timeoutMs);
 
   console.log("✅ Server setup completed for BDD tests");
 }
 
 /**
  * 起動中のBDDサーバーを停止する
+ *
+ * プロセスグループに SIGTERM を送り、グループリーダーの終了を最大5秒待つ。
+ * その後、残っているプロセスがあれば SIGKILL で確実に止める。
  */
 export async function stopBddServer(): Promise<void> {
   console.log("🛑 Stopping quiz-api server...");
 
-  if (global.__SERVER_PROCESS__) {
-    const process = global.__SERVER_PROCESS__;
+  const serverProcess = global.__SERVER_PROCESS__;
+  global.__SERVER_PROCESS__ = undefined;
 
-    // プロセスグループ全体を終了（detached: trueで起動しているため）
-    if (process.pid) {
-      try {
-        // SIGTERM送信でGraceful shutdown
-        process.kill("SIGTERM");
-
-        // 3秒待機してから強制終了
-        setTimeout(() => {
-          if (!process.killed) {
-            process.kill("SIGKILL");
-          }
-        }, 3000);
-
-        console.log("✅ Server stopped successfully");
-      } catch (error) {
-        console.warn("⚠️ Error stopping server:", error);
-      }
-    }
-
-    global.__SERVER_PROCESS__ = undefined;
-  } else {
+  if (!serverProcess?.pid) {
     console.log("ℹ️ No server process to stop");
+    return;
   }
+
+  const { pid } = serverProcess;
+  const exited =
+    serverProcess.exitCode !== null || serverProcess.signalCode !== null
+      ? Promise.resolve()
+      : new Promise<void>((resolve) => serverProcess.once("exit", resolve));
+
+  signalProcessGroup(pid, "SIGTERM");
+  await Promise.race([exited, sleep(5000)]);
+  signalProcessGroup(pid, "SIGKILL");
+
+  console.log("✅ Server stopped successfully");
 }
 
 /**
