@@ -212,6 +212,48 @@ describe("D1QuizRepository", () => {
       expect(result.isErr()).toBe(true);
     });
 
+    test("選択肢型クイズの選択肢をquiz_id基準で削除し、Quiz本体の削除より先に並ぶ", async () => {
+      // Arrange: SingleChoiceSolutionとMultipleChoiceSolutionは別々に1から
+      // 採番されるため、solution_id基準の削除では別クイズの選択肢まで
+      // 消えてしまう(ADR-0030)。また Choice.quiz_id は Quiz への FK なので、
+      // Quiz本体を削除するより先にChoiceを削除しないと制約違反になる
+      let batched: { sql: string; params: unknown[] }[] = [];
+      const db = createFakeD1Database({
+        firstResult: {
+          id: "1",
+          solution_id: "10",
+          answer_type: "single_choice",
+        },
+        onBatch: (statements) => {
+          batched = statements;
+        },
+      });
+      const repository = new D1QuizRepository(db);
+
+      // Act
+      const result = await repository.delete("1");
+
+      // Assert
+      expect(result.isOk()).toBe(true);
+      const choiceDelete = batched.find((s) =>
+        /DELETE FROM Choice/i.test(s.sql),
+      );
+      expect(choiceDelete).toBeDefined();
+      expect(choiceDelete?.sql).toMatch(/quiz_id/i);
+      expect(choiceDelete?.sql).not.toMatch(/solution_id/i);
+      expect(choiceDelete?.params).toEqual(["1"]);
+
+      const sqls = batched.map((s) => s.sql);
+      const choiceIndex = sqls.findIndex((sql) =>
+        /DELETE FROM Choice/i.test(sql),
+      );
+      const quizIndex = sqls.findIndex((sql) =>
+        /DELETE FROM Quiz\b/i.test(sql),
+      );
+      expect(choiceIndex).toBeGreaterThanOrEqual(0);
+      expect(choiceIndex).toBeLessThan(quizIndex);
+    });
+
     test("対象が存在しない場合は例外ではなくErrを返す", async () => {
       // Arrange: fromSafePromise(Promise.reject(...))はErrにならずthrowするため、
       // 本番D1では404であるべき場面がplain-textの500になっていた
@@ -227,6 +269,27 @@ describe("D1QuizRepository", () => {
   });
 
   describe("findById", () => {
+    test("選択肢の取得をquiz_id基準で行う", async () => {
+      // Arrange: SingleChoiceSolutionとMultipleChoiceSolutionは別々に1から
+      // 採番されるため、solution_id基準のJOINでは別クイズの選択肢が
+      // 混ざってしまう(ADR-0030)
+      let capturedSql = "";
+      const db = createFakeD1Database({
+        firstResult: d1QuizRow({ answer_type: "single_choice" }),
+        onPrepare: (sql) => {
+          capturedSql = sql;
+        },
+      });
+      const repository = new D1QuizRepository(db);
+
+      // Act
+      await repository.findById("3");
+
+      // Assert
+      expect(capturedSql).toMatch(/c\.quiz_id\s*=\s*q\.id/i);
+      expect(capturedSql).not.toMatch(/c\.solution_id\s*\)/i);
+    });
+
     test("D1の数値の行から文字列IDのレスポンスを返す", async () => {
       // Arrange
       const db = createFakeD1Database({ firstResult: d1QuizRow() });

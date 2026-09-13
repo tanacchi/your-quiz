@@ -94,7 +94,7 @@ export class D1QuizRepository implements IQuizRepository {
       LEFT JOIN FreeTextSolution fts ON q.solution_id = fts.id AND q.answer_type = 'free_text'
       LEFT JOIN SingleChoiceSolution scs ON q.solution_id = scs.id AND q.answer_type = 'single_choice'
       LEFT JOIN MultipleChoiceSolution mcs ON q.solution_id = mcs.id AND q.answer_type = 'multiple_choice'
-      LEFT JOIN Choice c ON (scs.id = c.solution_id OR mcs.id = c.solution_id)
+      LEFT JOIN Choice c ON c.quiz_id = q.id
       WHERE q.id = ?
       GROUP BY q.id`,
       [id],
@@ -609,10 +609,11 @@ export class D1QuizRepository implements IQuizRepository {
   }
 
   /**
-   * answerTypeに対応するsolution系テーブルの削除文を返す
+   * answerTypeに対応するsolutionテーブルの削除文を返す
    *
-   * Quiz.solution_id / Choice.solution_id にFK制約は無いため、Quiz本体より
-   * 後に消して問題ない。
+   * Quiz.solution_id にFK制約は無いため、Quiz本体より後に消して問題ない。
+   * Choice.quiz_id は Quiz へのFKを持つため、Choiceの削除はここではなく
+   * Quiz本体より先に実行する（executeDeleteを参照）。
    */
   private solutionDeleteStatements(
     solutionId: string,
@@ -630,18 +631,9 @@ export class D1QuizRepository implements IQuizRepository {
       return undefined;
     }
 
-    const statements: D1PreparedStatement[] = [];
-    if (answerType === "single_choice" || answerType === "multiple_choice") {
-      statements.push(
-        this.db
-          .prepare("DELETE FROM Choice WHERE solution_id = ?")
-          .bind(solutionId),
-      );
-    }
-    statements.push(
+    return [
       this.db.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(solutionId),
-    );
-    return statements;
+    ];
   }
 
   /**
@@ -705,9 +697,17 @@ export class D1QuizRepository implements IQuizRepository {
         );
       }
 
-      // FK参照元(QuizTag)を先に消してからQuiz本体、最後にFK制約の無いsolution系
+      // FK参照元(QuizTag, 選択肢型のみChoice)を先に消してからQuiz本体、
+      // 最後にFK制約の無いsolution系。Choice.quiz_idはQuizへのFKなので
+      // Quiz本体より先に消さないと制約違反になる(ADR-0030)
+      const isChoiceType =
+        existingQuiz.answer_type === "single_choice" ||
+        existingQuiz.answer_type === "multiple_choice";
       const statements: D1PreparedStatement[] = [
         this.db.prepare("DELETE FROM QuizTag WHERE quiz_id = ?").bind(id),
+        ...(isChoiceType
+          ? [this.db.prepare("DELETE FROM Choice WHERE quiz_id = ?").bind(id)]
+          : []),
         this.db.prepare("DELETE FROM Quiz WHERE id = ?").bind(id),
         ...solutionStatements,
       ];
