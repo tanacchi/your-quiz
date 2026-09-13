@@ -2,6 +2,7 @@
  * D1データベースのクエリ結果の型定義とマッパー (Zod版)
  */
 
+import { err, ok, type Result } from "neverthrow";
 import { z } from "zod";
 
 /**
@@ -111,13 +112,16 @@ export const zodBasicQuizInfoSchema = z.object({
 
 /**
  * JSON.parse後の選択肢データスキーマ
+ *
+ * D1 は INTEGER 列を number、boolean 列を 0/1 で返し、Mock のフィクスチャは
+ * 文字列と真偽値で持つため、両方を受け付けて string / boolean にそろえる。
  */
 export const zodParsedChoiceSchema = z.object({
-  id: z.string(),
-  solutionId: z.string(),
+  id: d1IdSchema,
+  solutionId: d1IdSchema,
   text: z.string(),
   orderIndex: z.coerce.number(),
-  isCorrect: z.boolean(),
+  isCorrect: z.union([z.boolean(), z.number()]).transform(Boolean),
 });
 
 /**
@@ -138,6 +142,68 @@ export type ParsedChoice = z.infer<typeof zodParsedChoiceSchema>;
 export function isQuizRow(data: unknown): data is QuizRow {
   const result = zodQuizRowSchema.safeParse(data);
   return result.success;
+}
+
+/**
+ * D1クエリ結果の1行を検証し、変換後の値（数値IDを文字列にした行）を返す
+ *
+ * `isQuizRow` は型ガード（真偽値のみ返す）のため、それで絞り込んだ行を
+ * そのまま使うと、型は `QuizRow` でも実行時の値は D1 が返した生の行のままで、
+ * id / solution_id / creator_id が number のまま残る。`safeParse` の `.data`
+ * を使って型と実行時の値を一致させる（`search-row.schema.ts` の
+ * `parseSearchRows` と同じ方針）。
+ */
+export function parseQuizRow(data: unknown): Result<QuizRow, Error> {
+  const parsed = zodQuizRowSchema.safeParse(data);
+  return parsed.success
+    ? ok(parsed.data)
+    : err(new Error(`Invalid quiz row data: ${parsed.error.message}`));
+}
+
+/**
+ * 選択肢が1件も無いときに LEFT JOIN + GROUP_CONCAT(json_object(...)) が返す、
+ * 全フィールドが null のオブジェクトか
+ */
+const isEmptyChoicePlaceholder = (value: unknown): boolean =>
+  typeof value === "object" &&
+  value !== null &&
+  Object.values(value).every((field) => field === null);
+
+/**
+ * GROUP_CONCAT(json_object(...)) で連結された選択肢を、並び順どおりの配列に変換する
+ *
+ * スキーマに合わない選択肢は黙って捨てずに Err を返す。以前は
+ * `.filter(isParsedChoice)` で捨てていたため、D1 の数値IDや 0/1 がすべて
+ * 不正扱いになり、選択式クイズの choices が空で返っていた（#89）。
+ * GROUP_CONCAT の連結順は保証されないので orderIndex で並べ直す。
+ */
+export function parseChoices(
+  groupConcat: string | null | undefined,
+): Result<ParsedChoice[], Error> {
+  if (groupConcat == null || groupConcat === "") {
+    return ok([]);
+  }
+
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(`[${groupConcat}]`);
+  } catch (error) {
+    return err(
+      error instanceof Error ? error : new Error("Invalid choices JSON"),
+    );
+  }
+  if (!Array.isArray(decoded)) {
+    return err(new Error("Choices JSON is not an array"));
+  }
+
+  const parsed = z
+    .array(zodParsedChoiceSchema)
+    .safeParse(decoded.filter((item) => !isEmptyChoicePlaceholder(item)));
+  if (!parsed.success) {
+    return err(new Error(`Invalid choice data: ${parsed.error.message}`));
+  }
+
+  return ok([...parsed.data].sort((a, b) => a.orderIndex - b.orderIndex));
 }
 
 /**

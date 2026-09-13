@@ -14,11 +14,12 @@ import type { D1QueryParam, QuizRow } from "../mappers/d1-types";
 import {
   isBasicQuizInfo,
   isCountResult,
-  isParsedChoice,
   isQuizRow,
   isValidAnswerType,
   isValidMatchingStrategy,
   isValidQuizStatus,
+  parseChoices,
+  parseQuizRow,
 } from "../mappers/d1-types";
 
 /**
@@ -344,7 +345,11 @@ export class D1QuizRepository implements IQuizRepository {
         return ResultAsync.fromSafePromise(Promise.resolve(null));
       }
 
-      if (!isQuizRow(result)) {
+      // isQuizRow（型ガード）で絞り込んだ行をそのまま使うと、数値IDが number の
+      // まま残り、所有者判定で文字列の UserIdentity.id と一致しなくなる。
+      // 変換後の値を使う。
+      const parsedRow = parseQuizRow(result);
+      if (parsedRow.isErr()) {
         return errAsync(
           RepositoryErrorFactory.findFailed(
             "Quiz",
@@ -354,7 +359,7 @@ export class D1QuizRepository implements IQuizRepository {
       }
 
       try {
-        const quizResponse = this.mapRowToQuizResponse(result);
+        const quizResponse = this.mapRowToQuizResponse(parsedRow.value);
         return ResultAsync.fromSafePromise(Promise.resolve(quizResponse));
       } catch (error) {
         return errAsync(
@@ -756,25 +761,13 @@ export class D1QuizRepository implements IQuizRepository {
 
       case "single_choice":
       case "multiple_choice": {
-        const choices = row.choices
-          ? JSON.parse(`[${row.choices}]`)
-              .filter(isParsedChoice)
-              .map(
-                (c: {
-                  id: string;
-                  solutionId: string;
-                  text: string;
-                  orderIndex: number;
-                  isCorrect: boolean;
-                }) => ({
-                  id: c.id,
-                  solutionId: c.solutionId,
-                  text: c.text,
-                  orderIndex: c.orderIndex,
-                  isCorrect: Boolean(c.isCorrect),
-                }),
-              )
-          : [];
+        // スキーマに合わない選択肢は黙って捨てずにエラーにする
+        // （呼び出し元の try/catch で findFailed に変換される）
+        const parsedChoices = parseChoices(row.choices);
+        if (parsedChoices.isErr()) {
+          throw parsedChoices.error;
+        }
+        const choices = parsedChoices.value;
 
         if (row.answer_type === "single_choice") {
           solution = {

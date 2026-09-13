@@ -182,6 +182,117 @@ describe("D1QuizRepository", () => {
   });
 
   describe("findById", () => {
+    /**
+     * findById の SELECT が返す D1 の生の行
+     *
+     * D1 は INTEGER 列を number、boolean 列を 0/1 で返す。選択肢は
+     * GROUP_CONCAT(json_object(...)) で連結された文字列になる。
+     */
+    const d1QuizRow = (overrides: Record<string, unknown> = {}) => ({
+      id: 3,
+      question: "TypeScriptは静的型付けか",
+      answer_type: "boolean",
+      solution_id: 7,
+      explanation: null,
+      status: "draft",
+      creator_id: 5,
+      created_at: "2026-09-13 00:00:00",
+      approved_at: null,
+      boolean_value: 0,
+      correct_answer: null,
+      matching_strategy: null,
+      case_sensitive: null,
+      choices: null,
+      min_correct_answers: null,
+      ...overrides,
+    });
+
+    test("D1の数値の行から文字列IDのレスポンスを返す", async () => {
+      // Arrange
+      const db = createFakeD1Database({ firstResult: d1QuizRow() });
+      const repository = new D1QuizRepository(db);
+
+      // Act
+      const result = await repository.findById("3");
+
+      // Assert: 所有者判定は文字列の UserIdentity.id と比較するため、
+      // number のままだと "5" !== 5 で作成者本人でも一致しない
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value.id).toBe("3");
+        expect(result.value.solutionId).toBe("7");
+        expect(result.value.creatorId).toBe("5");
+        expect(result.value.solution).toEqual({
+          type: "boolean",
+          id: "7",
+          value: false,
+        });
+      }
+    });
+
+    test("選択肢をD1の値から変換し並び順どおりに返す", async () => {
+      // Arrange: 選択肢の id / solutionId は number、isCorrect は 0/1。
+      // 以前はこれらが不正扱いで黙って捨てられ、choices が空になっていた
+      const db = createFakeD1Database({
+        firstResult: d1QuizRow({
+          answer_type: "single_choice",
+          boolean_value: null,
+          choices:
+            '{"id":12,"solutionId":7,"text":"b","orderIndex":1,"isCorrect":1},' +
+            '{"id":11,"solutionId":7,"text":"a","orderIndex":0,"isCorrect":0}',
+        }),
+      });
+      const repository = new D1QuizRepository(db);
+
+      // Act
+      const result = await repository.findById("3");
+
+      // Assert
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value.solution).toEqual({
+          type: "single_choice",
+          id: "7",
+          choices: [
+            {
+              id: "11",
+              solutionId: "7",
+              text: "a",
+              orderIndex: 0,
+              isCorrect: false,
+            },
+            {
+              id: "12",
+              solutionId: "7",
+              text: "b",
+              orderIndex: 1,
+              isCorrect: true,
+            },
+          ],
+        });
+      }
+    });
+
+    test("スキーマに合わない選択肢があれば空にせずErrを返す", async () => {
+      // Arrange: 2件目の選択肢に text が無い
+      const db = createFakeD1Database({
+        firstResult: d1QuizRow({
+          answer_type: "single_choice",
+          boolean_value: null,
+          choices:
+            '{"id":11,"solutionId":7,"text":"a","orderIndex":0,"isCorrect":0},' +
+            '{"id":12,"solutionId":7,"orderIndex":1,"isCorrect":1}',
+        }),
+      });
+      const repository = new D1QuizRepository(db);
+
+      // Act
+      const result = await repository.findById("3");
+
+      // Assert
+      expect(result.isErr()).toBe(true);
+    });
+
     test("対象が存在しない場合は例外ではなくErrを返す", async () => {
       // Arrange
       const db = createFakeD1Database({ firstResult: null });
