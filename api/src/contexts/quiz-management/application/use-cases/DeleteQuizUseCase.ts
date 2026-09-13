@@ -35,14 +35,7 @@ export class DeleteQuizUseCase {
       )
       .andThen((quiz) => {
         if (quiz.creatorId !== command.requesterId) {
-          return errAsync(
-            new QuizCreatorOnlyError(
-              command.quizId,
-              "delete",
-              quiz.creatorId,
-              command.requesterId,
-            ),
-          );
+          return errAsync(new QuizCreatorOnlyError(command.quizId, "delete"));
         }
 
         if (!canDeleteStatus(quiz.status)) {

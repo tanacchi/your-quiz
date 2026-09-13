@@ -47,14 +47,7 @@ export class UpdateQuizUseCase {
       )
       .andThen((quiz) => {
         if (quiz.creatorId !== command.requesterId) {
-          return errAsync(
-            new QuizCreatorOnlyError(
-              command.quizId,
-              "update",
-              quiz.creatorId,
-              command.requesterId,
-            ),
-          );
+          return errAsync(new QuizCreatorOnlyError(command.quizId, "update"));
         }
 
         if (!canUpdateStatus(quiz.status)) {
