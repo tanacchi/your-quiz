@@ -1,4 +1,4 @@
-import { errAsync, ResultAsync } from "neverthrow";
+import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import {
   type RepositoryError,
   RepositoryErrorFactory,
@@ -21,6 +21,22 @@ import {
   parseChoices,
   parseQuizRow,
 } from "../mappers/d1-types";
+
+/**
+ * answerType に対応する solution テーブル名
+ *
+ * create（solution作成・Quiz.solution_idのMAX(id)参照）と
+ * delete（solutionDeleteStatements）の両方で使う。
+ */
+const SOLUTION_TABLE_BY_ANSWER_TYPE: Record<
+  components["schemas"]["AnswerType"],
+  string
+> = {
+  boolean: "BooleanSolution",
+  free_text: "FreeTextSolution",
+  single_choice: "SingleChoiceSolution",
+  multiple_choice: "MultipleChoiceSolution",
+};
 
 /**
  * Cloudflare D1データベースを使用したクイズリポジトリ実装
@@ -163,164 +179,161 @@ export class D1QuizRepository implements IQuizRepository {
 
   // Private helper methods
 
+  /**
+   * クイズと関連行を作成する
+   *
+   * 以前は solution の INSERT と `INSERT INTO Quiz (id, …)`（UseCase が
+   * Date.now で払い出した id を明示）を独立した run() で順に実行していた。
+   * 途中で失敗すると孤立した solution / Choice 行が残り、成功しても
+   * 入力エンティティをそのまま返すためレスポンスの id / solutionId が
+   * DB の実際の値と一致しなかった。
+   *
+   * db.batch() は単一トランザクションで実行されるため、solution → Quiz →
+   * Choice（選択肢型のみ）→ 読み戻しのSELECT を1回のbatchにまとめ、
+   * 実際にDBへ入った行をそのまま返す。solutionの行IDは、直前の文が
+   * 同じトランザクション内で挿入した行を指す `MAX(id)` のサブクエリで参照する
+   * （batch内の書き込みは直列化されるため、途中で他のリクエストが挟まらない。
+   * 複数行INSERTの途中で値が変わる last_insert_rowid() は使わない）。
+   */
   private executeCreateTransaction(
     quiz: QuizSummary,
     solution: components["schemas"]["Solution"],
   ): ResultAsync<QuizSummary, RepositoryError> {
-    return this.createSolution(solution).andThen((solutionId) =>
-      ResultAsync.fromPromise(
-        this.db
-          .prepare(`
-          INSERT INTO Quiz (id, question, answer_type, solution_id, explanation, status, creator_id, created_at, approved_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `)
-          .bind(
-            quiz.get("id"),
-            quiz.get("question"),
-            quiz.get("answerType"),
-            solutionId,
-            quiz.get("explanation") || null,
-            quiz.get("status"),
-            quiz.get("creatorId"),
-            quiz.get("createdAt"),
-            quiz.get("approvedAt") || null,
-          )
-          .run(),
-        (error) =>
+    const statements = this.buildCreateStatements(quiz, solution);
+
+    return ResultAsync.fromPromise(this.db.batch(statements), (error) =>
+      RepositoryErrorFactory.createFailed(
+        "Quiz",
+        error instanceof Error
+          ? error
+          : new Error("Unknown quiz creation error"),
+      ),
+    ).andThen((results) => {
+      const readback = results[results.length - 1]?.results[0];
+      const parsedRow = parseQuizRow(readback);
+      if (parsedRow.isErr()) {
+        return errAsync(
           RepositoryErrorFactory.createFailed(
             "Quiz",
-            error instanceof Error
-              ? error
-              : new Error("Unknown quiz creation error"),
+            new Error("Invalid quiz row data from database after create"),
           ),
-      ).map(() => quiz),
-    );
-  }
-
-  private createSolution(
-    solution: components["schemas"]["Solution"],
-  ): ResultAsync<string, RepositoryError> {
-    switch (solution.type) {
-      case "boolean": {
-        return ResultAsync.fromPromise(
-          this.db
-            .prepare("INSERT INTO BooleanSolution (value) VALUES (?)")
-            .bind(solution.value)
-            .run(),
-          (error) =>
-            RepositoryErrorFactory.createFailed(
-              "BooleanSolution",
-              error instanceof Error
-                ? error
-                : new Error("Unknown boolean solution creation error"),
-            ),
-        ).map((result) => result.meta.last_row_id?.toString() || "");
+        );
       }
 
-      case "free_text": {
-        return ResultAsync.fromPromise(
-          this.db
-            .prepare(`
+      const mapped = D1QuizSummaryMapper.fromRow(parsedRow.value);
+      if (mapped.isErr()) {
+        return errAsync(
+          RepositoryErrorFactory.createFailed(
+            "Quiz",
+            new Error(mapped.error.message),
+          ),
+        );
+      }
+      return okAsync(mapped.value);
+    });
+  }
+
+  /**
+   * 作成用batchの文を組み立てる（solution → Quiz → Choice[選択肢型のみ] → 読み戻し）
+   */
+  private buildCreateStatements(
+    quiz: QuizSummary,
+    solution: components["schemas"]["Solution"],
+  ): D1PreparedStatement[] {
+    const solutionTable = SOLUTION_TABLE_BY_ANSWER_TYPE[quiz.get("answerType")];
+
+    const statements: D1PreparedStatement[] = [
+      this.createSolutionStatement(solution),
+      this.db
+        .prepare(`
+          INSERT INTO Quiz (question, answer_type, solution_id, explanation, status, creator_id, created_at, approved_at)
+          VALUES (?, ?, (SELECT MAX(id) FROM ${solutionTable}), ?, ?, ?, ?, NULL)
+        `)
+        .bind(
+          quiz.get("question"),
+          quiz.get("answerType"),
+          quiz.get("explanation") || null,
+          quiz.get("status"),
+          quiz.get("creatorId"),
+          quiz.get("createdAt"),
+        ),
+    ];
+
+    if (
+      solution.type === "single_choice" ||
+      solution.type === "multiple_choice"
+    ) {
+      statements.push(
+        this.createChoicesStatement(solutionTable, solution.choices),
+      );
+    }
+
+    statements.push(
+      this.db.prepare(`
+        SELECT id, question, answer_type, solution_id, explanation, status, creator_id, created_at, approved_at
+        FROM Quiz WHERE id = (SELECT MAX(id) FROM Quiz)
+      `),
+    );
+
+    return statements;
+  }
+
+  private createSolutionStatement(
+    solution: components["schemas"]["Solution"],
+  ): D1PreparedStatement {
+    switch (solution.type) {
+      case "boolean":
+        return this.db
+          .prepare("INSERT INTO BooleanSolution (value) VALUES (?)")
+          .bind(solution.value);
+
+      case "free_text":
+        return this.db
+          .prepare(`
             INSERT INTO FreeTextSolution (correct_answer, matching_strategy, case_sensitive)
             VALUES (?, ?, ?)
           `)
-            .bind(
-              solution.correctAnswer,
-              solution.matchingStrategy || "exact",
-              solution.caseSensitive || false,
-            )
-            .run(),
-          (error) =>
-            RepositoryErrorFactory.createFailed(
-              "FreeTextSolution",
-              error instanceof Error
-                ? error
-                : new Error("Unknown free text solution creation error"),
-            ),
-        ).map((result) => result.meta.last_row_id?.toString() || "");
-      }
-
-      case "single_choice": {
-        return ResultAsync.fromPromise(
-          this.db
-            .prepare("INSERT INTO SingleChoiceSolution () VALUES ()")
-            .run(),
-          (error) =>
-            RepositoryErrorFactory.createFailed(
-              "SingleChoiceSolution",
-              error instanceof Error
-                ? error
-                : new Error("Unknown single choice solution creation error"),
-            ),
-        ).andThen((result) => {
-          const solutionId = result.meta.last_row_id?.toString() || "";
-          return this.createChoices(solutionId, solution.choices).map(
-            () => solutionId,
+          .bind(
+            solution.correctAnswer,
+            solution.matchingStrategy || "exact",
+            solution.caseSensitive || false,
           );
-        });
-      }
 
-      case "multiple_choice": {
-        return ResultAsync.fromPromise(
-          this.db
-            .prepare(`
-            INSERT INTO MultipleChoiceSolution (min_correct_answers)
-            VALUES (?)
-          `)
-            .bind(solution.minCorrectAnswers || 1)
-            .run(),
-          (error) =>
-            RepositoryErrorFactory.createFailed(
-              "MultipleChoiceSolution",
-              error instanceof Error
-                ? error
-                : new Error("Unknown multiple choice solution creation error"),
-            ),
-        ).andThen((result) => {
-          const solutionId = result.meta.last_row_id?.toString() || "";
-          return this.createChoices(solutionId, solution.choices).map(
-            () => solutionId,
-          );
-        });
-      }
-
-      default:
-        return errAsync(
-          RepositoryErrorFactory.createFailed(
-            "Solution",
-            new Error(
-              `Unsupported solution type: ${(solution as { type: string }).type}`,
-            ),
-          ),
+      case "single_choice":
+        // MySQL構文の () VALUES () は無効。列を指定しないDEFAULT VALUESを使う
+        return this.db.prepare(
+          "INSERT INTO SingleChoiceSolution DEFAULT VALUES",
         );
+
+      case "multiple_choice":
+        return this.db
+          .prepare(
+            "INSERT INTO MultipleChoiceSolution (min_correct_answers) VALUES (?)",
+          )
+          .bind(solution.minCorrectAnswers || 1);
     }
   }
 
-  private createChoices(
-    solutionId: string,
+  /**
+   * 選択肢のINSERT文を組み立てる
+   *
+   * 選択肢数に上限が無いため、D1の「1文あたりのバインドパラメータ上限」と
+   * 「1リクエストあたりのクエリ数上限」を避けるべく、選択肢配列をJSON化した
+   * 1個のパラメータをjson_each()で展開してSELECTから一括INSERTする。
+   */
+  private createChoicesStatement(
+    solutionTable: string,
     choices: components["schemas"]["Choice"][],
-  ): ResultAsync<void, RepositoryError> {
-    return ResultAsync.fromPromise(
-      (async () => {
-        const stmt = this.db.prepare(`
-          INSERT INTO Choice (solution_id, text, order_index, is_correct)
-          VALUES (?, ?, ?, ?)
-        `);
-
-        for (const choice of choices) {
-          await stmt
-            .bind(solutionId, choice.text, choice.orderIndex, choice.isCorrect)
-            .run();
-        }
-      })(),
-      (error) =>
-        RepositoryErrorFactory.createFailed(
-          "Choice",
-          error instanceof Error
-            ? error
-            : new Error("Unknown choice creation error"),
-        ),
-    );
+  ): D1PreparedStatement {
+    return this.db
+      .prepare(`
+        INSERT INTO Choice (quiz_id, solution_id, text, order_index, is_correct)
+        SELECT (SELECT MAX(id) FROM Quiz), (SELECT MAX(id) FROM ${solutionTable}),
+               json_extract(j.value, '$.text'), json_extract(j.value, '$.orderIndex'), json_extract(j.value, '$.isCorrect')
+        FROM json_each(?) AS j
+        ORDER BY j.key
+      `)
+      .bind(JSON.stringify(choices));
   }
 
   private executeQueryWithSolution(

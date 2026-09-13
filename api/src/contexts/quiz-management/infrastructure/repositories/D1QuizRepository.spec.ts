@@ -1,4 +1,11 @@
 import { describe, expect, test } from "vitest";
+import type { components } from "../../../../shared/types";
+import {
+  CreatorId,
+  QuizId,
+  QuizSummary,
+  SolutionId,
+} from "../../domain/entities/quiz-summary/QuizSummary";
 import { D1QuizRepository } from "./D1QuizRepository";
 
 /**
@@ -22,6 +29,8 @@ import { D1QuizRepository } from "./D1QuizRepository";
 function createFakeD1Database(options: {
   firstResult?: unknown;
   batchError?: Error;
+  // batch()の最後の文（読み戻しのSELECT）が返す行。指定が無ければ空配列を返す
+  batchReadbackRow?: unknown;
   onBatch?: (statements: { sql: string; params: unknown[] }[]) => void;
   onPrepare?: (sql: string, params: unknown[]) => void;
 }): D1Database {
@@ -60,7 +69,17 @@ function createFakeD1Database(options: {
       if (options.batchError) {
         throw options.batchError;
       }
-      return statements.map(() => ({ success: true, meta: { changes: 1 } }));
+      return statements.map((_statement, index) => {
+        const isLastStatement = index === statements.length - 1;
+        return {
+          success: true,
+          meta: { changes: 1 },
+          results:
+            isLastStatement && options.batchReadbackRow !== undefined
+              ? [options.batchReadbackRow]
+              : [],
+        };
+      });
     },
   };
 
@@ -72,6 +91,32 @@ const existingBooleanQuiz = {
   solution_id: "10",
   answer_type: "boolean",
 };
+
+/**
+ * findById の SELECT が返す D1 の生の行
+ *
+ * D1 は INTEGER 列を number、boolean 列を 0/1 で返す。選択肢は
+ * GROUP_CONCAT(json_object(...)) で連結された文字列になる。create() の
+ * 読み戻し行にも列の形は同じなので共有する。
+ */
+const d1QuizRow = (overrides: Record<string, unknown> = {}) => ({
+  id: 3,
+  question: "TypeScriptは静的型付けか",
+  answer_type: "boolean",
+  solution_id: 7,
+  explanation: null,
+  status: "draft",
+  creator_id: 5,
+  created_at: "2026-09-13 00:00:00",
+  approved_at: null,
+  boolean_value: 0,
+  correct_answer: null,
+  matching_strategy: null,
+  case_sensitive: null,
+  choices: null,
+  min_correct_answers: null,
+  ...overrides,
+});
 
 describe("D1QuizRepository", () => {
   describe("delete", () => {
@@ -182,31 +227,6 @@ describe("D1QuizRepository", () => {
   });
 
   describe("findById", () => {
-    /**
-     * findById の SELECT が返す D1 の生の行
-     *
-     * D1 は INTEGER 列を number、boolean 列を 0/1 で返す。選択肢は
-     * GROUP_CONCAT(json_object(...)) で連結された文字列になる。
-     */
-    const d1QuizRow = (overrides: Record<string, unknown> = {}) => ({
-      id: 3,
-      question: "TypeScriptは静的型付けか",
-      answer_type: "boolean",
-      solution_id: 7,
-      explanation: null,
-      status: "draft",
-      creator_id: 5,
-      created_at: "2026-09-13 00:00:00",
-      approved_at: null,
-      boolean_value: 0,
-      correct_answer: null,
-      matching_strategy: null,
-      case_sensitive: null,
-      choices: null,
-      min_correct_answers: null,
-      ...overrides,
-    });
-
     test("D1の数値の行から文字列IDのレスポンスを返す", async () => {
       // Arrange
       const db = createFakeD1Database({ firstResult: d1QuizRow() });
@@ -304,6 +324,211 @@ describe("D1QuizRepository", () => {
       // Assert: UpdateQuizUseCase/DeleteQuizUseCase/ChangeQuizStatusUseCaseは
       // いずれも先頭でfindByIdを呼ぶため、ここがthrowすると全書き込み操作が
       // 契約外の500になる
+      expect(result.isErr()).toBe(true);
+    });
+  });
+
+  describe("create", () => {
+    /**
+     * create() に渡す入力。id / solutionId は暫定値で、D1 の採番値に
+     * 差し替えられるため、読み戻し結果と一致していないことをテストで確認する。
+     */
+    const buildQuiz = (
+      overrides: Partial<{
+        answerType: components["schemas"]["AnswerType"];
+        status: components["schemas"]["QuizStatus"];
+        creatorId: string;
+      }> = {},
+    ): QuizSummary =>
+      QuizSummary.build({
+        id: QuizId.parse("ignored-input-id"),
+        question: "TypeScriptは静的型付けか",
+        answerType: overrides.answerType ?? "boolean",
+        solutionId: SolutionId.parse("ignored-input-solution-id"),
+        status: overrides.status ?? "draft",
+        creatorId: CreatorId.parse(overrides.creatorId ?? "fp-creator"),
+        createdAt: "2026-09-14 00:00:00",
+        tagIds: [],
+      });
+
+    const booleanSolution: components["schemas"]["Solution"] = {
+      type: "boolean",
+      id: "ignored-input-solution-id",
+      value: true,
+    };
+
+    const singleChoiceSolution: components["schemas"]["Solution"] = {
+      type: "single_choice",
+      id: "ignored-input-solution-id",
+      choices: [
+        {
+          id: "ignored-a",
+          solutionId: "ignored",
+          text: "a",
+          orderIndex: 0,
+          isCorrect: false,
+        },
+        {
+          id: "ignored-b",
+          solutionId: "ignored",
+          text: "b",
+          orderIndex: 1,
+          isCorrect: true,
+        },
+      ],
+    };
+
+    test("run()を呼ばずbatch()1回で作成する", async () => {
+      const runOrFirstCalls: string[] = [];
+      let batchCalled = false;
+      const db = createFakeD1Database({
+        onPrepare: (sql) => {
+          runOrFirstCalls.push(sql);
+        },
+        onBatch: () => {
+          batchCalled = true;
+        },
+        batchReadbackRow: d1QuizRow({
+          answer_type: "boolean",
+          boolean_value: 1,
+        }),
+      });
+      const repository = new D1QuizRepository(db);
+
+      await repository.create(buildQuiz(), booleanSolution);
+
+      // Assert: onPrepareはrun()/first()が呼ばれた時だけ発火する。batch()に
+      // 渡すだけのstatementはbind()までしか呼ばないため記録されない
+      expect(runOrFirstCalls).toEqual([]);
+      expect(batchCalled).toBe(true);
+    });
+
+    test("文の順序はsolution→Quiz→読み戻しのSELECT(選択肢型でない場合)", async () => {
+      let batched: { sql: string; params: unknown[] }[] = [];
+      const db = createFakeD1Database({
+        onBatch: (statements) => {
+          batched = statements;
+        },
+        batchReadbackRow: d1QuizRow({
+          answer_type: "boolean",
+          boolean_value: 1,
+        }),
+      });
+      const repository = new D1QuizRepository(db);
+
+      await repository.create(buildQuiz(), booleanSolution);
+
+      const sqls = batched.map((s) => s.sql);
+      expect(sqls).toHaveLength(3);
+      expect(sqls[0]).toMatch(/INSERT INTO BooleanSolution/i);
+      expect(sqls[1]).toMatch(/INSERT INTO Quiz\b/i);
+      expect(sqls[2]).toMatch(/SELECT[\s\S]*FROM Quiz/i);
+    });
+
+    test("QuizのINSERTにid列を含まない", async () => {
+      let batched: { sql: string; params: unknown[] }[] = [];
+      const db = createFakeD1Database({
+        onBatch: (statements) => {
+          batched = statements;
+        },
+        batchReadbackRow: d1QuizRow({
+          answer_type: "boolean",
+          boolean_value: 1,
+        }),
+      });
+      const repository = new D1QuizRepository(db);
+
+      await repository.create(buildQuiz(), booleanSolution);
+
+      const quizInsert = batched.find((s) => /INSERT INTO Quiz\b/i.test(s.sql));
+      expect(quizInsert).toBeDefined();
+      expect(quizInsert?.sql).not.toMatch(/INSERT INTO Quiz\s*\(\s*id\b/i);
+    });
+
+    test("single_choiceのSQLに() VALUES ()を含まない", async () => {
+      let batched: { sql: string; params: unknown[] }[] = [];
+      const db = createFakeD1Database({
+        onBatch: (statements) => {
+          batched = statements;
+        },
+        batchReadbackRow: d1QuizRow({
+          answer_type: "single_choice",
+          boolean_value: null,
+        }),
+      });
+      const repository = new D1QuizRepository(db);
+
+      await repository.create(
+        buildQuiz({ answerType: "single_choice" }),
+        singleChoiceSolution,
+      );
+
+      const solutionInsert = batched.find((s) =>
+        /INSERT INTO SingleChoiceSolution/i.test(s.sql),
+      );
+      expect(solutionInsert).toBeDefined();
+      expect(solutionInsert?.sql).not.toContain("() VALUES ()");
+    });
+
+    test("選択肢型はChoiceのINSERTがsolutionとQuizの後・読み戻しの前に入り、quiz_idを含みjson_eachでパラメータ1個にする", async () => {
+      let batched: { sql: string; params: unknown[] }[] = [];
+      const db = createFakeD1Database({
+        onBatch: (statements) => {
+          batched = statements;
+        },
+        batchReadbackRow: d1QuizRow({
+          answer_type: "single_choice",
+          boolean_value: null,
+        }),
+      });
+      const repository = new D1QuizRepository(db);
+
+      await repository.create(
+        buildQuiz({ answerType: "single_choice" }),
+        singleChoiceSolution,
+      );
+
+      expect(batched).toHaveLength(4);
+      const choiceInsert = batched[2];
+      expect(choiceInsert?.sql).toMatch(/INSERT INTO Choice/i);
+      expect(choiceInsert?.sql).toContain("quiz_id");
+      expect(choiceInsert?.sql).toMatch(/json_each\(\?\)/i);
+      expect(choiceInsert?.params).toHaveLength(1);
+      expect(JSON.parse(String(choiceInsert?.params[0]))).toHaveLength(2);
+      expect(batched[3]?.sql).toMatch(/SELECT[\s\S]*FROM Quiz/i);
+    });
+
+    test("読み戻した数値の行からid/solutionId/creatorIdを文字列で返す", async () => {
+      const db = createFakeD1Database({
+        batchReadbackRow: d1QuizRow({
+          id: 42,
+          solution_id: 9,
+          creator_id: 5,
+          answer_type: "boolean",
+          boolean_value: 1,
+        }),
+      });
+      const repository = new D1QuizRepository(db);
+
+      const result = await repository.create(buildQuiz(), booleanSolution);
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value.get("id")).toBe("42");
+        expect(result.value.get("solutionId")).toBe("9");
+        expect(result.value.get("creatorId")).toBe("5");
+      }
+    });
+
+    test("batchが失敗した場合はErrを返し、例外を投げない", async () => {
+      // Arrange: creatorIdがまだfingerprintの段階ではFK制約違反になる
+      const db = createFakeD1Database({
+        batchError: new Error("FOREIGN KEY constraint failed"),
+      });
+      const repository = new D1QuizRepository(db);
+
+      const result = await repository.create(buildQuiz(), booleanSolution);
+
       expect(result.isErr()).toBe(true);
     });
   });
