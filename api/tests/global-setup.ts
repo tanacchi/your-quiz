@@ -1,10 +1,12 @@
 import { type ChildProcess, spawn } from "node:child_process";
+import { type BddTarget, baseUrlOf, bddTargets } from "./bdd-targets";
 
 /**
  * CI/CD環境対応のグローバルサーバー管理
  *
- * BDDテスト実行前にwrangler dev --env dev-mockを自動起動し、
+ * BDDテスト実行前に `wrangler dev` を自動起動し、
  * テスト終了後に確実にプロセスを終了します。
+ * 起動するスクリプトとポートは `bdd-targets.ts` のターゲットで決まります。
  */
 
 declare global {
@@ -20,7 +22,7 @@ declare global {
  * サーバーのヘルスチェック
  * 指定されたURLが正常に応答するまで待機
  */
-async function waitForServer(url: string, timeoutMs = 30000): Promise<void> {
+async function waitForServer(url: string, timeoutMs: number): Promise<void> {
   const startTime = Date.now();
   const checkInterval = 500; // 500ms間隔でチェック
 
@@ -42,13 +44,18 @@ async function waitForServer(url: string, timeoutMs = 30000): Promise<void> {
 }
 
 /**
- * BDDテスト開始前のサーバー起動
+ * 指定ターゲットのサーバーを起動し、ヘルスチェックが通るまで待つ
  */
-export async function setup(): Promise<void> {
-  console.log("🚀 Starting quiz-api server for BDD tests...");
+export async function startBddServer(
+  target: BddTarget,
+  timeoutMs = 30000,
+): Promise<void> {
+  console.log(
+    `🚀 Starting quiz-api server for BDD tests (pnpm ${target.script})...`,
+  );
 
-  // wrangler dev --env dev-mock をバックグラウンドで起動
-  const serverProcess = spawn("pnpm", ["dev:mock"], {
+  // wrangler dev をバックグラウンドで起動
+  const serverProcess = spawn("pnpm", [target.script], {
     stdio: ["ignore", "pipe", "pipe"],
     detached: true, // プロセスグループ作成
     cwd: process.cwd(),
@@ -79,15 +86,15 @@ export async function setup(): Promise<void> {
   });
 
   // ヘルスチェック待機
-  await waitForServer("http://localhost:8787/health", 30000);
+  await waitForServer(`${baseUrlOf(target)}/health`, timeoutMs);
 
   console.log("✅ Server setup completed for BDD tests");
 }
 
 /**
- * BDDテスト終了後のサーバー停止
+ * 起動中のBDDサーバーを停止する
  */
-export async function teardown(): Promise<void> {
+export async function stopBddServer(): Promise<void> {
   console.log("🛑 Stopping quiz-api server...");
 
   if (global.__SERVER_PROCESS__) {
@@ -116,4 +123,18 @@ export async function teardown(): Promise<void> {
   } else {
     console.log("ℹ️ No server process to stop");
   }
+}
+
+/**
+ * BDDテスト開始前のサーバー起動（Mockターゲット）
+ */
+export async function setup(): Promise<void> {
+  await startBddServer(bddTargets.mock);
+}
+
+/**
+ * BDDテスト終了後のサーバー停止
+ */
+export async function teardown(): Promise<void> {
+  await stopBddServer();
 }

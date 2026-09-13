@@ -8,7 +8,12 @@ declare global {
 // PactumJS global setup
 beforeAll(() => {
   // Set base URL for all API calls
-  pactum.request.setBaseUrl("http://localhost:8787");
+  // BDDの各vitest設定が `test.env.BDD_BASE_URL` でターゲットのURLを渡す。
+  // unitテスト（vitest.config.ts）も本ファイルを読み込むため、未設定時は
+  // 従来どおりMockターゲットのURLにする。
+  pactum.request.setBaseUrl(
+    process.env["BDD_BASE_URL"] ?? "http://localhost:8787",
+  );
 
   // Set default timeout
   pactum.request.setDefaultTimeout(30000);
