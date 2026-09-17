@@ -28,12 +28,11 @@ export class MockQuizRepository implements IQuizRepository {
 
   create(
     quiz: NewQuiz,
-    _solution: components["schemas"]["SolutionCreate"],
+    solution: components["schemas"]["SolutionCreate"],
   ): ResultAsync<QuizSummary, RepositoryError> {
-    // id/solutionIdはストアの連番カウンタが払い出す（D1のAUTOINCREMENTと同じ形式）
-    // Note: _solution は実際には使用しないが、インターフェースの互換性のため受け取る
-    // （作成時のsolutionを保持して返す対応はissue #76の別ステップで行う）
-    const created = this.store.createQuiz(quiz);
+    // id/solutionIdはストアの連番カウンタが払い出す（D1のAUTOINCREMENTと同じ形式）。
+    // 実際に送信されたsolutionもストアに保持し、findByIdでそのまま返す
+    const created = this.store.createQuiz(quiz, solution);
 
     return ResultAsync.fromPromise(
       new Promise((resolve) => resolve(created)),
@@ -54,6 +53,17 @@ export class MockQuizRepository implements IQuizRepository {
       new Promise((resolve, reject) => {
         const quiz = this.store.findById(id);
         if (quiz) {
+          // 作成時に実際に送信されたsolutionがあればそれを使う。
+          // JSONフィクスチャ由来の行（create()を経由していない）は
+          // ストアにsolutionを持たないため、最小限のモックにフォールバックする
+          const storedSolution = this.store.findSolution(quiz.get("id"));
+          const solution = storedSolution
+            ? this.toSolutionResponse(storedSolution, quiz.get("solutionId"))
+            : this.createMockSolution(
+                quiz.get("answerType"),
+                quiz.get("solutionId"),
+              );
+
           // QuizSummaryからQuizResponse形式に変換（モック用）
           const quizResponse: components["schemas"]["QuizResponse"] = {
             id: quiz.get("id"),
@@ -63,11 +73,7 @@ export class MockQuizRepository implements IQuizRepository {
             status: quiz.get("status"),
             creatorId: quiz.get("creatorId"),
             createdAt: quiz.get("createdAt"),
-            // モック用の最小限のsolution
-            solution: this.createMockSolution(
-              quiz.get("answerType"),
-              quiz.get("solutionId"),
-            ),
+            solution,
           };
 
           // オプショナルフィールドを追加
@@ -103,7 +109,69 @@ export class MockQuizRepository implements IQuizRepository {
   }
 
   /**
+   * 作成時に実際に送信された(ID不要の)SolutionCreateを、レスポンス用の
+   * IDつきSolutionに変換する
+   */
+  private toSolutionResponse(
+    solution: components["schemas"]["SolutionCreate"],
+    solutionId: string,
+  ): components["schemas"]["Solution"] {
+    switch (solution.type) {
+      case "boolean":
+        return { type: "boolean", id: solutionId, value: solution.value };
+      case "free_text":
+        return {
+          type: "free_text",
+          id: solutionId,
+          correctAnswer: solution.correctAnswer,
+          // matchingStrategy/caseSensitiveはOpenAPIスキーマ上デフォルト値付きの
+          // 必須フィールド（リクエストのバリデーション層で既定値が補われた後の
+          // 型）なので、ここでのフォールバックは不要
+          matchingStrategy: solution.matchingStrategy,
+          caseSensitive: solution.caseSensitive,
+        };
+      case "single_choice":
+        return {
+          type: "single_choice",
+          id: solutionId,
+          choices: solution.choices.map((choice, index) =>
+            this.toChoiceResponse(choice, solutionId, index),
+          ),
+        };
+      case "multiple_choice":
+        return {
+          type: "multiple_choice",
+          id: solutionId,
+          minCorrectAnswers: solution.minCorrectAnswers,
+          choices: solution.choices.map((choice, index) =>
+            this.toChoiceResponse(choice, solutionId, index),
+          ),
+        };
+    }
+  }
+
+  private toChoiceResponse(
+    choice: components["schemas"]["ChoiceCreate"],
+    solutionId: string,
+    index: number,
+  ): components["schemas"]["Choice"] {
+    return {
+      id: `${solutionId}-${index}`,
+      solutionId,
+      text: choice.text,
+      orderIndex: choice.orderIndex,
+      isCorrect: choice.isCorrect,
+    };
+  }
+
+  /**
    * モック用の最小限のSolutionオブジェクトを作成
+   *
+   * 作成時に実際のsolutionを保持していないフィクスチャ行（JSONから
+   * 読み込んだ既定データ）のためのフォールバック。既定フィクスチャは
+   * boolean（quiz-2）とsingle_choice（quiz-1）の2件のみのため、その2種類
+   * だけを扱う。他の形式で作成したクイズは常にcreate()経由でstore.solutions
+   * にsolutionを持つため、ここには到達しない。
    */
   private createMockSolution(
     answerType: string,
@@ -115,14 +183,6 @@ export class MockQuizRepository implements IQuizRepository {
           type: "boolean",
           id: solutionId,
           value: false,
-        };
-      case "free_text":
-        return {
-          type: "free_text",
-          id: solutionId,
-          correctAnswer: "mock answer",
-          matchingStrategy: "exact",
-          caseSensitive: false,
         };
       case "single_choice":
         return {
@@ -138,23 +198,10 @@ export class MockQuizRepository implements IQuizRepository {
             },
           ],
         };
-      case "multiple_choice":
-        return {
-          type: "multiple_choice",
-          id: solutionId,
-          minCorrectAnswers: 1,
-          choices: [
-            {
-              id: "choice-1",
-              solutionId,
-              text: "Mock choice",
-              orderIndex: 1,
-              isCorrect: true,
-            },
-          ],
-        };
       default:
-        throw new Error(`Unsupported answer type: ${answerType}`);
+        throw new Error(
+          `No mock solution fixture available for answer type: ${answerType}`,
+        );
     }
   }
 

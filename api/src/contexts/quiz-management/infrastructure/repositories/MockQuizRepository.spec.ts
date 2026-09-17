@@ -243,49 +243,48 @@ describe("MockQuizRepository", () => {
       );
     });
 
-    describe("createMockSolution", () => {
+    describe("作成時のsolution", () => {
       test.each([
-        ["boolean", "boolean", { type: "boolean", value: false }],
+        ["boolean", { type: "boolean", value: true }],
         [
-          "free_text",
           "free_text",
           {
             type: "free_text",
-            correctAnswer: "mock answer",
-            matchingStrategy: "exact",
-            caseSensitive: false,
+            correctAnswer: "actual answer",
+            matchingStrategy: "partial",
+            caseSensitive: true,
           },
         ],
         [
-          "single_choice",
           "single_choice",
           {
             type: "single_choice",
-            choices: expect.arrayContaining([
-              expect.objectContaining({ text: "Mock choice", isCorrect: true }),
-            ]),
+            choices: [
+              { text: "actual a", orderIndex: 0, isCorrect: false },
+              { text: "actual b", orderIndex: 1, isCorrect: true },
+            ],
           },
         ],
         [
           "multiple_choice",
-          "multiple_choice",
           {
             type: "multiple_choice",
-            minCorrectAnswers: 1,
-            choices: expect.arrayContaining([
-              expect.objectContaining({ text: "Mock choice", isCorrect: true }),
-            ]),
+            minCorrectAnswers: 2,
+            choices: [
+              { text: "actual a", orderIndex: 0, isCorrect: true },
+              { text: "actual b", orderIndex: 1, isCorrect: true },
+            ],
           },
         ],
       ])(
-        "should create proper mock solution for %s",
-        async (_description, answerType, expectedSolution) => {
+        "%sで作成した内容がfindByIdで返る（モックの固定値にフォールバックしない）",
+        async (_description, solution) => {
           // Arrange
           const created = await repository.create(
             createNewQuiz({
-              answerType: answerType as components["schemas"]["AnswerType"],
+              answerType: solution.type as components["schemas"]["AnswerType"],
             }),
-            mockSolution,
+            solution as components["schemas"]["SolutionCreate"],
           );
           expect(created.isOk()).toBe(true);
           if (!created.isOk()) return;
@@ -296,22 +295,43 @@ describe("MockQuizRepository", () => {
 
           // Assert
           expect(result.isOk()).toBe(true);
-          if (result.isOk()) {
-            expect(result.value.solution).toMatchObject(expectedSolution);
+          if (!result.isOk()) return;
+          expect(result.value.solution).toMatchObject(solution);
+
+          // 選択肢型は各Choiceにidが付与され、solutionIdがクイズのsolutionIdと
+          // 一致すること（D1のChoice.id/solution_idに相当）も確認する
+          const returnedSolution = result.value.solution;
+          if (
+            returnedSolution.type === "single_choice" ||
+            returnedSolution.type === "multiple_choice"
+          ) {
+            for (const choice of returnedSolution.choices) {
+              expect(choice.id.length).toBeGreaterThan(0);
+              expect(choice.solutionId).toBe(result.value.solutionId);
+            }
           }
         },
       );
 
-      test("should throw error for unsupported answer type", async () => {
-        // This test verifies the internal createMockSolution method
-        // We need to create a scenario where it would be called with invalid type
-        // Since this is a private method, we'll test it indirectly by creating
-        // a quiz with an invalid answer type (though this shouldn't happen in practice)
+      test.each([
+        ["quiz-1", "single_choice"],
+        ["quiz-2", "boolean"],
+      ])(
+        "solutionを保持していないフィクスチャ行(%s)はモックの固定solutionにフォールバックする",
+        async (id, expectedAnswerType) => {
+          // Arrange: デフォルトフィクスチャはcreate()を経由しておらず、
+          // MockQuizStoreは実際のsolutionを持たない
 
-        // For now, we'll test the happy path since the createMockSolution
-        // is a private method and should only be called with valid types
-        expect(true).toBe(true); // Placeholder test
-      });
+          // Act
+          const result = await repository.findById(id);
+
+          // Assert
+          expect(result.isOk()).toBe(true);
+          if (result.isOk()) {
+            expect(result.value.solution.type).toBe(expectedAnswerType);
+          }
+        },
+      );
     });
   });
 
