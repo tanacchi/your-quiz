@@ -241,22 +241,16 @@ describe("CreateQuizUseCase", () => {
     });
 
     describe("edge cases", () => {
-      test("should generate unique ID for each quiz", async () => {
-        // Arrange
-        const originalDateNow = Date.now;
-        let callCount = 0;
-        Date.now = vi.fn(() => {
-          callCount++;
-          return 1000 + callCount;
-        });
-
-        const mockQuizSummary1 = {
+      test("IDを自分で発行せず、リポジトリにid/solutionIdを渡さない。レスポンスはリポジトリの採番値になる", async () => {
+        // Arrange: IDの採番はリポジトリ(D1のAUTOINCREMENTやMockの連番カウンタ)の
+        // 責務であり、UseCaseはDate.nowでIDを作らない(issue #76)
+        const mockQuizSummary = {
           get: vi.fn((key: string) => {
             const data: Record<string, unknown> = {
-              id: "1001",
+              id: "42",
               question: "First question",
               answerType: "boolean",
-              solutionId: "solution-1",
+              solutionId: "7",
               status: "pending_approval",
               creatorId: "mock-user-id",
               createdAt: "2024-01-01 00:00:00",
@@ -265,47 +259,36 @@ describe("CreateQuizUseCase", () => {
           }),
         } as unknown as QuizSummary;
 
-        const mockQuizSummary2 = {
-          get: vi.fn((key: string) => {
-            const data: Record<string, unknown> = {
-              id: "1002",
-              question: "Second question",
-              answerType: "boolean",
-              solutionId: "solution-2",
-              status: "pending_approval",
-              creatorId: "mock-user-id",
-              createdAt: "2024-01-01 00:00:00",
-            };
-            return data[key];
-          }),
-        } as unknown as QuizSummary;
-
-        vi.mocked(mockRepository.create)
-          .mockReturnValueOnce(createImmediateSuccess(mockQuizSummary1))
-          .mockReturnValueOnce(createImmediateSuccess(mockQuizSummary2));
+        vi.mocked(mockRepository.create).mockReturnValue(
+          createImmediateSuccess(mockQuizSummary),
+        );
 
         // Act
-        const result1 = await useCase.execute({
+        const result = await useCase.execute({
           question: "First question",
           answerType: "boolean",
           solution: { type: "boolean", value: true },
           creatorId: "user-123",
         });
-        const result2 = await useCase.execute({
-          question: "Second question",
-          answerType: "boolean",
-          solution: { type: "boolean", value: false },
-          creatorId: "user-123",
-        });
 
         // Assert
-        expect(result1.isOk() && result2.isOk()).toBe(true);
-        if (result1.isOk() && result2.isOk()) {
-          expect(result1.value.id).not.toBe(result2.value.id);
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          expect(result.value.id).toBe("42");
+          expect(result.value.solutionId).toBe("7");
+          expect(result.value.createdAt).toBe("2024-01-01 00:00:00");
         }
 
-        // Cleanup
-        Date.now = originalDateNow;
+        // リポジトリに渡す第1引数は、id/solutionIdが決まる前の採番前入力
+        // (NewQuiz、プレーンオブジェクト)であり、QuizSummaryエンティティでは
+        // ない(QuizSummaryなら.get()メソッドを持つはず)
+        const [passedQuiz] =
+          vi.mocked(mockRepository.create).mock.calls[0] ?? [];
+        expect(
+          typeof (passedQuiz as { get?: unknown } | undefined)?.get,
+        ).not.toBe("function");
+        expect(Object.keys(passedQuiz ?? {})).not.toContain("id");
+        expect(Object.keys(passedQuiz ?? {})).not.toContain("solutionId");
       });
     });
 
@@ -344,7 +327,7 @@ describe("CreateQuizUseCase", () => {
         }
         const [passedQuiz] =
           vi.mocked(mockRepository.create).mock.calls[0] ?? [];
-        expect(passedQuiz?.get("status")).toBe("draft");
+        expect(passedQuiz?.status).toBe("draft");
       });
 
       test.each([
@@ -389,7 +372,7 @@ describe("CreateQuizUseCase", () => {
           // できない(T-5)。実際にリポジトリへ渡されたstatusを検証する。
           const [passedQuiz] =
             vi.mocked(mockRepository.create).mock.calls[0] ?? [];
-          expect(passedQuiz?.get("status")).toBe("pending_approval");
+          expect(passedQuiz?.status).toBe("pending_approval");
         },
       );
     });

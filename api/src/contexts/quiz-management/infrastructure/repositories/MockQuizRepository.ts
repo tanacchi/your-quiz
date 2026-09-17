@@ -9,6 +9,7 @@ import type {
   QuizSummary,
   QuizSummaryData,
 } from "../../domain/entities/quiz-summary/QuizSummary";
+import type { NewQuiz } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import { MockQuizStore } from "./MockQuizStore";
 /**
@@ -26,15 +27,16 @@ export class MockQuizRepository implements IQuizRepository {
   constructor(private readonly store: MockQuizStore = new MockQuizStore()) {}
 
   create(
-    quiz: QuizSummary,
-    _solution: components["schemas"]["Solution"],
+    quiz: NewQuiz,
+    _solution: components["schemas"]["SolutionCreate"],
   ): ResultAsync<QuizSummary, RepositoryError> {
-    // モックデータに追加（実際のD1では永続化）
+    // id/solutionIdはストアの連番カウンタが払い出す（D1のAUTOINCREMENTと同じ形式）
     // Note: _solution は実際には使用しないが、インターフェースの互換性のため受け取る
-    this.store.add(quiz);
+    // （作成時のsolutionを保持して返す対応はissue #76の別ステップで行う）
+    const created = this.store.createQuiz(quiz);
 
     return ResultAsync.fromPromise(
-      new Promise((resolve) => resolve(quiz)),
+      new Promise((resolve) => resolve(created)),
       (error) => {
         console.error("Failed to create quiz:", error);
         return RepositoryErrorFactory.createFailed(

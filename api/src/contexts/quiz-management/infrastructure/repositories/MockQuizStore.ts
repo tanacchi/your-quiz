@@ -1,5 +1,11 @@
 import { loadQuizFixtures } from "../../../../shared/fixtures";
-import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
+import {
+  CreatorId,
+  QuizId,
+  QuizSummary,
+  SolutionId,
+} from "../../domain/entities/quiz-summary/QuizSummary";
+import type { NewQuiz } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 
 /**
  * MockQuizRepository のインメモリデータストア。
@@ -14,6 +20,10 @@ import type { QuizSummary } from "../../domain/entities/quiz-summary/QuizSummary
  */
 export class MockQuizStore {
   private items: QuizSummary[];
+  // D1のAUTOINCREMENTと同じ形式(1始まりの数値文字列)にそろえる採番カウンタ。
+  // 既定フィクスチャのidは"quiz-1"のような非数値文字列なので衝突しない。
+  private nextQuizId = 1;
+  private nextSolutionId = 1;
 
   constructor(seed: readonly QuizSummary[] = loadQuizFixtures()) {
     this.items = [...seed];
@@ -25,6 +35,26 @@ export class MockQuizStore {
 
   add(quiz: QuizSummary): void {
     this.items.push(quiz);
+  }
+
+  /**
+   * 採番前のクイズ入力から連番のid/solutionIdを払い出し、QuizSummaryとして
+   * ストアに追加する（issue #76）。呼び出し側（UseCase）はIDを作らない。
+   */
+  createQuiz(input: NewQuiz): QuizSummary {
+    const quiz = QuizSummary.build({
+      id: QuizId.parse(String(this.nextQuizId++)),
+      question: input.question,
+      answerType: input.answerType,
+      solutionId: SolutionId.parse(String(this.nextSolutionId++)),
+      explanation: input.explanation,
+      status: input.status,
+      creatorId: CreatorId.parse(input.creatorId),
+      createdAt: input.createdAt,
+      tagIds: [],
+    });
+    this.items.push(quiz);
+    return quiz;
   }
 
   findById(id: string): QuizSummary | undefined {
@@ -49,6 +79,8 @@ export class MockQuizStore {
 
   reset(seed: readonly QuizSummary[] = loadQuizFixtures()): void {
     this.items = [...seed];
+    this.nextQuizId = 1;
+    this.nextSolutionId = 1;
   }
 }
 

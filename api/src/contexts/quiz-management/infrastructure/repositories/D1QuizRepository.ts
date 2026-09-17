@@ -8,6 +8,7 @@ import type {
   QuizSummary,
   QuizSummaryData,
 } from "../../domain/entities/quiz-summary/QuizSummary";
+import type { NewQuiz } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import { D1QuizSummaryMapper } from "../mappers/D1QuizSummaryMapper";
 import type { D1QueryParam, QuizRow } from "../mappers/d1-types";
@@ -58,8 +59,8 @@ export class D1QuizRepository implements IQuizRepository {
    * クイズとソリューションを作成
    */
   create(
-    quiz: QuizSummary,
-    solution: components["schemas"]["Solution"],
+    quiz: NewQuiz,
+    solution: components["schemas"]["SolutionCreate"],
   ): ResultAsync<QuizSummary, RepositoryError> {
     return this.executeCreateTransaction(quiz, solution).mapErr((error) => {
       console.error("Failed to create quiz:", error);
@@ -196,8 +197,8 @@ export class D1QuizRepository implements IQuizRepository {
    * 複数行INSERTの途中で値が変わる last_insert_rowid() は使わない）。
    */
   private executeCreateTransaction(
-    quiz: QuizSummary,
-    solution: components["schemas"]["Solution"],
+    quiz: NewQuiz,
+    solution: components["schemas"]["SolutionCreate"],
   ): ResultAsync<QuizSummary, RepositoryError> {
     const statements = this.buildCreateStatements(quiz, solution);
 
@@ -237,10 +238,10 @@ export class D1QuizRepository implements IQuizRepository {
    * 作成用batchの文を組み立てる（solution → Quiz → Choice[選択肢型のみ] → 読み戻し）
    */
   private buildCreateStatements(
-    quiz: QuizSummary,
-    solution: components["schemas"]["Solution"],
+    quiz: NewQuiz,
+    solution: components["schemas"]["SolutionCreate"],
   ): D1PreparedStatement[] {
-    const solutionTable = SOLUTION_TABLE_BY_ANSWER_TYPE[quiz.get("answerType")];
+    const solutionTable = SOLUTION_TABLE_BY_ANSWER_TYPE[quiz.answerType];
 
     const statements: D1PreparedStatement[] = [
       this.createSolutionStatement(solution),
@@ -250,12 +251,12 @@ export class D1QuizRepository implements IQuizRepository {
           VALUES (?, ?, (SELECT MAX(id) FROM ${solutionTable}), ?, ?, ?, ?, NULL)
         `)
         .bind(
-          quiz.get("question"),
-          quiz.get("answerType"),
-          quiz.get("explanation") || null,
-          quiz.get("status"),
-          quiz.get("creatorId"),
-          quiz.get("createdAt"),
+          quiz.question,
+          quiz.answerType,
+          quiz.explanation || null,
+          quiz.status,
+          quiz.creatorId,
+          quiz.createdAt,
         ),
     ];
 
@@ -279,7 +280,7 @@ export class D1QuizRepository implements IQuizRepository {
   }
 
   private createSolutionStatement(
-    solution: components["schemas"]["Solution"],
+    solution: components["schemas"]["SolutionCreate"],
   ): D1PreparedStatement {
     switch (solution.type) {
       case "boolean":
@@ -323,7 +324,7 @@ export class D1QuizRepository implements IQuizRepository {
    */
   private createChoicesStatement(
     solutionTable: string,
-    choices: components["schemas"]["Choice"][],
+    choices: components["schemas"]["ChoiceCreate"][],
   ): D1PreparedStatement {
     return this.db
       .prepare(`

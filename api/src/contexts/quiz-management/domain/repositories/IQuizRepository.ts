@@ -5,6 +5,7 @@ import type {
   QuizSummary,
   QuizSummaryData,
 } from "../entities/quiz-summary/QuizSummary";
+import type { NewQuiz } from "../entities/quiz-summary/quiz-summary-schema";
 
 /**
  * クイズリポジトリインターフェース
@@ -19,13 +20,16 @@ export interface IQuizRepository {
   /**
    * クイズを作成する
    *
-   * @param quiz - 作成するクイズエンティティ
-   * @param solution - クイズの正解データ
-   * @returns 作成されたクイズエンティティ、またはRepositoryError
+   * id / solutionId は実装（D1のAUTOINCREMENT、Mockの連番カウンタ）が
+   * 払い出すため、呼び出し側は持たない（issue #76）。
+   *
+   * @param quiz - 作成するクイズの内容（採番前）
+   * @param solution - クイズの正解データ（ID不要）
+   * @returns 作成されたクイズエンティティ（実装が払い出したid/solutionId込み）、またはRepositoryError
    */
   create(
-    quiz: QuizSummary,
-    solution: components["schemas"]["Solution"],
+    quiz: NewQuiz,
+    solution: components["schemas"]["SolutionCreate"],
   ): ResultAsync<QuizSummary, RepositoryError>;
 
   /**

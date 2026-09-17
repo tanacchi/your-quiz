@@ -1,11 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { components } from "../../../../shared/types";
-import {
-  CreatorId,
-  QuizId,
-  QuizSummary,
-  SolutionId,
-} from "../../domain/entities/quiz-summary/QuizSummary";
+import { CreatorId } from "../../domain/entities/quiz-summary/QuizSummary";
+import type { NewQuiz } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import { D1QuizRepository } from "./D1QuizRepository";
 
 /**
@@ -393,51 +389,33 @@ describe("D1QuizRepository", () => {
 
   describe("create", () => {
     /**
-     * create() に渡す入力。id / solutionId は暫定値で、D1 の採番値に
-     * 差し替えられるため、読み戻し結果と一致していないことをテストで確認する。
+     * create() に渡す採番前の入力。id / solutionId はリポジトリ（D1の
+     * AUTOINCREMENT）が払い出すため持たない（issue #76）。
      */
     const buildQuiz = (
       overrides: Partial<{
         answerType: components["schemas"]["AnswerType"];
-        status: components["schemas"]["QuizStatus"];
+        status: "draft" | "pending_approval";
         creatorId: string;
       }> = {},
-    ): QuizSummary =>
-      QuizSummary.build({
-        id: QuizId.parse("ignored-input-id"),
-        question: "TypeScriptは静的型付けか",
-        answerType: overrides.answerType ?? "boolean",
-        solutionId: SolutionId.parse("ignored-input-solution-id"),
-        status: overrides.status ?? "draft",
-        creatorId: CreatorId.parse(overrides.creatorId ?? "fp-creator"),
-        createdAt: "2026-09-14 00:00:00",
-        tagIds: [],
-      });
+    ): NewQuiz => ({
+      question: "TypeScriptは静的型付けか",
+      answerType: overrides.answerType ?? "boolean",
+      status: overrides.status ?? "draft",
+      creatorId: CreatorId.parse(overrides.creatorId ?? "fp-creator"),
+      createdAt: "2026-09-14 00:00:00",
+    });
 
-    const booleanSolution: components["schemas"]["Solution"] = {
+    const booleanSolution: components["schemas"]["SolutionCreate"] = {
       type: "boolean",
-      id: "ignored-input-solution-id",
       value: true,
     };
 
-    const singleChoiceSolution: components["schemas"]["Solution"] = {
+    const singleChoiceSolution: components["schemas"]["SolutionCreate"] = {
       type: "single_choice",
-      id: "ignored-input-solution-id",
       choices: [
-        {
-          id: "ignored-a",
-          solutionId: "ignored",
-          text: "a",
-          orderIndex: 0,
-          isCorrect: false,
-        },
-        {
-          id: "ignored-b",
-          solutionId: "ignored",
-          text: "b",
-          orderIndex: 1,
-          isCorrect: true,
-        },
+        { text: "a", orderIndex: 0, isCorrect: false },
+        { text: "b", orderIndex: 1, isCorrect: true },
       ],
     };
 
