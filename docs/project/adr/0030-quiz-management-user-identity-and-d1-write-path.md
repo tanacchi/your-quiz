@@ -90,22 +90,32 @@ BDD は `dev-mock`（Mock リポジトリ）でしか走らないため、これ
 | リスク | 発生確率 | 影響度 | 対策 |
 |--------|----------|--------|------|
 | 本番 D1 の batch がトランザクションとして振る舞わず、`MAX(id)` が他リクエストの行を指す | 低 | 高 | Cloudflare D1 の仕様（batch はトランザクション）に依拠し、ローカル D1 で実測する。前提をコードのコメントと単体テストで固定する |
-| 本番 D1 に衝突した選択肢や孤立行が既に存在する | 低 | 中 | 0003 の適用前に、衝突件数・孤立行・`sqlite_sequence` を確認する |
+| 本番 D1 に衝突した選択肢や孤立行が既に存在する | 低 | 中 | 0003 の適用前に、衝突件数・孤立行・`sqlite_sequence` を確認する。確認クエリを `api/migrations/quiz-db/checks/0003_choice_quiz_id_pre_apply_check.sql` に用意した（読み取り専用）。適用前に `wrangler d1 execute quiz-db --remote --file migrations/quiz-db/checks/0003_choice_quiz_id_pre_apply_check.sql` を実行し、件数が0でなければ対応方針（手動での `quiz_id` 確定、影響クイズの一時非公開化など）を決めてから 0003 を適用する |
 | `wrangler.jsonc` の `env.dev` が本番と同じ `database_id` を指しており、ローカル用の設定で本番 DB に書き込む | 中 | 高 | D1 の BDD は `--local` と専用の `--persist-to` だけを使う。`env.dev` の分離は別 issue で扱う |
 
 ## Implementation Notes
 
 ### Action Items
 
-- [ ] `api/migrations/quiz-db/0003_choice_add_quiz_id.sql`: `Choice.quiz_id` の追加、一意に決まる行の補完、インデックス
-- [ ] `D1QuizRepository`: findById で変換後の値を使う、作成を batch 化して採番値を返す、選択肢の取得・削除を `quiz_id` 基準にする
-- [ ] `IQuizRepository.create` を採番前の入力（`NewQuiz`）に変更し、UseCase から ID 生成をなくす
+- [x] `api/migrations/quiz-db/0003_choice_add_quiz_id.sql`: `Choice.quiz_id` の追加、一意に決まる行の補完、インデックス
+- [x] `D1QuizRepository`: findById で変換後の値を使う、作成を batch 化して採番値を返す、選択肢の取得・削除を `quiz_id` 基準にする
+- [x] `IQuizRepository.create` を採番前の入力（`NewQuiz`）に変更し、UseCase から ID 生成をなくす
 - [ ] `IUserIdentityFinder` の追加、`D1UserIdentityResolver` の初回同時解決の修正、`MockUserIdentityResolver` の連番化
 - [ ] quiz-management の UseCase に Resolver / Finder を注入し、所有者判定を `UserIdentity.id` に統一する
-- [ ] `QuizCreatorOnlyError` の詳細から作成者 ID を除く
-- [ ] ローカル D1 を対象にした BDD を追加し、CI で実行する
+- [x] `QuizCreatorOnlyError` の詳細から作成者 ID を除く
+- [x] ローカル D1 を対象にした BDD・統合テストを追加し、CI で実行する（下記「D1経路のCI回帰保護の実効範囲」参照。Quiz CRUD の HTTP 経由の保護は未完了）
 - [ ] TypeSpec の `creatorId` と ID 形式の記述を更新する
 - [ ] ADR-0026 / ADR-0028 / ADR-0029 に本 ADR への参照を追記する
+
+### D1経路のCI回帰保護の実効範囲（issue #76 本PR時点）
+
+Action Item「ローカル D1 を対象にした BDD を追加し、CI で実行する」は、次の3層で実現した。
+
+1. **`api/vitest.integration.d1.config.ts`**（`@cloudflare/vitest-pool-workers`、workerd を in-process 起動）: `D1QuizRepository.create/findById/delete` をHTTP・ミドルウェアを経由せず直接呼び出す。有効な `UserIdentity.id` をテスト内でSQLから直接用意できるため、Identity 解決（Phase 4-5）の完了を待たずに create/delete と batch の原子性を実機検証できる。作成の原子性（下記リスク表の1件目）は、FK 違反時に同一 batch 内の solution 行がロールバックされることをこのテストで実測済み。
+2. **`api/vitest.bdd.d1.config.ts`**（`wrangler dev --env dev` + PactumJS、HTTP経由）: `tests/features/d1/quiz-retrieval-d1.spec.ts` を追加し、`migrations/dev/seed.sql` のシード済みデータに対する `GET /manage/quizzes(/:id)` を実機で検証する。
+3. **`api/migrations/dev/seed.sql`**: 本PRの調査で、solution 系テーブル（Boolean/FreeText/SingleChoice/MultipleChoiceSolution）がそれぞれ独立に採番される前提を誤ってテーブル横断の通し番号で書いていたため、seed済みクイズ21件中14件が存在しない solution 行を指し、`Choice` は全件 `quiz_id` が NULL のまま（0003 のバックフィルは seed 適用より前のマイグレーション時点の既存データのみが対象で、seed 自身の行には効かない）という既存バグを発見・修正した。修正後の参照整合性は `api/tests/integration/d1/seed-consistency.spec.ts` で固定化している。
+
+**未完了（Phase 4-5 待ち）**: `POST/PATCH/DELETE /manage/quizzes` および `submit/approve/reject/publish` の**HTTP経由**のD1実機検証は、Identity 解決が無いと `creatorId` が UUID のまま FK 違反になるため実施できていない。この経路のCI回帰保護は、quiz-management の UseCase に Resolver/Finder を注入した後（Phase 5）に追加する。リポジトリ層（`D1QuizRepository` 自体のSQL）は上記1で担保済み。
 
 ### Timeline
 
@@ -125,6 +135,6 @@ BDD は `dev-mock`（Mock リポジトリ）でしか走らないため、これ
 ---
 
 **Created**: 2026-09-13
-**Last Updated**: 2026-09-13
+**Last Updated**: 2026-09-20
 **Authors**: Claude (Opus 5, background session)
 **Reviewers**: [@tanacchi](https://github.com/tanacchi)
