@@ -28,6 +28,7 @@
     "test:bdd": "vitest run --config=vitest.bdd.config.ts",
     "test:bdd-d1": "vitest run --config=vitest.bdd.d1.config.ts",
     "test:bdd:watch": "vitest --config=vitest.bdd.config.ts --ui --open --watch",
+    "test:integration-d1": "vitest run --config=vitest.integration.d1.config.ts",
     "test:tdd": "vitest run --coverage",
     "test:tdd:watch": "vitest --ui --open --watch --coverage",
     "typecheck": "tsc --noEmit",
@@ -40,10 +41,11 @@
     "zod": "^4.1.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.2.2",
+    "@cloudflare/vitest-pool-workers": "0.12.21",
     "@stryker-mutator/core": "^9.0.1",
     "@stryker-mutator/typescript-checker": "^9.0.1",
     "@stryker-mutator/vitest-runner": "^9.0.1",
-    "@biomejs/biome": "2.2.2",
     "@tsconfig/strictest": "^2.0.5",
     "@types/node": "^20.19.10",
     "@types/qs": "^6.14.0",
