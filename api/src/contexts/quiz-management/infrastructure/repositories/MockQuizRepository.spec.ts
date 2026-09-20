@@ -1,75 +1,39 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import type { components } from "../../../../shared/types";
-import {
-  CreatorId,
-  QuizId,
-  QuizSummary,
-  SolutionId,
-} from "../../domain/entities/quiz-summary/QuizSummary";
-import { TagIds } from "../../domain/entities/quiz-summary/quiz-summary-schema";
+import { CreatorId } from "../../domain/entities/quiz-summary/QuizSummary";
+import type { NewQuiz } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import { MockQuizRepository } from "./MockQuizRepository";
 
 describe("MockQuizRepository", () => {
   let repository: MockQuizRepository;
 
-  const createMockQuiz = (
+  /**
+   * create() に渡す採番前の入力。id / solutionId はリポジトリ（Mockの連番
+   * カウンタ、D1のAUTOINCREMENT）が払い出すため、ここでは持たない(issue #76)。
+   * 同じ理由でtagIds（作成時のタグ保存）も持たない。
+   */
+  const createNewQuiz = (
     overrides: Partial<{
-      id: string;
       question: string;
       answerType: components["schemas"]["AnswerType"];
-      solutionId: string;
-      status: components["schemas"]["QuizStatus"];
+      status: "draft" | "pending_approval";
       creatorId: string;
       explanation?: string;
-      tagIds: string[];
     }> = {},
-  ): QuizSummary => {
-    const defaults = {
-      id: "quiz-test",
-      question: "Test question",
-      answerType: "single_choice" as const,
-      solutionId: "solution-test",
-      status: "approved" as const,
-      creatorId: "user-test",
-      tagIds: ["tag-1"],
-      ...overrides,
-    };
+  ): NewQuiz => ({
+    question: overrides.question ?? "Test question",
+    answerType: overrides.answerType ?? "single_choice",
+    explanation: overrides.explanation,
+    status: overrides.status ?? "pending_approval",
+    creatorId: CreatorId.parse(overrides.creatorId ?? "user-test"),
+    createdAt: "2024-01-01 00:00:00",
+  });
 
-    return QuizSummary.build({
-      id: QuizId.parse(defaults.id),
-      question: defaults.question,
-      answerType: defaults.answerType,
-      solutionId: SolutionId.parse(defaults.solutionId),
-      explanation: defaults.explanation,
-      status: defaults.status,
-      creatorId: CreatorId.parse(defaults.creatorId),
-      createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
-      approvedAt:
-        defaults.status === "approved"
-          ? new Date().toISOString().slice(0, 19).replace("T", " ")
-          : undefined,
-      tagIds: TagIds.parse(defaults.tagIds),
-    });
-  };
-
-  const mockSolution: components["schemas"]["Solution"] = {
+  const mockSolution: components["schemas"]["SolutionCreate"] = {
     type: "single_choice",
-    id: "solution-test",
     choices: [
-      {
-        id: "choice-1",
-        solutionId: "solution-test",
-        text: "Option 1",
-        orderIndex: 0,
-        isCorrect: true,
-      },
-      {
-        id: "choice-2",
-        solutionId: "solution-test",
-        text: "Option 2",
-        orderIndex: 1,
-        isCorrect: false,
-      },
+      { text: "Option 1", orderIndex: 0, isCorrect: true },
+      { text: "Option 2", orderIndex: 1, isCorrect: false },
     ],
   };
 
@@ -79,34 +43,57 @@ describe("MockQuizRepository", () => {
 
   describe("create", () => {
     describe("when valid quiz and solution are provided", () => {
-      test("should create quiz successfully", async () => {
-        // Arrange
-        const quiz = createMockQuiz();
-
+      test("should create quiz with a repository-issued id", async () => {
         // Act
-        const result = await repository.create(quiz, mockSolution);
+        const result = await repository.create(
+          createNewQuiz({ question: "Test question" }),
+          mockSolution,
+        );
 
-        // Assert
+        // Assert: idはリポジトリが払い出す(D1のAUTOINCREMENTと同じ数値文字列の形式)
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
-          expect(result.value.get("id")).toBe("quiz-test");
+          expect(result.value.get("id")).toMatch(/^\d+$/);
           expect(result.value.get("question")).toBe("Test question");
           expect(result.value.get("answerType")).toBe("single_choice");
         }
       });
 
+      test("2回createすると異なる採番値が返り、その id で findById できる", async () => {
+        // Act
+        const result1 = await repository.create(
+          createNewQuiz({ question: "First question" }),
+          mockSolution,
+        );
+        const result2 = await repository.create(
+          createNewQuiz({ question: "Second question" }),
+          mockSolution,
+        );
+
+        // Assert
+        expect(result1.isOk() && result2.isOk()).toBe(true);
+        if (!result1.isOk() || !result2.isOk()) return;
+
+        const id1 = result1.value.get("id");
+        const id2 = result2.value.get("id");
+        expect(id1).not.toBe(id2);
+
+        const found1 = await repository.findById(id1);
+        const found2 = await repository.findById(id2);
+        expect(found1.isOk() && found2.isOk()).toBe(true);
+        if (found1.isOk() && found2.isOk()) {
+          expect(found1.value.question).toBe("First question");
+          expect(found2.value.question).toBe("Second question");
+        }
+      });
+
       test.each([
-        [
-          "boolean",
-          "boolean",
-          { type: "boolean", id: "sol-bool", value: true },
-        ],
+        ["boolean", "boolean", { type: "boolean", value: true }],
         [
           "free_text",
           "free_text",
           {
             type: "free_text",
-            id: "sol-text",
             correctAnswer: "answer",
             matchingStrategy: "exact",
             caseSensitive: false,
@@ -117,7 +104,6 @@ describe("MockQuizRepository", () => {
           "multiple_choice",
           {
             type: "multiple_choice",
-            id: "sol-multi",
             minCorrectAnswers: 2,
             choices: [],
           },
@@ -126,15 +112,14 @@ describe("MockQuizRepository", () => {
         "should create quiz with %s answer type",
         async (_description, answerType, solution) => {
           // Arrange
-          const quiz = createMockQuiz({
+          const quiz = createNewQuiz({
             answerType: answerType as components["schemas"]["AnswerType"],
-            solutionId: solution.id,
           });
 
           // Act
           const result = await repository.create(
             quiz,
-            solution as components["schemas"]["Solution"],
+            solution as components["schemas"]["SolutionCreate"],
           );
 
           // Assert
@@ -147,9 +132,7 @@ describe("MockQuizRepository", () => {
 
       test("should handle quiz without optional fields", async () => {
         // Arrange
-        const quiz = createMockQuiz({
-          status: "pending_approval",
-        });
+        const quiz = createNewQuiz({ status: "pending_approval" });
 
         // Act
         const result = await repository.create(quiz, mockSolution);
@@ -168,18 +151,21 @@ describe("MockQuizRepository", () => {
     describe("when quiz exists", () => {
       test("should return quiz with solution for existing quiz", async () => {
         // Arrange
-        // "quiz-1" はデフォルトフィクスチャで既に使用されているIDのため、
-        // 衝突しない新規IDを使う
-        const quiz = createMockQuiz({ id: "quiz-new-1" });
-        await repository.create(quiz, mockSolution);
+        const created = await repository.create(
+          createNewQuiz({ question: "Test question" }),
+          mockSolution,
+        );
+        expect(created.isOk()).toBe(true);
+        if (!created.isOk()) return;
+        const id = created.value.get("id");
 
         // Act
-        const result = await repository.findById("quiz-new-1");
+        const result = await repository.findById(id);
 
         // Assert
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
-          expect(result.value.id).toBe("quiz-new-1");
+          expect(result.value.id).toBe(id);
           expect(result.value.question).toBe("Test question");
           expect(result.value.solution).toBeDefined();
           expect(result.value.solution.type).toBe("single_choice");
@@ -204,14 +190,16 @@ describe("MockQuizRepository", () => {
 
       test("should handle quiz without optional fields", async () => {
         // Arrange
-        const quiz = createMockQuiz({
-          id: "quiz-minimal",
-          status: "pending_approval",
-        });
-        await repository.create(quiz, mockSolution);
+        const created = await repository.create(
+          createNewQuiz({ status: "pending_approval" }),
+          mockSolution,
+        );
+        expect(created.isOk()).toBe(true);
+        if (!created.isOk()) return;
+        const id = created.value.get("id");
 
         // Act
-        const result = await repository.findById("quiz-minimal");
+        const result = await repository.findById(id);
 
         // Assert
         expect(result.isOk()).toBe(true);
@@ -255,71 +243,95 @@ describe("MockQuizRepository", () => {
       );
     });
 
-    describe("createMockSolution", () => {
+    describe("作成時のsolution", () => {
       test.each([
-        ["boolean", "boolean", { type: "boolean", value: false }],
+        ["boolean", { type: "boolean", value: true }],
         [
-          "free_text",
           "free_text",
           {
             type: "free_text",
-            correctAnswer: "mock answer",
-            matchingStrategy: "exact",
-            caseSensitive: false,
+            correctAnswer: "actual answer",
+            matchingStrategy: "partial",
+            caseSensitive: true,
           },
         ],
         [
-          "single_choice",
           "single_choice",
           {
             type: "single_choice",
-            choices: expect.arrayContaining([
-              expect.objectContaining({ text: "Mock choice", isCorrect: true }),
-            ]),
+            choices: [
+              { text: "actual a", orderIndex: 0, isCorrect: false },
+              { text: "actual b", orderIndex: 1, isCorrect: true },
+            ],
           },
         ],
         [
           "multiple_choice",
-          "multiple_choice",
           {
             type: "multiple_choice",
-            minCorrectAnswers: 1,
-            choices: expect.arrayContaining([
-              expect.objectContaining({ text: "Mock choice", isCorrect: true }),
-            ]),
+            minCorrectAnswers: 2,
+            choices: [
+              { text: "actual a", orderIndex: 0, isCorrect: true },
+              { text: "actual b", orderIndex: 1, isCorrect: true },
+            ],
           },
         ],
       ])(
-        "should create proper mock solution for %s",
-        async (_description, answerType, expectedSolution) => {
+        "%sで作成した内容がfindByIdで返る（モックの固定値にフォールバックしない）",
+        async (_description, solution) => {
           // Arrange
-          const quiz = createMockQuiz({
-            id: `quiz-${answerType}`,
-            answerType: answerType as components["schemas"]["AnswerType"],
-          });
-          await repository.create(quiz, mockSolution);
+          const created = await repository.create(
+            createNewQuiz({
+              answerType: solution.type as components["schemas"]["AnswerType"],
+            }),
+            solution as components["schemas"]["SolutionCreate"],
+          );
+          expect(created.isOk()).toBe(true);
+          if (!created.isOk()) return;
+          const id = created.value.get("id");
 
           // Act
-          const result = await repository.findById(`quiz-${answerType}`);
+          const result = await repository.findById(id);
 
           // Assert
           expect(result.isOk()).toBe(true);
-          if (result.isOk()) {
-            expect(result.value.solution).toMatchObject(expectedSolution);
+          if (!result.isOk()) return;
+          expect(result.value.solution).toMatchObject(solution);
+
+          // 選択肢型は各Choiceにidが付与され、solutionIdがクイズのsolutionIdと
+          // 一致すること（D1のChoice.id/solution_idに相当）も確認する
+          const returnedSolution = result.value.solution;
+          if (
+            returnedSolution.type === "single_choice" ||
+            returnedSolution.type === "multiple_choice"
+          ) {
+            for (const choice of returnedSolution.choices) {
+              expect(choice.id.length).toBeGreaterThan(0);
+              expect(choice.solutionId).toBe(result.value.solutionId);
+            }
           }
         },
       );
 
-      test("should throw error for unsupported answer type", async () => {
-        // This test verifies the internal createMockSolution method
-        // We need to create a scenario where it would be called with invalid type
-        // Since this is a private method, we'll test it indirectly by creating
-        // a quiz with an invalid answer type (though this shouldn't happen in practice)
+      test.each([
+        ["quiz-1", "single_choice"],
+        ["quiz-2", "boolean"],
+      ])(
+        "solutionを保持していないフィクスチャ行(%s)はモックの固定solutionにフォールバックする",
+        async (id, expectedAnswerType) => {
+          // Arrange: デフォルトフィクスチャはcreate()を経由しておらず、
+          // MockQuizStoreは実際のsolutionを持たない
 
-        // For now, we'll test the happy path since the createMockSolution
-        // is a private method and should only be called with valid types
-        expect(true).toBe(true); // Placeholder test
-      });
+          // Act
+          const result = await repository.findById(id);
+
+          // Assert
+          expect(result.isOk()).toBe(true);
+          if (result.isOk()) {
+            expect(result.value.solution.type).toBe(expectedAnswerType);
+          }
+        },
+      );
     });
   });
 
@@ -342,11 +354,10 @@ describe("MockQuizRepository", () => {
     describe("when filters are provided", () => {
       test("should filter by status", async () => {
         // Arrange
-        const pendingQuiz = createMockQuiz({
-          id: "quiz-pending",
-          status: "pending_approval",
-        });
-        await repository.create(pendingQuiz, mockSolution);
+        await repository.create(
+          createNewQuiz({ status: "pending_approval" }),
+          mockSolution,
+        );
 
         // Act
         const result = await repository.findMany({
@@ -363,11 +374,10 @@ describe("MockQuizRepository", () => {
 
       test("should filter by creatorId", async () => {
         // Arrange
-        const userQuiz = createMockQuiz({
-          id: "quiz-user-specific",
-          creatorId: "specific-user",
-        });
-        await repository.create(userQuiz, mockSolution);
+        await repository.create(
+          createNewQuiz({ creatorId: "specific-user" }),
+          mockSolution,
+        );
 
         // Act
         const result = await repository.findMany({
@@ -382,13 +392,16 @@ describe("MockQuizRepository", () => {
         }
       });
 
-      test("should filter by tags", async () => {
-        // Arrange
-        const taggedQuiz = createMockQuiz({
-          id: "quiz-tagged",
-          tagIds: ["special-tag", "another-tag"],
-        });
-        await repository.create(taggedQuiz, mockSolution);
+      test("作成したクイズがfindManyの結果に含まれる", async () => {
+        // Arrange: 作成時のタグ保存(#74寄り)はissue #76のスコープに含めないため、
+        // NewQuizはtagIdsを持たない。ここでは新規作成したクイズが一覧に
+        // 出ることだけ確認する
+        const created = await repository.create(
+          createNewQuiz({ question: "Newly created quiz" }),
+          mockSolution,
+        );
+        expect(created.isOk()).toBe(true);
+        if (!created.isOk()) return;
 
         // Act
         const result = await repository.findMany({});
@@ -396,23 +409,31 @@ describe("MockQuizRepository", () => {
         // Assert
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
-          expect(result.value.items.length).toBeGreaterThan(0);
           const foundQuiz = result.value.items.find(
-            (q) => q.get("id") === "quiz-tagged",
+            (q) => q.get("id") === created.value.get("id"),
           );
           expect(foundQuiz).toBeDefined();
         }
       });
 
       test("should combine multiple filters", async () => {
-        // Arrange
-        const specificQuiz = createMockQuiz({
-          id: "quiz-specific",
+        // Arrange: createはdraft/pending_approvalのみ受け付けるため、
+        // approvedへの遷移はupdateで行う
+        const created = await repository.create(
+          createNewQuiz({
+            status: "pending_approval",
+            creatorId: "target-user",
+          }),
+          mockSolution,
+        );
+        expect(created.isOk()).toBe(true);
+        if (!created.isOk()) return;
+        const id = created.value.get("id");
+
+        await repository.update(id, {
           status: "approved",
-          creatorId: "target-user",
-          tagIds: ["target-tag"],
+          approvedAt: "2024-01-01 00:00:00",
         });
-        await repository.create(specificQuiz, mockSolution);
 
         // Act
         const result = await repository.findMany({
@@ -423,9 +444,7 @@ describe("MockQuizRepository", () => {
         // Assert
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
-          const foundQuiz = result.value.items.find(
-            (q) => q.get("id") === "quiz-specific",
-          );
+          const foundQuiz = result.value.items.find((q) => q.get("id") === id);
           expect(foundQuiz).toBeDefined();
         }
       });
@@ -434,12 +453,11 @@ describe("MockQuizRepository", () => {
     describe("pagination", () => {
       beforeEach(async () => {
         // Add more test data for pagination tests
-        for (let i = 3; i <= 15; i++) {
-          const quiz = createMockQuiz({
-            id: `quiz-${i}`,
-            question: `Question ${i}`,
-          });
-          await repository.create(quiz, mockSolution);
+        for (let i = 0; i < 13; i++) {
+          await repository.create(
+            createNewQuiz({ question: `Question ${i}` }),
+            mockSolution,
+          );
         }
       });
 
@@ -525,11 +543,13 @@ describe("MockQuizRepository", () => {
     describe("when quiz exists", () => {
       test("should update question and explanation and return updated entity", async () => {
         // Arrange
-        const quiz = createMockQuiz({ id: "quiz-update-target" });
-        await repository.create(quiz, mockSolution);
+        const created = await repository.create(createNewQuiz(), mockSolution);
+        expect(created.isOk()).toBe(true);
+        if (!created.isOk()) return;
+        const id = created.value.get("id");
 
         // Act
-        const result = await repository.update("quiz-update-target", {
+        const result = await repository.update(id, {
           question: "Updated question",
           explanation: "Updated explanation",
         });
@@ -544,14 +564,16 @@ describe("MockQuizRepository", () => {
 
       test("should persist the update so a subsequent findById reflects it", async () => {
         // Arrange
-        const quiz = createMockQuiz({ id: "quiz-persist-check" });
-        await repository.create(quiz, mockSolution);
-        await repository.update("quiz-persist-check", {
+        const created = await repository.create(createNewQuiz(), mockSolution);
+        expect(created.isOk()).toBe(true);
+        if (!created.isOk()) return;
+        const id = created.value.get("id");
+        await repository.update(id, {
           question: "Persisted question",
         });
 
         // Act
-        const result = await repository.findById("quiz-persist-check");
+        const result = await repository.findById(id);
 
         // Assert
         expect(result.isOk()).toBe(true);
@@ -583,11 +605,13 @@ describe("MockQuizRepository", () => {
     describe("when quiz exists", () => {
       test("should delete the quiz and return void", async () => {
         // Arrange
-        const quiz = createMockQuiz({ id: "quiz-delete-target" });
-        await repository.create(quiz, mockSolution);
+        const created = await repository.create(createNewQuiz(), mockSolution);
+        expect(created.isOk()).toBe(true);
+        if (!created.isOk()) return;
+        const id = created.value.get("id");
 
         // Act
-        const result = await repository.delete("quiz-delete-target");
+        const result = await repository.delete(id);
 
         // Assert
         expect(result.isOk()).toBe(true);
@@ -595,12 +619,14 @@ describe("MockQuizRepository", () => {
 
       test("should remove the quiz so a subsequent findById returns NotFoundError", async () => {
         // Arrange
-        const quiz = createMockQuiz({ id: "quiz-delete-check" });
-        await repository.create(quiz, mockSolution);
-        await repository.delete("quiz-delete-check");
+        const created = await repository.create(createNewQuiz(), mockSolution);
+        expect(created.isOk()).toBe(true);
+        if (!created.isOk()) return;
+        const id = created.value.get("id");
+        await repository.delete(id);
 
         // Act
-        const result = await repository.findById("quiz-delete-check");
+        const result = await repository.findById(id);
 
         // Assert
         expect(result.isErr()).toBe(true);

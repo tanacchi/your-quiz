@@ -65,12 +65,13 @@ Table MultipleChoiceSolution {
 
 Table Choice {
   id ChoiceId [pk]
-  solution_id SolutionId [not null, note: 'References SingleChoice or MultipleChoice solution']
+  quiz_id QuizId [null, ref: > Quiz.id, note: 'Owning quiz. Always set on create. Nullable only because migration 0003 adds it via ALTER TABLE and cannot backfill rows whose quiz is ambiguous (ADR-0030)']
+  solution_id SolutionId [not null, note: 'References SingleChoice or MultipleChoice solution. Ambiguous on its own because both solution tables are numbered from 1, so look choices up by quiz_id (ADR-0030)']
   text varchar(500) [not null, note: 'Choice option text']
   order_index int [not null, note: 'Display order within solution']
   is_correct boolean [not null, note: 'Whether this choice is a correct answer']
 
-  Note: 'Choice options for single/multiple choice solutions. Each choice knows if it is correct.'
+  Note: 'Choice options for single/multiple choice solutions. Each choice knows if it is correct and which quiz owns it.'
 }
 
 Table Tag {

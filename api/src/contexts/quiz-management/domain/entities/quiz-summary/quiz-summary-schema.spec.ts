@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ZodError } from "zod";
 import {
   CreatorId,
+  NewQuizSchema,
   QuizId,
   type QuizSummaryData,
   type QuizSummaryInput,
@@ -423,6 +424,73 @@ describe("QuizSummary Schema", () => {
         expect(result.data.explanation).toBeUndefined();
         expect(result.data.approvedAt).toBeUndefined();
       }
+    });
+  });
+
+  describe("NewQuizSchema", () => {
+    // DBが採番するid/solutionIdを持たない、作成前の入力データ。
+    // タグ保存は含めないためtagIdsも持たない(issue #76)。
+    const validNewQuiz = {
+      question: "What is TypeScript?",
+      answerType: "single_choice" as const,
+      explanation: "TypeScript is a superset of JavaScript",
+      status: "draft" as const,
+      creatorId: "creator-789",
+      createdAt: "2023-12-01 10:00:00",
+    };
+
+    it("内容フィールドを受け付ける", () => {
+      const result = NewQuizSchema.safeParse(validNewQuiz);
+      expect(result.success).toBe(true);
+    });
+
+    it("explanationを省略できる", () => {
+      const { explanation: _explanation, ...withoutExplanation } = validNewQuiz;
+      const result = NewQuizSchema.safeParse(withoutExplanation);
+      expect(result.success).toBe(true);
+    });
+
+    it.each([
+      ["id", { id: "quiz-123" }],
+      ["solutionId", { solutionId: "solution-456" }],
+      ["tagIds", { tagIds: ["tag-1"] }],
+      ["approvedAt", { approvedAt: "2023-12-02 10:00:00" }],
+    ])("採番後にしか決まらないフィールド%sを拒否する", (_field, extraField) => {
+      const result = NewQuizSchema.safeParse({
+        ...validNewQuiz,
+        ...extraField,
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it.each([
+      ["draft", "draft", true],
+      ["pending_approval", "pending_approval", true],
+      ["approved", "approved", false],
+      ["rejected", "rejected", false],
+      ["published", "published", false],
+    ])(
+      "statusは作成時に取りうる値だけを許可する: %s -> %s",
+      (_desc, status, isValid) => {
+        const result = NewQuizSchema.safeParse({ ...validNewQuiz, status });
+        expect(result.success).toBe(isValid);
+      },
+    );
+
+    it("空のquestionを拒否する", () => {
+      const result = NewQuizSchema.safeParse({
+        ...validNewQuiz,
+        question: "",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("空のcreatorIdを拒否する", () => {
+      const result = NewQuizSchema.safeParse({
+        ...validNewQuiz,
+        creatorId: "",
+      });
+      expect(result.success).toBe(false);
     });
   });
 });

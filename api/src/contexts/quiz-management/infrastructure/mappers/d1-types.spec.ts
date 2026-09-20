@@ -11,6 +11,8 @@ import {
   isValidAnswerType,
   isValidMatchingStrategy,
   isValidQuizStatus,
+  parseChoices,
+  parseQuizRow,
   toBasicQuizInfo,
   toQuizRow,
   zodAnswerTypeSchema,
@@ -301,6 +303,109 @@ describe("D1 Types with Zod", () => {
           expectInvalidParse(zodParsedChoiceSchema, invalidChoice);
         });
       });
+
+      test("D1の数値IDと0/1の真偽値を受け付けて文字列・真偽値に変換する", () => {
+        // D1 は INTEGER 列を number、boolean 列を 0/1 で返す。以前は string /
+        // boolean しか受け付けず、D1 の選択肢がすべて不正扱いで黙って捨てられ、
+        // 選択式クイズを取得すると choices が空になっていた（#89）
+        const parseResult = zodParsedChoiceSchema.safeParse({
+          id: 12,
+          solutionId: 7,
+          text: "Choice text",
+          orderIndex: 1,
+          isCorrect: 0,
+        });
+
+        expect(parseResult.success).toBe(true);
+        if (parseResult.success) {
+          expect(parseResult.data).toEqual({
+            id: "12",
+            solutionId: "7",
+            text: "Choice text",
+            orderIndex: 1,
+            isCorrect: false,
+          });
+        }
+      });
+    });
+
+    describe("parseQuizRow", () => {
+      test("D1の数値IDを文字列に変換した行を返す", () => {
+        // isQuizRow は型ガードで変換結果を返さないため、D1 の行をそのまま使うと
+        // id / solution_id / creator_id が number のまま残っていた。所有者判定は
+        // 文字列の UserIdentity.id と比較するので、number のままでは一致しない
+        const result = parseQuizRow({
+          ...createValidQuizRow(),
+          id: 3,
+          solution_id: 7,
+          creator_id: 5,
+        });
+
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          expect(result.value.id).toBe("3");
+          expect(result.value.solution_id).toBe("7");
+          expect(result.value.creator_id).toBe("5");
+        }
+      });
+
+      test("不正な行はErrを返す", () => {
+        expect(parseQuizRow({ invalid: "data" }).isErr()).toBe(true);
+      });
+    });
+
+    describe("parseChoices", () => {
+      test("GROUP_CONCATの結果を並び順どおりの選択肢配列に変換する", () => {
+        // GROUP_CONCAT の連結順は保証されないため orderIndex で並べ直す
+        const groupConcat =
+          '{"id":12,"solutionId":7,"text":"b","orderIndex":1,"isCorrect":1},' +
+          '{"id":11,"solutionId":7,"text":"a","orderIndex":0,"isCorrect":0}';
+
+        const result = parseChoices(groupConcat);
+
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          expect(result.value).toEqual([
+            {
+              id: "11",
+              solutionId: "7",
+              text: "a",
+              orderIndex: 0,
+              isCorrect: false,
+            },
+            {
+              id: "12",
+              solutionId: "7",
+              text: "b",
+              orderIndex: 1,
+              isCorrect: true,
+            },
+          ]);
+        }
+      });
+
+      test("選択肢が無いとき（未指定・LEFT JOINの空行）は空配列を返す", () => {
+        // 選択肢が1件も無いと LEFT JOIN + GROUP_CONCAT(json_object(...)) は
+        // 全フィールドが null のオブジェクトを1つ返す
+        expect(parseChoices(undefined)._unsafeUnwrap()).toEqual([]);
+        expect(
+          parseChoices(
+            '{"id":null,"solutionId":null,"text":null,"orderIndex":null,"isCorrect":null}',
+          )._unsafeUnwrap(),
+        ).toEqual([]);
+      });
+
+      test("スキーマに合わない選択肢があれば黙って捨てずにErrを返す", () => {
+        const groupConcat =
+          '{"id":11,"solutionId":7,"text":"a","orderIndex":0,"isCorrect":0},' +
+          '{"id":12,"solutionId":7,"orderIndex":1,"isCorrect":1}';
+
+        expect(parseChoices(groupConcat).isErr()).toBe(true);
+      });
+
+      test("壊れたJSONはErrを返す", () => {
+        expect(parseChoices('{"id":').isErr()).toBe(true);
+      });
     });
   });
 
@@ -434,7 +539,7 @@ describe("D1 Types with Zod", () => {
 
       test("should validate field types strictly", () => {
         const invalidFieldTypes = {
-          id: 123, // number instead of string
+          id: true, // boolean instead of string/number
           solutionId: [], // array instead of string
           text: {}, // object instead of string
           orderIndex: "not-a-number", // invalid string instead of number

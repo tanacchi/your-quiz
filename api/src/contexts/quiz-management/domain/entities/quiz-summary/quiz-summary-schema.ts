@@ -27,7 +27,7 @@ export interface TagDetail {
 }
 
 // QuizSummary schema with flat structure
-export const QuizSummarySchema = z
+export const quizSummaryObject = z
   .object({
     id: QuizId,
     question: z.string().min(1),
@@ -51,30 +51,53 @@ export const QuizSummarySchema = z
     createdAt: sqliteDateTimeSchema,
     approvedAt: sqliteDateTimeSchema.optional(),
   })
-  .strict()
-  .superRefine((quiz, ctx) => {
-    // Cross-field constraint: approved/published quiz must have approvedAt
-    if (
-      (quiz.status === "approved" || quiz.status === "published") &&
-      !quiz.approvedAt
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Approved quiz must have approvedAt timestamp",
-        path: ["approvedAt"],
-      });
-    }
+  .strict();
 
-    // Duplicate tagIds check
-    const uniqueTagIds = new Set(quiz.tagIds);
-    if (uniqueTagIds.size !== quiz.tagIds.length) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Duplicate tag IDs are not allowed",
-        path: ["tagIds"],
-      });
-    }
-  });
+export const QuizSummarySchema = quizSummaryObject.superRefine((quiz, ctx) => {
+  // Cross-field constraint: approved/published quiz must have approvedAt
+  if (
+    (quiz.status === "approved" || quiz.status === "published") &&
+    !quiz.approvedAt
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Approved quiz must have approvedAt timestamp",
+      path: ["approvedAt"],
+    });
+  }
+
+  // Duplicate tagIds check
+  const uniqueTagIds = new Set(quiz.tagIds);
+  if (uniqueTagIds.size !== quiz.tagIds.length) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Duplicate tag IDs are not allowed",
+      path: ["tagIds"],
+    });
+  }
+});
 
 export type QuizSummaryData = z.output<typeof QuizSummarySchema>;
 export type QuizSummaryInput = z.input<typeof QuizSummarySchema>;
+
+/**
+ * 採番前のクイズ作成入力スキーマ
+ *
+ * id / solutionId はDBの採番後にしか決まらず、tagIds（作成時のタグ保存）は
+ * このissue #76のスコープに含めない。approvedAtも作成時点では常に無い。
+ * status はモデレーション前の2値（draft / pending_approval）のみ受け付ける。
+ */
+export const NewQuizSchema = quizSummaryObject
+  .pick({
+    question: true,
+    answerType: true,
+    explanation: true,
+    status: true,
+    creatorId: true,
+    createdAt: true,
+  })
+  .extend({
+    status: z.enum(["draft", "pending_approval"]),
+  });
+
+export type NewQuiz = z.infer<typeof NewQuizSchema>;

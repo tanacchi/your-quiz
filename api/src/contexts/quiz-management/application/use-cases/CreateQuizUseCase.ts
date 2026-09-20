@@ -1,13 +1,21 @@
-import { err, ok, ResultAsync } from "neverthrow";
+import { errAsync, ok, type ResultAsync } from "neverthrow";
 import { CreateFailedError } from "../../../../shared/errors";
 import type { components } from "../../../../shared/types";
-import { parseQuizSummary } from "../../domain/entities/quiz-summary/QuizSummary";
+import { NewQuizSchema } from "../../domain/entities/quiz-summary/quiz-summary-schema";
 import type { IQuizRepository } from "../../domain/repositories/IQuizRepository";
 import {
   QuizCreationFailedError,
   type UseCaseError,
   UseCaseInternalError,
 } from "../errors";
+
+/**
+ * バリデーション失敗時の QuizCreationFailedError に渡す仮のID
+ *
+ * id はDB（D1のAUTOINCREMENT、Mockの連番カウンタ）が採番するため、
+ * リポジトリを呼ぶ前の入力検証エラーの時点ではまだ存在しない(issue #76)。
+ */
+const UNASSIGNED_QUIZ_ID = "(unassigned)";
 
 /**
  * クイズ作成コマンドの型定義
@@ -64,55 +72,40 @@ export class CreateQuizUseCase {
   execute(
     command: CreateQuizCommand,
   ): ResultAsync<components["schemas"]["Quiz"], UseCaseError> {
-    // QuizSummaryエンティティの作成と検証
-    const quizId = Date.now().toString(); // 簡易ID生成
-    const solutionId = `solution-${quizId}`; // ソリューションID生成
-
-    const quizData = {
-      id: quizId,
+    // 採番前の内容を検証する。id/solutionIdはリポジトリ（D1のAUTOINCREMENT、
+    // Mockの連番カウンタ）が払い出すため、ここでは持たない(issue #76)
+    const newQuizInput = {
       question: command.question,
       answerType: command.answerType,
-      solutionId: solutionId,
       explanation: command.explanation,
       status: command.isDraft
         ? ("draft" as const)
         : ("pending_approval" as const),
       creatorId: command.creatorId,
       createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
-      tagIds: [], // デフォルト値
     };
 
-    // SolutionCreateからSolutionへ変換（IDを付与）
-    const solutionWithId: components["schemas"]["Solution"] = {
-      ...command.solution,
-      id: solutionId,
-    } as components["schemas"]["Solution"];
+    const validationResult = NewQuizSchema.safeParse(newQuizInput);
 
-    const quizValidationResult = parseQuizSummary(quizData);
-
-    if (quizValidationResult.isErr()) {
-      return ResultAsync.fromSafePromise(Promise.resolve()).andThen(() => {
-        return err(
-          new QuizCreationFailedError(
-            quizData.id,
-            quizValidationResult.error.issues
-              .map((issue) => issue.message)
-              .join(", "),
-          ),
-        );
-      });
+    if (!validationResult.success) {
+      return errAsync(
+        new QuizCreationFailedError(
+          UNASSIGNED_QUIZ_ID,
+          validationResult.error.issues
+            .map((issue) => issue.message)
+            .join(", "),
+        ),
+      );
     }
 
-    const quiz = quizValidationResult.value;
-
-    // リポジトリを通じて永続化
+    // リポジトリを通じて永続化（solutionはID不要のSolutionCreateのまま渡す）
     return this.quizRepository
-      .create(quiz, solutionWithId)
+      .create(validationResult.data, command.solution)
       .mapErr((repositoryError) => {
         // リポジトリエラーをユースケースエラーにマッピング
         if (repositoryError instanceof CreateFailedError) {
           return new QuizCreationFailedError(
-            quiz.get("id"),
+            UNASSIGNED_QUIZ_ID,
             repositoryError.details,
           );
         }

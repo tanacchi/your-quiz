@@ -68,12 +68,7 @@ export class ChangeQuizStatusUseCase {
           }
         } else if (quiz.creatorId !== command.requesterId) {
           return errAsync(
-            new QuizCreatorOnlyError(
-              command.quizId,
-              command.action,
-              quiz.creatorId,
-              command.requesterId,
-            ),
+            new QuizCreatorOnlyError(command.quizId, command.action),
           );
         }
 

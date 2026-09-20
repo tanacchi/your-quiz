@@ -99,39 +99,28 @@ export class QuizPublishError extends ConflictError {
  *
  * クイズの作成者以外が作成者限定操作を実行しようとした場合に発生します。
  * 例：他人が作成したクイズを編集・削除しようとした場合など。
+ *
+ * 作成者やリクエスト実行者の ID は持たない。作成者 ID は匿名識別子と結びつく
+ * ため、権限の無い第三者へのレスポンスやログに出さない（ADR-0030）。
  */
 export class QuizCreatorOnlyError extends ForbiddenError {
   readonly quizId: string;
   readonly operation: string;
-  readonly requesterId?: string;
-  readonly creatorId: string;
 
   /**
    * QuizCreatorOnlyErrorのコンストラクタ
    *
    * @param quizId - 対象クイズのID
    * @param operation - 実行しようとした操作
-   * @param creatorId - クイズの作成者ID
-   * @param requesterId - リクエスト実行者のID（オプション）
    * @param requestId - リクエストトレーシング用ID（オプション）
    */
-  constructor(
-    quizId: string,
-    operation: string,
-    creatorId: string,
-    requesterId?: string,
-    requestId?: string,
-  ) {
+  constructor(quizId: string, operation: string, requestId?: string) {
     super(
-      `Quiz ${quizId}: ${operation} operation is only allowed for creator ${creatorId}`,
+      `Quiz ${quizId}: ${operation} operation is only allowed for the creator`,
       requestId,
     );
     this.quizId = quizId;
     this.operation = operation;
-    if (requesterId !== undefined) {
-      this.requesterId = requesterId;
-    }
-    this.creatorId = creatorId;
   }
 }
 

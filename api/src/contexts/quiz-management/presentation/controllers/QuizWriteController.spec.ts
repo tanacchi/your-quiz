@@ -113,9 +113,7 @@ describe("QuizWriteController", () => {
 
     test("異常系: UseCaseエラーはControllerErrorHandlerでマッピングされる", async () => {
       vi.mocked(updateUseCase.execute).mockReturnValue(
-        createImmediateFailure(
-          new QuizCreatorOnlyError("quiz-123", "update", "someone-else"),
-        ),
+        createImmediateFailure(new QuizCreatorOnlyError("quiz-123", "update")),
       );
 
       const req = new Request("http://localhost/quizzes/quiz-123", {
