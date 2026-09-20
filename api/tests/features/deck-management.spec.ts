@@ -5,10 +5,16 @@ import { deckManagementData } from "../fixtures/deck-management-data";
 // issue #47（quiz-learning Deck管理）/ ADR-0028
 // Endpoint: /api/quiz/v1/learning/decks/*
 //
-// dev-mock env（USE_MOCK_DB=true）で動作するため、MockDeckRepository /
+// `vitest.bdd.config.ts`（dev-mock env、USE_MOCK_DB=true）と
+// `vitest.bdd.d1.config.ts`（dev env + ローカルD1、issue #76）の両方の
+// ターゲットで実行される。dev-mockでは MockDeckRepository /
 // MockUserIdentityResolver / MockSearchRepository / MockAttemptQueryRepository
-// を経由する。所有者はanonymousSessionミドルウェアが発行するCookie
-// （userFingerprint）で識別される。
+// を、devではD1実装（D1DeckRepository / D1UserIdentityResolver /
+// D1AttemptQueryRepository）を経由する（検索のみD1環境でも
+// MockSearchRepositoryのまま、issue #48で対応予定）。所有者は
+// anonymousSessionミドルウェアが発行するCookie（userFingerprint）で識別され、
+// リクエストごとに新規のUserIdentity行が作られるため、seed済みデータの
+// 有無に依存しない。
 
 const BASE_PATH = "/api/quiz/v1/learning/decks";
 const COOKIE_NAME = "quiz_fingerprint";
