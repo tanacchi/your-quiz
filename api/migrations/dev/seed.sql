@@ -76,65 +76,26 @@ INSERT INTO "FreeTextSolution" ("correct_answer", "matching_strategy", "case_sen
   ('async/await', 'partial', 0),         -- id: 12
   ('何でも', 'partial', 0);              -- id: 13 (for rejected quiz - too vague)
 
--- Single choice solutions - create choices with is_correct field
-INSERT INTO "Choice" ("solution_id", "text", "order_index", "is_correct") VALUES 
-  -- For solution id 14 (JavaScript variable declaration)
-  (14, 'const', 0, 0),
-  (14, 'let', 1, 1),  -- correct
-  (14, 'var', 2, 0),
-  (14, 'function', 3, 0),
-  -- For solution id 15 (HTTP status codes)
-  (15, '200', 0, 1),  -- correct
-  (15, '404', 1, 0),
-  (15, '500', 2, 0),
-  (15, '301', 3, 0),
-  -- For solution id 16 (React hooks)
-  (16, 'useState', 0, 1),  -- correct
-  (16, 'useEffect', 1, 0),
-  (16, 'useContext', 2, 0),
-  (16, 'useReducer', 3, 0),
-  -- For solution id 17 (SQL joins)
-  (17, 'INNER JOIN', 0, 1),  -- correct
-  (17, 'LEFT JOIN', 1, 0),
-  (17, 'RIGHT JOIN', 2, 0),
-  (17, 'FULL OUTER JOIN', 3, 0),
-  -- For solution id 18 (CSS display values)
-  (18, 'block', 0, 0),
-  (18, 'inline', 1, 0),
-  (18, 'flex', 2, 1),  -- correct
-  (18, 'grid', 3, 0),
-  -- For solution id 19 (rejected quiz - incorrect programming concept)
-  (19, 'HTML', 0, 0),
-  (19, 'CSS', 1, 0),
-  (19, 'JavaScript', 2, 0),
-  (19, 'Python', 3, 1);  -- marked as correct but actually wrong context
-
-INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 14
-INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 15
-INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 16
-INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 17
-INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 18
-INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 19 (for rejected quiz)
+-- Single choice solutions
+INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 1 (quiz 14)
+INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 2 (quiz 15)
+INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 3 (quiz 16)
+INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 4 (quiz 17)
+INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 5 (quiz 18)
+INSERT INTO "SingleChoiceSolution" DEFAULT VALUES;  -- id: 6 (quiz 19, rejected)
 
 -- Multiple choice solutions
-INSERT INTO "Choice" ("solution_id", "text", "order_index", "is_correct") VALUES 
-  -- For solution id 20 (JavaScript frameworks)
-  (20, 'React', 0, 1),     -- correct
-  (20, 'Vue.js', 1, 1),    -- correct
-  (20, 'Angular', 2, 1),   -- correct
-  (20, 'jQuery', 3, 0),    -- not a framework
-  -- For solution id 21 (HTTP methods)
-  (21, 'GET', 0, 1),       -- correct
-  (21, 'POST', 1, 1),      -- correct
-  (21, 'PUT', 2, 1),       -- correct
-  (21, 'DELETE', 3, 1);    -- correct
-
-INSERT INTO "MultipleChoiceSolution" ("min_correct_answers") VALUES 
-  (2),   -- id: 20, React, Vue.js, Angular are frameworks (minimum 2 required)
-  (3);   -- id: 21, all HTTP methods are correct (minimum 3 required)
+INSERT INTO "MultipleChoiceSolution" ("min_correct_answers") VALUES
+  (2),   -- id: 1 (quiz 20), React, Vue.js, Angular are frameworks (minimum 2 required)
+  (3);   -- id: 2 (quiz 21), all HTTP methods are correct (minimum 3 required)
 
 -- Insert diverse sample quizzes
-INSERT INTO "Quiz" ("question", "answer_type", "solution_id", "explanation", "status", "creator_id", "created_at", "approved_at") VALUES 
+--
+-- solution_idは各solutionテーブル内の連番（SingleChoiceSolutionとMultiple
+-- ChoiceSolutionはそれぞれ独立にAUTOINCREMENTされるため、両者とも1から
+-- 始まる）。Choiceはquiz_idで所属クイズを明示するため、Quiz挿入より後ろに
+-- 置く必要がある(ADR-0030)。
+INSERT INTO "Quiz" ("question", "answer_type", "solution_id", "explanation", "status", "creator_id", "created_at", "approved_at") VALUES
   -- Boolean quizzes
   ('TypeScriptはJavaScriptのスーパーセットである', 'boolean', 1, 'TypeScriptはJavaScriptに静的型付けを追加した言語で、JavaScriptのスーパーセットです', 'approved', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('SQLではNULL値は0と等しい', 'boolean', 2, 'NULL値は0ではなく、未定義の値を表します。NULL値との比較は常にNULLを返します', 'approved', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -143,26 +104,74 @@ INSERT INTO "Quiz" ("question", "answer_type", "solution_id", "explanation", "st
   ('Node.jsはブラウザでのみ動作する', 'boolean', 5, 'Node.jsはサーバーサイドでJavaScriptを実行するためのランタイム環境です', 'pending_approval', 3, CURRENT_TIMESTAMP, NULL),
   ('Pythonは静的型付け言語である', 'boolean', 6, 'Pythonは動的型付け言語です。静的型付けではありません', 'rejected', 4, CURRENT_TIMESTAMP, NULL),
   ('HTMLはプログラミング言語である', 'boolean', 7, 'HTMLはマークアップ言語であり、プログラミング言語ではありません。この質問は誤解を招く可能性があります', 'rejected', 3, CURRENT_TIMESTAMP, NULL),
-  
-  -- Free text quizzes
-  ('プログラミングの世界で最初に表示される伝統的なメッセージは？', 'free_text', 8, '多くのプログラミング言語で最初に学ぶのは"Hello World"の表示です', 'approved', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('JavaScriptでコンソールに出力するために使用する関数名を答えてください', 'free_text', 9, 'console.log()がJavaScriptでの標準的なコンソール出力関数です', 'approved', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('すべてのユーザーを取得するSQLクエリを書いてください（テーブル名: users）', 'free_text', 10, 'SELECT文を使用してusersテーブルからすべてのレコードを取得します', 'approved', 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('Reactで状態管理を行う基本的なフック名を答えてください', 'free_text', 11, 'useStateはReactの関数コンポーネントで状態を管理するための基本的なフックです', 'approved', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('JavaScriptで非同期処理を扱う現代的な構文を答えてください', 'free_text', 12, 'async/awaitはPromiseベースの非同期処理をより読みやすく書くための構文です', 'pending_approval', 4, CURRENT_TIMESTAMP, NULL),
-  ('プログラミングで最も重要なことは何ですか？', 'free_text', 13, 'この質問は主観的すぎて明確な答えがありません。採点基準が曖昧になります', 'rejected', 2, CURRENT_TIMESTAMP, NULL),
-  
-  -- Single choice quizzes
-  ('ES6で導入されたブロックスコープの変数宣言キーワードは？', 'single_choice', 14, 'letとconstがES6で導入されました。letは再代入可能、constは再代入不可です', 'approved', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('HTTPレスポンスでリクエスト成功を表すステータスコードは？', 'single_choice', 15, '200 OKはHTTPリクエストが正常に処理されたことを示します', 'approved', 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('Reactで最も基本的な状態管理フックは？', 'single_choice', 16, 'useStateはReactの関数コンポーネントで状態を管理するための最も基本的なフックです', 'approved', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('SQLで最も一般的に使用される結合方法は？', 'single_choice', 17, 'INNER JOINは両方のテーブルに一致するレコードのみを返す、最も一般的な結合方法です', 'approved', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('CSSで現代的なレイアウトシステムとして広く使われているのは？', 'single_choice', 18, 'Flexboxは現代的なCSSレイアウトシステムとして広く採用されています', 'approved', 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('Webブラウザで動作するプログラミング言語は？', 'single_choice', 19, '質問と選択肢の内容が不正確です。HTMLはマークアップ言語、CSSはスタイルシート言語であり、プログラミング言語ではありません', 'rejected', 1, CURRENT_TIMESTAMP, NULL),
-  
-  -- Multiple choice quizzes
-  ('以下のうち、JavaScriptフレームワーク/ライブラリはどれですか？（複数選択）', 'multiple_choice', 20, 'React、Vue.js、AngularはすべてJavaScriptフレームワークです。jQueryはライブラリですが、現代的なフレームワークではありません', 'approved', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('RESTful APIで使用される基本的なHTTPメソッドをすべて選んでください', 'multiple_choice', 21, 'GET、POST、PUT、DELETEはRESTful APIの基本的なCRUD操作に対応するHTTPメソッドです', 'approved', 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+  -- Free text quizzes（solution_idは1から始まるFreeTextSolutionの連番）
+  ('プログラミングの世界で最初に表示される伝統的なメッセージは？', 'free_text', 1, '多くのプログラミング言語で最初に学ぶのは"Hello World"の表示です', 'approved', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('JavaScriptでコンソールに出力するために使用する関数名を答えてください', 'free_text', 2, 'console.log()がJavaScriptでの標準的なコンソール出力関数です', 'approved', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('すべてのユーザーを取得するSQLクエリを書いてください（テーブル名: users）', 'free_text', 3, 'SELECT文を使用してusersテーブルからすべてのレコードを取得します', 'approved', 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('Reactで状態管理を行う基本的なフック名を答えてください', 'free_text', 4, 'useStateはReactの関数コンポーネントで状態を管理するための基本的なフックです', 'approved', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('JavaScriptで非同期処理を扱う現代的な構文を答えてください', 'free_text', 5, 'async/awaitはPromiseベースの非同期処理をより読みやすく書くための構文です', 'pending_approval', 4, CURRENT_TIMESTAMP, NULL),
+  ('プログラミングで最も重要なことは何ですか？', 'free_text', 6, 'この質問は主観的すぎて明確な答えがありません。採点基準が曖昧になります', 'rejected', 2, CURRENT_TIMESTAMP, NULL),
+
+  -- Single choice quizzes（solution_idは上で作ったSingleChoiceSolutionの1..6）
+  ('ES6で導入されたブロックスコープの変数宣言キーワードは？', 'single_choice', 1, 'letとconstがES6で導入されました。letは再代入可能、constは再代入不可です', 'approved', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('HTTPレスポンスでリクエスト成功を表すステータスコードは？', 'single_choice', 2, '200 OKはHTTPリクエストが正常に処理されたことを示します', 'approved', 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('Reactで最も基本的な状態管理フックは？', 'single_choice', 3, 'useStateはReactの関数コンポーネントで状態を管理するための最も基本的なフックです', 'approved', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('SQLで最も一般的に使用される結合方法は？', 'single_choice', 4, 'INNER JOINは両方のテーブルに一致するレコードのみを返す、最も一般的な結合方法です', 'approved', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('CSSで現代的なレイアウトシステムとして広く使われているのは？', 'single_choice', 5, 'Flexboxは現代的なCSSレイアウトシステムとして広く採用されています', 'approved', 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('Webブラウザで動作するプログラミング言語は？', 'single_choice', 6, '質問と選択肢の内容が不正確です。HTMLはマークアップ言語、CSSはスタイルシート言語であり、プログラミング言語ではありません', 'rejected', 1, CURRENT_TIMESTAMP, NULL),
+
+  -- Multiple choice quizzes（solution_idは上で作ったMultipleChoiceSolutionの1,2）
+  --
+  -- multiple_choiceのsolution_id=1は、上のsingle_choice(quiz 14)の
+  -- solution_id=1と意図的に衝突させている。両テーブルは独立採番のため
+  -- 実際にもこの衝突が起き得ることを示し、Choice.quiz_id基準の取得・削除が
+  -- 選択肢を混同しないことをBDD/統合テストで確認する材料にする(ADR-0030)。
+  ('以下のうち、JavaScriptフレームワーク/ライブラリはどれですか？（複数選択）', 'multiple_choice', 1, 'React、Vue.js、AngularはすべてJavaScriptフレームワークです。jQueryはライブラリですが、現代的なフレームワークではありません', 'approved', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('RESTful APIで使用される基本的なHTTPメソッドをすべて選んでください', 'multiple_choice', 2, 'GET、POST、PUT、DELETEはRESTful APIの基本的なCRUD操作に対応するHTTPメソッドです', 'approved', 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- 選択肢（Quiz挿入後に配置し、所属クイズをquiz_idで明示する。ADR-0030）
+INSERT INTO "Choice" ("quiz_id", "solution_id", "text", "order_index", "is_correct") VALUES
+  -- For quiz 14 / solution id 1 (JavaScript variable declaration)
+  (14, 1, 'const', 0, 0),
+  (14, 1, 'let', 1, 1),  -- correct
+  (14, 1, 'var', 2, 0),
+  (14, 1, 'function', 3, 0),
+  -- For quiz 15 / solution id 2 (HTTP status codes)
+  (15, 2, '200', 0, 1),  -- correct
+  (15, 2, '404', 1, 0),
+  (15, 2, '500', 2, 0),
+  (15, 2, '301', 3, 0),
+  -- For quiz 16 / solution id 3 (React hooks)
+  (16, 3, 'useState', 0, 1),  -- correct
+  (16, 3, 'useEffect', 1, 0),
+  (16, 3, 'useContext', 2, 0),
+  (16, 3, 'useReducer', 3, 0),
+  -- For quiz 17 / solution id 4 (SQL joins)
+  (17, 4, 'INNER JOIN', 0, 1),  -- correct
+  (17, 4, 'LEFT JOIN', 1, 0),
+  (17, 4, 'RIGHT JOIN', 2, 0),
+  (17, 4, 'FULL OUTER JOIN', 3, 0),
+  -- For quiz 18 / solution id 5 (CSS display values)
+  (18, 5, 'block', 0, 0),
+  (18, 5, 'inline', 1, 0),
+  (18, 5, 'flex', 2, 1),  -- correct
+  (18, 5, 'grid', 3, 0),
+  -- For quiz 19 / solution id 6 (rejected quiz - incorrect programming concept)
+  (19, 6, 'HTML', 0, 0),
+  (19, 6, 'CSS', 1, 0),
+  (19, 6, 'JavaScript', 2, 0),
+  (19, 6, 'Python', 3, 1),  -- marked as correct but actually wrong context
+  -- For quiz 20 / solution id 1 (JavaScript frameworks)
+  (20, 1, 'React', 0, 1),     -- correct
+  (20, 1, 'Vue.js', 1, 1),    -- correct
+  (20, 1, 'Angular', 2, 1),   -- correct
+  (20, 1, 'jQuery', 3, 0),    -- not a framework
+  -- For quiz 21 / solution id 2 (HTTP methods)
+  (21, 2, 'GET', 0, 1),       -- correct
+  (21, 2, 'POST', 1, 1),      -- correct
+  (21, 2, 'PUT', 2, 1),       -- correct
+  (21, 2, 'DELETE', 3, 1);    -- correct
 
 -- Tag quiz relationships with more variety
 INSERT INTO "QuizTag" ("quiz_id", "tag_id", "assigned_at") VALUES 
@@ -229,49 +238,53 @@ INSERT INTO "QuizSession" ("deck_id", "creator_id", "device_fingerprint", "start
 INSERT INTO "BooleanAnswer" ("value") VALUES 
   (1), (0), (1), (0), (1), (0), (1), (1); -- ids: 1-8
 
-INSERT INTO "FreeTextAnswer" ("text") VALUES 
-  ('Hello World'),           -- id: 9
-  ('console.log'),          -- id: 10
-  ('SELECT * FROM users'),  -- id: 11
-  ('useState'),             -- id: 12
-  ('hoge'),                -- id: 13, wrong answer
-  ('print'),               -- id: 14, wrong answer
-  ('async/await');         -- id: 15
+INSERT INTO "FreeTextAnswer" ("text") VALUES
+  ('Hello World'),           -- id: 1
+  ('console.log'),          -- id: 2
+  ('SELECT * FROM users'),  -- id: 3
+  ('useState'),             -- id: 4
+  ('hoge'),                -- id: 5, wrong answer
+  ('print'),               -- id: 6, wrong answer
+  ('async/await');         -- id: 7
 
-INSERT INTO "SingleChoiceAnswer" ("selected_choice_id") VALUES 
-  (2),  -- id: 16, correct "let" (choice_id 2)
-  (5),  -- id: 17, correct "200" (choice_id 5)
-  (9),  -- id: 18, correct "useState" (choice_id 9)
-  (11), -- id: 19, wrong choice
-  (13), -- id: 20, correct "INNER JOIN" (choice_id 13)
-  (17); -- id: 21, correct "flex" (choice_id 17)
+INSERT INTO "SingleChoiceAnswer" ("selected_choice_id") VALUES
+  (2),  -- id: 1, correct "let" (choice_id 2, quiz 14)
+  (5),  -- id: 2, correct "200" (choice_id 5, quiz 15)
+  (9),  -- id: 3, correct "useState" (choice_id 9, quiz 16)
+  (11), -- id: 4, wrong choice (choice_id 11 "RIGHT JOIN", quiz 17)
+  (13), -- id: 5, correct "INNER JOIN" (choice_id 13, quiz 17)
+  (19); -- id: 6, correct "flex" (choice_id 19, quiz 18)
 
-INSERT INTO "MultipleChoiceAnswer" ("selected_choice_ids") VALUES 
-  ('[18,19,20]'),   -- id: 22, correct frameworks (React, Vue.js, Angular)
-  ('[22,23,24,25]'), -- id: 23, correct HTTP methods (GET, POST, PUT, DELETE)
-  ('[18,21]'),      -- id: 24, partially correct (React + jQuery)
-  ('[22,23,24]');   -- id: 25, missing one method (GET, POST, PUT without DELETE)
+INSERT INTO "MultipleChoiceAnswer" ("selected_choice_ids") VALUES
+  ('[25,26,27]'),   -- id: 1, correct frameworks (React, Vue.js, Angular; quiz 20)
+  ('[29,30,31,32]'), -- id: 2, correct HTTP methods (GET, POST, PUT, DELETE; quiz 21)
+  ('[25,28]'),      -- id: 3, partially correct (React + jQuery; quiz 20)
+  ('[29,30,31]');   -- id: 4, missing one method (GET, POST, PUT without DELETE; quiz 21)
 
 -- Insert comprehensive attempts data
-INSERT INTO "Attempt" ("quiz_id", "session_id", "user_id", "answer_type", "answer_id", "is_correct", "answered_at") VALUES 
+--
+-- answer_typeはQuiz.answer_typeと一致させ、answer_idは対応するAnswerテーブル
+-- (FreeTextAnswer/SingleChoiceAnswer/MultipleChoiceAnswerはいずれも1から
+-- 採番)の実在するidを指す(ADR-0030、seed-consistency統合テストで検証)。
+INSERT INTO "Attempt" ("quiz_id", "session_id", "user_id", "answer_type", "answer_id", "is_correct", "answered_at") VALUES
   -- Session 1 (completed)
   (1, 1, 1, 'boolean', 1, 1, datetime('now', '-2 hours')),
-  (7, 1, 1, 'free_text', 10, 1, datetime('now', '-115 minutes')),
-  (11, 1, 1, 'single_choice', 16, 1, datetime('now', '-110 minutes')),
-  (16, 1, 1, 'multiple_choice', 22, 1, datetime('now', '-65 minutes')),
-  
+  (9, 1, 1, 'free_text', 2, 1, datetime('now', '-115 minutes')),
+  (14, 1, 1, 'single_choice', 1, 1, datetime('now', '-110 minutes')),
+  (20, 1, 1, 'multiple_choice', 1, 1, datetime('now', '-65 minutes')),
+
   -- Session 2 (in progress)
   (3, 2, 2, 'boolean', 3, 1, datetime('now', '-45 minutes')),
-  (9, 2, 2, 'free_text', 12, 1, datetime('now', '-40 minutes')),
-  
+  (11, 2, 2, 'free_text', 4, 1, datetime('now', '-40 minutes')),
+
   -- Session 3 (completed)
   (2, 3, 3, 'boolean', 2, 1, datetime('now', '-25 minutes')),
-  (8, 3, 3, 'free_text', 11, 1, datetime('now', '-20 minutes')),
-  (14, 3, 3, 'single_choice', 20, 1, datetime('now', '-15 minutes')),
-  
-  -- Session 4 (in progress) 
+  (10, 3, 3, 'free_text', 3, 1, datetime('now', '-20 minutes')),
+  (17, 3, 3, 'single_choice', 5, 1, datetime('now', '-15 minutes')),
+
+  -- Session 4 (in progress)
   (1, 4, 2, 'boolean', 4, 0, datetime('now', '-12 minutes')),
-  (7, 4, 2, 'free_text', 14, 0, datetime('now', '-10 minutes')),
-  
+  (9, 4, 2, 'free_text', 6, 0, datetime('now', '-10 minutes')),
+
   -- Session 5 (just started)
   (3, 5, 1, 'boolean', 5, 1, datetime('now', '-2 minutes'));
